@@ -34,11 +34,12 @@ class EDFType(db.Model):
 
 class University(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    abbreviation = db.Column(db.Text, nullable=False)
+    abbreviation = db.Column(db.Text, nullable=False, unique=True)
     name = db.Column(db.Text, nullable=False)
 
     students = db.relationship('Student', back_populates='university')
     professors = db.relationship('Professor', back_populates='university')
+    schools = db.relationship('School', back_populates='university')
 
 
 class Student(db.Model):
@@ -100,6 +101,15 @@ class Department(db.Model):
     school = db.Column(db.Text, nullable=False)
 
     courses = db.relationship('Course', back_populates='department')
+
+
+class School(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    abbreviation = db.Column(db.Text, nullable=False, unique=True)
+    name = db.Column(db.Text, nullable=False)
+    university_id = db.Column(db.Integer, db.ForeignKey('university.id'), nullable=False)
+
+    university = db.relationship('University', back_populates='schools')
 
 
 class Course(db.Model):
