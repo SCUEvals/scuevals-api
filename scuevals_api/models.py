@@ -1,4 +1,3 @@
-from sqlalchemy.dialects.postgresql import JSONB
 from scuevals_api import db
 
 
@@ -6,30 +5,6 @@ quarter_course = db.Table('quarter_course', db.metadata,
                           db.Column('quarter_id', db.Integer, db.ForeignKey('quarter.id')),
                           db.Column('course_id', db.Integer, db.ForeignKey('course.id')),
                           db.UniqueConstraint('quarter_id', 'course_id', name='quarter_course_uix'))
-
-
-class EDF(db.Model):
-    __tablename__ = 'edf'
-
-    id = db.Column(db.Integer, primary_key=True)
-    type_id = db.Column(db.Integer, db.ForeignKey('edf_type.id'), nullable=False)
-    url = db.Column(db.Text, nullable=False)
-    time = db.Column(db.DateTime(timezone=True), nullable=False)
-    arguments = db.Column(JSONB)
-    data = db.Column(JSONB, nullable=False)
-    current = db.Column(db.Boolean, default=False)
-
-    type = db.relationship('EDFType', back_populates='edfs')
-
-
-class EDFType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, nullable=False)
-    edfs = db.relationship('EDF', back_populates='type')
-
-    def __init__(self, idx, name):
-        self.id = idx
-        self.name = name
 
 
 class University(db.Model):
