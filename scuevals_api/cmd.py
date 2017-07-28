@@ -8,7 +8,7 @@ def initdb():
     db.create_all()
     db.session.commit()
 
-    sql_files = ['db/insert_courses.sql']
+    sql_files = ['db/insert_courses.sql', 'db/insert_departments.sql']
 
     for sfile in sql_files:
         with open(sfile, 'r') as f:
@@ -25,7 +25,7 @@ def seeddb():
     db.session.add(School(abbreviation='EGR', name='Engineering', university=scu))
     db.session.add(School(abbreviation='AS', name='Arts and Sciences', university=scu))
     db.session.add(School(abbreviation='UNV', name='Generic', university=scu))
-    db.session.add(School(abbreviation='ECP', name='Education and Counseling Psychology', university=scu))
+    db.session.add(School(abbreviation='CPE', name='Education and Counseling Psychology', university=scu))
     db.session.add(School(abbreviation='LAW', name='Law', university=scu))
 
     db.session.commit()

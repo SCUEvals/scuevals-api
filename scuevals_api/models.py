@@ -95,12 +95,15 @@ class Evaluation(db.Model):
 
 
 class Department(db.Model):
+    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id', name='uix_department'),)
+
     id = db.Column(db.Integer, primary_key=True)
-    abbreviation = db.Column(db.Text, nullable=False, unique=True)
+    abbreviation = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
-    school = db.Column(db.Text, nullable=False)
+    school_id = db.Column(db.Integer, db.ForeignKey('school.id'), nullable=False)
 
     courses = db.relationship('Course', back_populates='department')
+    school = db.relationship('School', back_populates='departments')
 
 
 class School(db.Model):
@@ -110,6 +113,7 @@ class School(db.Model):
     university_id = db.Column(db.Integer, db.ForeignKey('university.id'), nullable=False)
 
     university = db.relationship('University', back_populates='schools')
+    departments = db.relationship('Department', back_populates='school')
 
 
 class Course(db.Model):
