@@ -11,6 +11,7 @@ setup(
         'Flask-SQLAlchemy==2.2',
         'Flask==0.12.2',
         'gunicorn==19.7.1',
-        'psycopg2==2.7.1'
+        'psycopg2==2.7.1',
+        'webargs==1.8.1'
     ],
 )
