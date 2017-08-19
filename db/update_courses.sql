@@ -5,12 +5,15 @@ declare
   _c_id       numeric;
   _department varchar;
   _number     varchar;
+  _title      varchar;
+  _latest_quarter varchar;
 
 begin
-  for _department, _number in
+  for _department, _number, _title in
   select
     split_part(course ->> 'value', ' ', 1) as _department,
-    split_part(course ->> 'value', ' ', 2) as _number
+    split_part(course ->> 'value', ' ', 2) as _number,
+    split_part(course ->> 'label', ' - ', 2) as _title
   from jsonb_array_elements(_json -> 'results') course
   loop
     -- get the department id
@@ -28,9 +31,23 @@ begin
     -- if the course does not exist, create it
     if _c_id is null
     then
-      insert into course (department_id, number) values (_d_id, _number)
+      insert into course (department_id, number, title) values (_d_id, _number, _title)
       returning id
         into _c_id;
+
+    -- if it does exist, make sure the title is up to date
+    else
+      select q.id into _latest_quarter
+      from quarter q
+        join quarter_course qc on q.id = qc.quarter_id
+      where qc.course_id = _c_id
+      order by lower(period) desc
+      limit 1;
+
+      if _quarter = _latest_quarter then
+        update course set title = _title where id = _c_id;
+      end if;
+
     end if;
 
     -- if the course is not yet listed under the specified quarter, list it
