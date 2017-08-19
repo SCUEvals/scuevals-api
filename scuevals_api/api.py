@@ -21,6 +21,7 @@ class Courses(Resource):
                 'id': course.id,
                 'department': course.department.abbreviation,
                 'number': course.number,
+                'title': course.title,
                 'quarters': [quarter.id for quarter in course.quarters]
             }
             for course in courses
