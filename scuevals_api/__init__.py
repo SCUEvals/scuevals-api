@@ -15,5 +15,5 @@ CORS(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-import scuevals_api.cmd
-import scuevals_api.api
+import scuevals_api.cmd # noqa
+import scuevals_api.api # noqa

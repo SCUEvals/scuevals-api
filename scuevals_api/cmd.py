@@ -4,7 +4,7 @@ from scuevals_api.models import University, School
 
 @app.cli.command(short_help='Initializes the DB.')
 def initdb():
-    import scuevals_api.models
+    import scuevals_api.models # noqa
     db.create_all()
     db.session.commit()
 
