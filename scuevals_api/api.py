@@ -28,6 +28,21 @@ class Courses(Resource):
         ]
 
 
+class Quarters(Resource):
+    def get(self):
+        quarters = Quarter.query.all()
+
+        return [
+            {
+                'id': quarter.id,
+                'year': quarter.year,
+                'name': quarter.name,
+                'current': quarter.current
+            }
+            for quarter in quarters
+        ]
+
+
 @parser.error_handler
 def handle_request_parsing_error(err):
     """webargs error handler that uses Flask-RESTful's abort function to return
@@ -37,3 +52,4 @@ def handle_request_parsing_error(err):
 
 
 api.add_resource(Courses, '/courses')
+api.add_resource(Quarters, '/quarters')
