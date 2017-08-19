@@ -1,4 +1,5 @@
 from scuevals_api import db
+from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
 
 
 quarter_course = db.Table('quarter_course', db.metadata,
@@ -44,18 +45,19 @@ class Quarter(db.Model):
     year = db.Column(db.Integer, nullable=False)
     name = db.Column(db.Text, nullable=False)
     current = db.Column(db.Boolean, default=False)
+    period = db.Column(ranges.DATERANGE, nullable=False)
 
     evaluations = db.relationship('Evaluation', back_populates='quarter')
     courses = db.relationship('Course', secondary=quarter_course, back_populates="quarters")
 
-    check = db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']))
+    __table_args__ = (
+        ExcludeConstraint(('period', '&&')),
+        db.UniqueConstraint('year', 'name'),
+        db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']))
+    )
 
 
 class Evaluation(db.Model):
-    __table_args__ = (
-        db.UniqueConstraint('student_id', 'professor_id', 'quarter_id', 'course_id', name='uix_evaluation'),
-    )
-
     id = db.Column(db.Integer, primary_key=True)
 
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
@@ -68,10 +70,12 @@ class Evaluation(db.Model):
     quarter = db.relationship('Quarter', back_populates='evaluations')
     course = db.relationship('Course', back_populates='evaluations')
 
+    __table_args__ = (
+        db.UniqueConstraint('student_id', 'professor_id', 'quarter_id', 'course_id', name='uix_evaluation'),
+    )
+
 
 class Department(db.Model):
-    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id', name='uix_department'),)
-
     id = db.Column(db.Integer, primary_key=True)
     abbreviation = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
@@ -79,6 +83,8 @@ class Department(db.Model):
 
     courses = db.relationship('Course', back_populates='department')
     school = db.relationship('School', back_populates='departments')
+
+    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id', name='uix_department'),)
 
 
 class School(db.Model):
@@ -92,8 +98,6 @@ class School(db.Model):
 
 
 class Course(db.Model):
-    __table_args__ = (db.UniqueConstraint('department_id', 'number', name='uix_course'),)
-
     id = db.Column(db.Integer, primary_key=True)
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
     number = db.Column(db.Text, nullable=False)
@@ -101,3 +105,5 @@ class Course(db.Model):
     department = db.relationship('Department', back_populates='courses')
     evaluations = db.relationship('Evaluation', back_populates='course')
     quarters = db.relationship('Quarter', secondary=quarter_course, back_populates="courses")
+
+    __table_args__ = (db.UniqueConstraint('department_id', 'number', name='uix_course'),)
