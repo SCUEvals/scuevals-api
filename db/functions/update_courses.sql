@@ -4,7 +4,7 @@ declare
   _d_id           numeric;
   _c_id           numeric;
   _p_id           numeric;
-  _q_id           numeric;
+  _quarter        numeric;
   _s_id           numeric;
 
   _department     varchar;
@@ -12,12 +12,9 @@ declare
   _title          varchar;
   _latest_quarter varchar;
 
-  _first_name1    varchar;
-  _last_name1     varchar;
-  _first_name2    varchar;
-  _last_name2     varchar;
-  _first_name3    varchar;
-  _last_name3     varchar;
+  _professor1     varchar[];
+  _professor2     varchar[];
+  _professor3     varchar[];
 
   _professors     varchar[][];
   _professor      varchar[];
@@ -25,7 +22,15 @@ declare
   _new_course     boolean default false;
 
 begin
-  for _department, _number, _title in
+  for
+    _quarter,
+    _department,
+    _number,
+    _title,
+    _professor1,
+    _professor2,
+    _professor3
+  in
   select
     (course ->> 'term')::int as _quarter,
     course ->> 'subject' as _department,
@@ -34,48 +39,41 @@ begin
 
     -- prof #1
     case
-    when ',' in (course ->> 'instr_1') then
-        split_part(course ->> 'instr_1', ', ', 1)
-    when (course ->> 'instr_1') == '' then
+    when (course ->> 'instr_1') like '%, %' then
+        array[
+          split_part(course ->> 'instr_1', ', ', 1),
+          split_part(course ->> 'instr_1', ', ', 2)
+        ]
+    when (course ->> 'instr_1') = '' then
         null
-    end as _last_name1,
-    case
-    when ',' in (course ->> 'instr_1') then
-        split_part(course ->> 'instr_1', ', ', 2)
-    when (course ->> 'instr_1') == '' then
-        null
-    end as _first_name1,
+    end as _professor1,
 
     -- prof #2
     case
-    when ',' in (course ->> 'instr_2') then
-      split_part(course ->> 'instr_2', ', ', 1)
-    when (course ->> 'instr_1') == '' then
-      null
-    end as _last_name2,
-    case
-    when ',' in (course ->> 'instr_2') then
+    when (course ->> 'instr_2') like '%, %' then
+      array[
+      split_part(course ->> 'instr_2', ', ', 1),
       split_part(course ->> 'instr_2', ', ', 2)
-    when (course ->> 'instr_1') == '' then
+      ]
+    when (course ->> 'instr_2') = '' then
       null
-    end as _first_name2,
+    end as _professor2,
 
     -- prof #3
     case
-    when ',' in (course ->> 'instr_3') then
-      split_part(course ->> 'instr_3', ', ', 1)
-    when (course ->> 'instr_1') == '' then
-      null
-    end as _last_name3,
-    case
-    when ',' in (course ->> 'instr_3') then
+    when (course ->> 'instr_3') like '%, %' then
+      array[
+      split_part(course ->> 'instr_3', ', ', 1),
       split_part(course ->> 'instr_3', ', ', 2)
-    when (course ->> 'instr_1') == '' then
+      ]
+    when (course ->> 'instr_3') = '' then
       null
-    end as _first_name3
+    end as _professor3
+
   from jsonb_array_elements(_json -> 'results') course
-  where _last_name1 is not null
   loop
+
+    if _professor1 is null then continue; end if;
 
     -- get the department id (assume it exists)
     select departments.id into _d_id
@@ -98,19 +96,17 @@ begin
     -- get the section id if it exists
     select id into _s_id
     from sections
-    where quarter_id = _q_id and course_id = _c_id;
+    where quarter_id = _quarter and course_id = _c_id;
 
     -- if the section does not exist, create it
     if _s_id is null then
-      insert into sections (quarter_id, course_id) values (_q_id, _c_id)
+      insert into sections (quarter_id, course_id) values (_quarter, _c_id)
       returning id into _s_id;
     end if;
 
-    _professors = array[
-      [_first_name1, _last_name1],
-      [_first_name2, _last_name2],
-      [_first_name3, _last_name3]
-    ];
+    _professors = array[_professor1];
+    if _professor2 is not null then _professors = array_append(_professors, _professor2); end if;
+    if _professor3 is not null then _professors = array_append(_professors, _professor3); end if;
 
     foreach _professor slice 1 in array _professors
     loop
@@ -150,7 +146,7 @@ begin
       limit 1;
 
       -- if this course info is for the latest quarter, update the title
-      if _q_id = _latest_quarter then
+      if _quarter = _latest_quarter then
         update courses
         set title = _title
         where id = _c_id;
