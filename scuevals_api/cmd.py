@@ -8,7 +8,7 @@ def initdb():
     db.create_all()
     db.session.commit()
 
-    sql_files = ['db/update_courses.sql', 'db/update_departments.sql']
+    sql_files = ['db/functions/update_courses.sql', 'db/functions/update_departments.sql']
 
     for sfile in sql_files:
         with open(sfile, 'r') as f:

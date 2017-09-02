@@ -2,6 +2,12 @@ from scuevals_api import db
 from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
 
 
+section_professor = db.Table('section_professor', db.metadata,
+                             db.Column('section_id', db.Integer, db.ForeignKey('sections.id')),
+                             db.Column('professor_id', db.Integer, db.ForeignKey('professors.id')),
+                             db.UniqueConstraint('section_id', 'professor_id'))
+
+
 class University(db.Model):
     __tablename__ = 'universities'
 
@@ -40,7 +46,7 @@ class Professor(db.Model):
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 
     university = db.relationship('University', back_populates='professors')
-    sections = db.relationship('Section', back_populates='professor')
+    sections = db.relationship('Section', secondary=section_professor, back_populates='professors')
 
 
 class Quarter(db.Model):
@@ -125,11 +131,10 @@ class Section(db.Model):
 
     quarter_id = db.Column(db.Integer, db.ForeignKey('quarters.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    professor_id = db.Column(db.Integer, db.ForeignKey('professors.id'), nullable=False)
 
     quarter = db.relationship('Quarter', back_populates='sections')
     course = db.relationship('Course', back_populates='sections')
-    professor = db.relationship('Professor', back_populates='sections')
+    professors = db.relationship('Professor', secondary=section_professor, back_populates='sections')
     evaluations = db.relationship('Evaluation', back_populates='section')
 
-    __table_args__ = (db.UniqueConstraint('professor_id', 'quarter_id', 'course_id'),)
+    __table_args__ = (db.UniqueConstraint('quarter_id', 'course_id'),)
