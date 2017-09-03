@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from scuevals_api import app, db
 from scuevals_api.models import University, School
 
@@ -13,7 +14,7 @@ def initdb():
     for sfile in sql_files:
         with open(sfile, 'r') as f:
             sql = f.read()
-            db.engine.execute(sql)
+            db.engine.execute(text(sql))
 
 
 @app.cli.command(short_help='Seeds the DB.')
