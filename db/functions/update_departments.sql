@@ -1,5 +1,5 @@
-create or replace function update_departments(_json jsonb)
-  returns void as $func$
+create or replace function update_departments(_university_id numeric, _json jsonb)
+  returns numeric as $func$
 declare
   _s_id   numeric;
   _d_id   numeric;
@@ -18,7 +18,7 @@ begin
     select id
     into _s_id
     from schools
-    where abbreviation = _school;
+    where abbreviation = _school and university_id = _university_id;
 
     -- get the department id if it exists
     select id
@@ -33,5 +33,7 @@ begin
     end if;
 
   end loop;
+
+  return 0;
 end;
 $func$ language plpgsql;
