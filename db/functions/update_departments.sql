@@ -3,6 +3,7 @@ create or replace function update_departments(_university_id numeric, _json json
 declare
   _s_id   numeric;
   _d_id   numeric;
+  _count  numeric := 0;
   _abbr   varchar;
   _name   varchar;
   _school varchar;
@@ -12,7 +13,7 @@ begin
     department ->> 'value' as _abbr,
     (regexp_matches(department ->> 'label', '.+(?=\()')) [1] as _name,
     department ->> 'school' as _school
-  from jsonb_array_elements(_json -> 'results') department
+  from jsonb_array_elements(_json -> 'departments') department
   loop
     -- get the school id
     select id
@@ -32,8 +33,10 @@ begin
       insert into departments (abbreviation, name, school_id) values (_abbr, _name, _s_id);
     end if;
 
+    _count = _count + 1;
+
   end loop;
 
-  return 0;
+  return _count;
 end;
 $func$ language plpgsql;
