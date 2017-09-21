@@ -1,4 +1,5 @@
 import json
+import logging
 from flask import request
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
@@ -36,12 +37,16 @@ class Departments(Resource):
         if 'departments' not in request.json or not isinstance(request.json['departments'], list):
             return {'error': 'invalid json format'}
 
+        if university_id is missing:
+            return {'error': 'missing university_id parameter'}
+
         params = {'u_id': university_id, 'data': json.dumps(request.json)}
 
         try:
             result = db.engine.execute(text('select update_departments(:u_id, (:data)::jsonb)'), params)
-        except DatabaseError:
-            return {'error': 'invalid json format'}
+        except DatabaseError as e:
+            logging.error('failed to update departments: ' + str(e))
+            return {'error': 'database error'}
 
         return {'result': 'success', 'updated_count': int(result.first()[0])}
 
