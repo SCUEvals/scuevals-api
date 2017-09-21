@@ -12,6 +12,7 @@ setup(
         'Flask==0.12.2',
         'gunicorn==19.7.1',
         'psycopg2==2.7.1',
+        'requests==2.18.4',
         'webargs==1.8.1'
     ],
 )
