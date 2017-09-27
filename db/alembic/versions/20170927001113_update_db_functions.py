@@ -19,7 +19,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute('drop function if exists update_courses(jsonb)')
+    conn.execute('drop function if exists update_courses(numeric, jsonb)')
 
     execute_file('db/functions/update_departments.sql')
     execute_file('db/functions/update_courses.sql')
