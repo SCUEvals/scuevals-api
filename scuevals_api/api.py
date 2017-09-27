@@ -43,7 +43,9 @@ class Departments(Resource):
         params = {'u_id': university_id, 'data': json.dumps(request.json)}
 
         try:
-            result = db.engine.execute(text('select update_departments(:u_id, (:data)::jsonb)'), params)
+            sql = text('select update_departments(:u_id, (:data)::jsonb)')
+            result = db.session.execute(sql, params)
+            db.session.commit()
         except DatabaseError as e:
             logging.error('failed to update departments: ' + str(e))
             return {'error': 'database error'}
@@ -89,7 +91,9 @@ class Courses(Resource):
         params = {'u_id': university_id, 'data': json.dumps(request.json)}
 
         try:
-            result = db.engine.execute(text('select update_courses(:u_id, (:data)::jsonb)'), params)
+            sql = text('select update_courses(:u_id, (:data)::jsonb)')
+            result = db.session.execute(sql, params)
+            db.session.commit()
         except DatabaseError as e:
             logging.error('failed to update courses: ' + str(e))
             return {'error': 'database error'}
