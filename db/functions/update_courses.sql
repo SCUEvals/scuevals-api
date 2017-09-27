@@ -1,6 +1,7 @@
 create or replace function update_courses(_university_id numeric, _json jsonb)
-  returns void as $func$
+  returns numeric as $func$
 declare
+  _count          numeric := 0;
   _d_id           numeric;
   _c_id           numeric;
   _p_id           numeric;
@@ -154,6 +155,10 @@ begin
       end if;
 
     end if;
+
+    _count = _count + 1;
   end loop;
+
+  return _count;
 end;
 $func$ language plpgsql;
