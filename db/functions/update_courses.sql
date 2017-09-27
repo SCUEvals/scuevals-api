@@ -1,17 +1,16 @@
 create or replace function update_courses(_university_id numeric, _json jsonb)
   returns numeric as $func$
 declare
-  _count          numeric := 0;
   _d_id           numeric;
   _c_id           numeric;
   _p_id           numeric;
   _quarter        numeric;
+  _latest_quarter numeric;
   _s_id           numeric;
 
   _department     varchar;
   _number         varchar;
   _title          varchar;
-  _latest_quarter varchar;
 
   _professor1     varchar[];
   _professor2     varchar[];
@@ -20,7 +19,8 @@ declare
   _professors     varchar[][];
   _professor      varchar[];
 
-  _new_course     boolean default false;
+  _count          numeric := 0;
+  _new_course     boolean := false;
 
 begin
   for
@@ -71,7 +71,7 @@ begin
       null
     end as _professor3
 
-  from jsonb_array_elements(_json -> 'results') course
+  from jsonb_array_elements(_json -> 'courses') course
   loop
 
     if _professor1 is null then continue; end if;
@@ -107,8 +107,8 @@ begin
     end if;
 
     _professors = array[_professor1];
-    if _professor2 is not null then _professors = array_append(_professors, _professor2); end if;
-    if _professor3 is not null then _professors = array_append(_professors, _professor3); end if;
+    if _professor2 is not null then _professors = array_cat(_professors, _professor2); end if;
+    if _professor3 is not null then _professors = array_cat(_professors, _professor3); end if;
 
     foreach _professor slice 1 in array _professors
     loop
