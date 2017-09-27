@@ -78,7 +78,8 @@ begin
     -- get the department id (assume it exists)
     select departments.id into _d_id
     from departments
-    where abbreviation = _department;
+    where abbreviation = _department
+    order by school_id limit 1;
 
     -- get the course id if it exists
     select id into _c_id
