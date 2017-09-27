@@ -73,6 +73,29 @@ class Courses(Resource):
             for course in courses
         ]
 
+    args = {'university_id': fields.Integer()}
+
+    @use_kwargs(args)
+    def post(self, university_id):
+        if request.headers['Content-Type'] != 'application/json':
+            return {'error': 'wrong mime type'}
+
+        if 'courses' not in request.json or not isinstance(request.json['courses'], list):
+            return {'error': 'invalid json format'}
+
+        if university_id is missing:
+            return {'error': 'missing university_id parameter'}
+
+        params = {'u_id': university_id, 'data': json.dumps(request.json)}
+
+        try:
+            result = db.engine.execute(text('select update_courses(:u_id, (:data)::jsonb)'), params)
+        except DatabaseError as e:
+            logging.error('failed to update courses: ' + str(e))
+            return {'error': 'database error'}
+
+        return {'result': 'success', 'updated_count': int(result.first()[0])}
+
 
 class Quarters(Resource):
     def get(self):
