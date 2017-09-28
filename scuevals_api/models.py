@@ -95,7 +95,7 @@ class Department(db.Model):
     courses = db.relationship('Course', back_populates='department')
     school = db.relationship('School', back_populates='departments')
 
-    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id'),)
+    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id', name='departments_abbreviation_school_id_key'),)
 
 
 class School(db.Model):
