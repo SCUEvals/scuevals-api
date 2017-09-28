@@ -1,11 +1,11 @@
 import json
 import logging
 from flask import request
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from webargs import fields, missing
 from webargs.flaskparser import parser, use_kwargs
-from scuevals_api.models import Course, Quarter, Department, School, Section
+from scuevals_api.models import Course, Quarter, Department, School, Section, Professor
 from scuevals_api import api, db
 from flask_restful import Resource, abort
 
@@ -24,6 +24,7 @@ class Departments(Resource):
             {
                 'id': department.id,
                 'abbr': department.abbreviation,
+                'name': department.name,
                 'school': department.school.abbreviation
             }
             for department in departments
@@ -117,6 +118,54 @@ class Quarters(Resource):
         ]
 
 
+class Search(Resource):
+    args = {'university_id': fields.Integer(), 'q': fields.String(), 'limit': fields.Integer()}
+
+    @use_kwargs(args)
+    def get(self, university_id, q, limit):
+        if university_id is missing:
+            return {'error': 'missing university_id parameter'}
+
+        if q is missing:
+            return {'error': 'missing q parameter'}
+
+        if limit is missing or limit > 50:
+            limit = 50
+
+        # strip any characters that would cause matching issues
+        q = q.replace(',', '')
+
+        courses = Course.query.join(Course.department).filter(
+            func.concat(Department.abbreviation, ' ', Course.number, ' ', Course.title).ilike('%{}%'.format(q))
+        ).limit(limit).all()
+
+        professors = Professor.query.filter(
+            func.concat(Professor.last_name, ' ', Professor.first_name).ilike('%{}%'.format(q)) |
+            func.concat(Professor.first_name, ' ', Professor.last_name).ilike('%{}%'.format(q))
+        ).limit(limit).all()
+
+        return {
+            'courses': [
+                {
+                    'id': course.id,
+                    'department': course.department.abbreviation,
+                    'number': course.number,
+                    'title': course.title,
+                    'quarters': [section.quarter.id for section in course.sections]
+                }
+                for course in courses
+            ],
+            'professors': [
+                {
+                    'id': professor.id,
+                    'first_name': professor.first_name,
+                    'last_name': professor.last_name
+                }
+                for professor in professors
+            ]
+        }
+
+
 @parser.error_handler
 def handle_request_parsing_error(err):
     """webargs error handler that uses Flask-RESTful's abort function to return
@@ -128,3 +177,4 @@ def handle_request_parsing_error(err):
 api.add_resource(Departments, '/departments')
 api.add_resource(Courses, '/courses')
 api.add_resource(Quarters, '/quarters')
+api.add_resource(Search, '/search')
