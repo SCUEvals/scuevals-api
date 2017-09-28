@@ -5,7 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from webargs import fields, missing
 from webargs.flaskparser import parser, use_kwargs
-from scuevals_api.models import Course, Quarter, Department, School
+from scuevals_api.models import Course, Quarter, Department, School, Section
 from scuevals_api import api, db
 from flask_restful import Resource, abort
 
@@ -54,15 +54,18 @@ class Departments(Resource):
 
 
 class Courses(Resource):
-    args = {'quarter_id': fields.Integer()}
+    args = {'university_id': fields.Integer(), 'quarter_id': fields.Integer()}
 
     @use_kwargs(args)
-    def get(self, quarter_id):
+    def get(self, university_id, quarter_id):
+
+        if university_id is missing:
+            return {'error': 'missing university_id parameter'}
 
         if quarter_id is missing:
             courses = Course.query.all()
         else:
-            courses = Course.query.join(Course.quarters).filter(Quarter.id == quarter_id).all()
+            courses = Course.query.join(Course.sections).filter(Section.quarter_id == quarter_id).all()
 
         return [
             {
@@ -70,12 +73,10 @@ class Courses(Resource):
                 'department': course.department.abbreviation,
                 'number': course.number,
                 'title': course.title,
-                'quarters': [quarter.id for quarter in course.quarters]
+                'quarters': [section.quarter.id for section in course.sections]
             }
             for course in courses
         ]
-
-    args = {'university_id': fields.Integer()}
 
     @use_kwargs(args)
     def post(self, university_id):
