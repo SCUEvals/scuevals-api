@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for filename in alembic/versions/*.mako; do
+    cat $filename | mako-render > ${filename%.*}
+done
