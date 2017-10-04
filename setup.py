@@ -6,6 +6,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'Flask-Cors==3.0.3',
+        'Flask-JWT-Simple==0.0.3',
         'Flask-Migrate==2.0.4',
         'Flask-RESTful==0.3.6',
         'Flask-SQLAlchemy==2.2',

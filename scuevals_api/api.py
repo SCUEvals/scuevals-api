@@ -1,12 +1,17 @@
 import json
 import logging
+import os
+import requests
+import time
 from flask import request
+from flask_jwt_simple import jwt_required, create_jwt
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from webargs import fields, missing
 from webargs.flaskparser import parser, use_kwargs
+from scuevals_api.exceptions import BadRequest
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor
-from scuevals_api import api, db
+from scuevals_api import api, db, app
 from flask_restful import Resource, abort
 
 
@@ -16,7 +21,7 @@ class Departments(Resource):
     @use_kwargs(args)
     def get(self, university_id):
         if university_id is missing:
-            return {'error': 'missing university_id parameter'}
+            raise BadRequest('missing university_id parameter')
 
         departments = Department.query.join(Department.school).filter(School.university_id == university_id).all()
 
@@ -33,13 +38,13 @@ class Departments(Resource):
     @use_kwargs(args)
     def post(self, university_id):
         if request.headers['Content-Type'] != 'application/json':
-            return {'error': 'wrong mime type'}
+            raise BadRequest('wrong mime type')
 
         if 'departments' not in request.json or not isinstance(request.json['departments'], list):
-            return {'error': 'invalid json format'}
+            raise BadRequest('invalid json format')
 
         if university_id is missing:
-            return {'error': 'missing university_id parameter'}
+            raise BadRequest('missing university_id parameter')
 
         params = {'u_id': university_id, 'data': json.dumps(request.json)}
 
@@ -61,7 +66,7 @@ class Courses(Resource):
     def get(self, university_id, quarter_id):
 
         if university_id is missing:
-            return {'error': 'missing university_id parameter'}
+            raise BadRequest('missing university_id parameter')
 
         if quarter_id is missing:
             courses = Course.query.all()
@@ -82,13 +87,13 @@ class Courses(Resource):
     @use_kwargs(args)
     def post(self, university_id):
         if request.headers['Content-Type'] != 'application/json':
-            return {'error': 'wrong mime type'}
+            raise BadRequest('wrong mime type')
 
         if 'courses' not in request.json or not isinstance(request.json['courses'], list):
-            return {'error': 'invalid json format'}
+            raise BadRequest('invalid json format')
 
         if university_id is missing:
-            return {'error': 'missing university_id parameter'}
+            raise BadRequest('missing university_id parameter')
 
         params = {'u_id': university_id, 'data': json.dumps(request.json)}
 
@@ -121,13 +126,14 @@ class Quarters(Resource):
 class Search(Resource):
     args = {'university_id': fields.Integer(), 'q': fields.String(), 'limit': fields.Integer()}
 
+    @jwt_required
     @use_kwargs(args)
     def get(self, university_id, q, limit):
         if university_id is missing:
-            return {'error': 'missing university_id parameter'}
+            raise BadRequest('missing university_id parameter')
 
         if q is missing:
-            return {'error': 'missing q parameter'}
+            raise BadRequest('missing q parameter')
 
         if limit is missing or limit > 50:
             limit = 50
@@ -172,6 +178,34 @@ def handle_request_parsing_error(err):
     a JSON error response to the client.
     """
     abort(422, errors=err.messages)
+
+
+@app.route('/auth', methods=['POST'])
+@use_kwargs({'id_token': fields.String()})
+def auth(id_token):
+    if request.headers['Content-Type'] != 'application/json':
+        raise BadRequest('wrong mime type')
+
+    resp = requests.get('https://www.googleapis.com/oauth2/v3/tokeninfo', params={id_token: id_token})
+
+    if resp.status_code != 200:
+        raise BadRequest('failed to validate id_token with Google')
+
+    data = resp.json()
+    if data['iss'] not in ('https://accounts.google.com', 'accounts.google.com'):
+        raise BadRequest('invalid id_token')
+
+    if data['aud'] != os.environ['GOOGLE_CLIENT_ID']:
+        raise BadRequest('invalid id_token')
+
+    if data['exp'] < time.time():
+        raise BadRequest('inavlid id_token')
+
+    # TODO: Get this value from the database
+    if data['hd'] != 'scu.edu':
+        raise BadRequest('inavlid id_token')
+
+    return {'jwt': create_jwt(identity=data['email'])}
 
 
 api.add_resource(Departments, '/departments')
