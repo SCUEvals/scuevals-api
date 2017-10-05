@@ -1,0 +1,21 @@
+#!/bin/bash
+
+export MAIN_DB=scuevals
+export TMP_DB=scuevals_new
+
+function delete_db () {
+    psql -d ${1} -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = '$1'
+  AND pid <> pg_backend_pid();" || true
+
+    dropdb ${1} || true
+}
+
+delete_db ${TMP_DB}
+
+heroku pg:pull DATABASE_URL ${TMP_DB} || exit 1
+
+delete_db ${MAIN_DB}
+
+psql -c "ALTER DATABASE $TMP_DB RENAME TO $MAIN_DB;"
