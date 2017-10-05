@@ -1,2 +1,8 @@
 #!/bin/bash
+if [ "${PWD##*/}" == "scripts" ]; then
+  cd ../db || exit 1
+else
+  cd db || exit 1
+fi
+
 cat $1 | mako-render > ${1%.*}
