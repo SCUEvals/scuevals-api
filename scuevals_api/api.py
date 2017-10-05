@@ -3,7 +3,7 @@ import logging
 import os
 import requests
 import time
-from flask import request
+from flask import request, jsonify
 from flask_jwt_simple import jwt_required, create_jwt
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
@@ -186,7 +186,7 @@ def auth(id_token):
     if request.headers['Content-Type'] != 'application/json':
         raise BadRequest('wrong mime type')
 
-    resp = requests.get('https://www.googleapis.com/oauth2/v3/tokeninfo', params={id_token: id_token})
+    resp = requests.get('https://www.googleapis.com/oauth2/v3/tokeninfo', params={'id_token': id_token})
 
     if resp.status_code != 200:
         raise BadRequest('failed to validate id_token with Google')
@@ -198,14 +198,16 @@ def auth(id_token):
     if data['aud'] != os.environ['GOOGLE_CLIENT_ID']:
         raise BadRequest('invalid id_token')
 
-    if data['exp'] < time.time():
+    if float(data['exp']) < time.time():
         raise BadRequest('inavlid id_token')
 
     # TODO: Get this value from the database
     if data['hd'] != 'scu.edu':
         raise BadRequest('inavlid id_token')
 
-    return {'jwt': create_jwt(identity=data['email'])}
+    jwt = create_jwt(identity=data['email'])
+
+    return jsonify({'jwt': jwt})
 
 
 api.add_resource(Departments, '/departments')
