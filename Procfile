@@ -1,1 +1,1 @@
-web: gunicorn scuevals_api:app
+web: gunicorn 'scuevals_api:create_app()'
