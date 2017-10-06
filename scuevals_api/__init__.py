@@ -1,6 +1,8 @@
 import datetime
 import os
 from flask import Flask
+
+from scuevals_api.errors import errors_bp
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
 
@@ -36,6 +38,7 @@ def register_extensions(app):
 def register_blueprints(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(resources_bp)
+    app.register_blueprint(errors_bp)
 
 
 def register_cli(app):

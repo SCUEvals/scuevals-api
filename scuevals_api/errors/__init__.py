@@ -1,1 +1,6 @@
-from .views import BadRequest, InternalServerError, Unauthorized  # noqa
+from .views import (  # noqa
+    errors_bp,
+    BadRequest,
+    InternalServerError,
+    Unauthorized
+)

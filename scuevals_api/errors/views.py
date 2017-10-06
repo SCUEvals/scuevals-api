@@ -27,9 +27,10 @@ class InternalServerError(Error):
     status_code = 500
 
 
-@errors_bp.errorhandler(Error)
-@errors_bp.errorhandler(BadRequest)
-@errors_bp.errorhandler(InternalServerError)
+@errors_bp.app_errorhandler(Error)
+@errors_bp.app_errorhandler(BadRequest)
+@errors_bp.app_errorhandler(InternalServerError)
+@errors_bp.app_errorhandler(Unauthorized)
 def handle_error(error):
     resp = jsonify(error.to_dict())
     resp.status_code = error.status_code
