@@ -2,7 +2,7 @@ import os
 import time
 import requests
 from flask import Blueprint, request, jsonify
-from flask_jwt_simple import create_jwt
+from flask_jwt_simple import create_jwt, decode_jwt
 from flask_restful import fields
 from webargs.flaskparser import use_kwargs
 from scuevals_api.errors import BadRequest
@@ -37,4 +37,14 @@ def auth(id_token):
 
     jwt = create_jwt(identity=data['email'])
 
+    return jsonify({'jwt': jwt})
+
+
+@auth_bp.route('/auth/validate', methods=['POST'])
+@use_kwargs({'jwt': fields.String()})
+def validate(jwt):
+    try:
+        decode_jwt(jwt)
+    except:
+        return BadRequest('invalid jwt')
     return jsonify({'jwt': jwt})
