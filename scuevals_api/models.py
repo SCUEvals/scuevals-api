@@ -1,5 +1,7 @@
-from scuevals_api import db
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
+
+db = SQLAlchemy()
 
 
 section_professor = db.Table('section_professor', db.metadata,

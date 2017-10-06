@@ -1,24 +1,28 @@
+import os
+
+import click
+from flask.cli import FlaskGroup
 from sqlalchemy import text
-from scuevals_api import app, db
+
+from scuevals_api import create_app
 from scuevals_api.models import University, School
 
 
-@app.cli.command(short_help='Initializes the DB.')
-def initdb():
+def init_db(app, db):
     import scuevals_api.models # noqa
     db.create_all()
     db.session.commit()
 
-    sql_files = ['db/functions/update_courses.sql', 'db/functions/update_departments.sql']
+    sql_files = ['functions/update_courses.sql', 'functions/update_departments.sql']
+    db_dir = os.path.join(os.path.dirname(app.root_path), 'db')
 
     for sfile in sql_files:
-        with open(sfile, 'r') as f:
+        with open(os.path.join(db_dir, sfile), 'r') as f:
             sql = f.read()
             db.engine.execute(text(sql))
 
 
-@app.cli.command(short_help='Seeds the DB.')
-def seeddb():
+def seed_db(db):
     scu = University(abbreviation='SCU', name='Santa Clara University')
 
     db.session.add(scu)
@@ -30,3 +34,8 @@ def seeddb():
     db.session.add(School(abbreviation='LAW', name='Law', university=scu))
 
     db.session.commit()
+
+
+@click.group(cls=FlaskGroup, create_app=create_app)
+def cli():
+    pass

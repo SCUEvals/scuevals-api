@@ -4,6 +4,11 @@ setup(
     name='scuevals-api',
     packages=['scuevals_api'],
     include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            'app=scuevals_api.cmd:cli'
+        ]
+    },
     install_requires=[
         'Flask-Cors==3.0.3',
         'Flask-JWT-Simple==0.0.3',

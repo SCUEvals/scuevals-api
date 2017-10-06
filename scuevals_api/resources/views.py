@@ -1,18 +1,17 @@
 import json
 import logging
-import os
-import requests
-import time
-from flask import request, jsonify
-from flask_jwt_simple import jwt_required, create_jwt
+from flask import Blueprint, request
+from flask_jwt_simple import jwt_required
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
-from webargs import fields, missing
+from webargs import missing
 from webargs.flaskparser import parser, use_kwargs
-from scuevals_api.exceptions import BadRequest
-from scuevals_api.models import Course, Quarter, Department, School, Section, Professor
-from scuevals_api import api, db, app
-from flask_restful import Resource, abort
+from scuevals_api.errors import BadRequest
+from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db
+from flask_restful import Resource, abort, Api, fields
+
+resources_bp = Blueprint('resources', __name__)
+api = Api(resources_bp)
 
 
 class Departments(Resource):
@@ -178,36 +177,6 @@ def handle_request_parsing_error(err):
     a JSON error response to the client.
     """
     abort(422, errors=err.messages)
-
-
-@app.route('/auth', methods=['POST'])
-@use_kwargs({'id_token': fields.String()})
-def auth(id_token):
-    if request.headers['Content-Type'] != 'application/json':
-        raise BadRequest('wrong mime type')
-
-    resp = requests.get('https://www.googleapis.com/oauth2/v3/tokeninfo', params={'id_token': id_token})
-
-    if resp.status_code != 200:
-        raise BadRequest('failed to validate id_token with Google')
-
-    data = resp.json()
-    if data['iss'] not in ('https://accounts.google.com', 'accounts.google.com'):
-        raise BadRequest('invalid id_token')
-
-    if data['aud'] != os.environ['GOOGLE_CLIENT_ID']:
-        raise BadRequest('invalid id_token')
-
-    if float(data['exp']) < time.time():
-        raise BadRequest('inavlid id_token')
-
-    # TODO: Get this value from the database
-    if data['hd'] != 'scu.edu':
-        raise BadRequest('inavlid id_token')
-
-    jwt = create_jwt(identity=data['email'])
-
-    return jsonify({'jwt': jwt})
 
 
 api.add_resource(Departments, '/departments')

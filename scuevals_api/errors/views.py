@@ -1,5 +1,7 @@
-from flask import jsonify
-from scuevals_api import app
+from flask import Blueprint, jsonify
+
+
+errors_bp = Blueprint('errors', __name__)
 
 
 class Error(Exception):
@@ -21,9 +23,9 @@ class InternalServerError(Error):
     status_code = 500
 
 
-@app.errorhandler(Error)
-@app.errorhandler(BadRequest)
-@app.errorhandler(InternalServerError)
+@errors_bp.errorhandler(Error)
+@errors_bp.errorhandler(BadRequest)
+@errors_bp.errorhandler(InternalServerError)
 def handle_error(error):
     resp = jsonify(error.to_dict())
     resp.status_code = error.status_code
