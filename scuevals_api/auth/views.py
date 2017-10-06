@@ -3,8 +3,8 @@ import time
 import requests
 from flask import Blueprint, request, jsonify
 from flask_jwt_simple import create_jwt, decode_jwt
-from flask_restful import fields
 from webargs.flaskparser import use_kwargs
+from webargs import missing, fields
 from scuevals_api.errors import BadRequest
 
 auth_bp = Blueprint('auth', __name__)
@@ -43,8 +43,11 @@ def auth(id_token):
 @auth_bp.route('/auth/validate', methods=['POST'])
 @use_kwargs({'jwt': fields.String()})
 def validate(jwt):
+    if jwt is missing:
+        raise BadRequest('missing jwt paramter')
+
     try:
         decode_jwt(jwt)
     except:
-        return BadRequest('invalid jwt')
+        raise BadRequest('invalid jwt')
     return jsonify({'jwt': jwt})

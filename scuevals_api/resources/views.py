@@ -4,11 +4,11 @@ from flask import Blueprint, request
 from flask_jwt_simple import jwt_required
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
-from webargs import missing
+from webargs import missing, fields
 from webargs.flaskparser import parser, use_kwargs
 from scuevals_api.errors import BadRequest
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db
-from flask_restful import Resource, abort, Api, fields
+from flask_restful import Resource, abort, Api
 
 resources_bp = Blueprint('resources', __name__)
 api = Api(resources_bp)
