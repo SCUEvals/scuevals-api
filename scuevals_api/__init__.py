@@ -2,9 +2,9 @@ import datetime
 import os
 from flask import Flask
 
-from scuevals_api.errors import errors_bp
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
+from scuevals_api.errors import errors_bp
 
 
 def create_app(config=None):
