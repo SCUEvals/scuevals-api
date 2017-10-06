@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_simple import create_jwt, decode_jwt
 from webargs.flaskparser import use_kwargs
 from webargs import missing, fields
-from scuevals_api.errors import BadRequest
+from scuevals_api.errors import BadRequest, Unauthorized
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -49,5 +49,5 @@ def validate(jwt):
     try:
         decode_jwt(jwt)
     except:
-        raise BadRequest('invalid jwt')
+        raise Unauthorized('invalid jwt')
     return jsonify({'jwt': jwt})

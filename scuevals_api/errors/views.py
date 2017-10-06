@@ -19,6 +19,10 @@ class BadRequest(Error):
     status_code = 400
 
 
+class Unauthorized(Error):
+    status_code = 401
+
+
 class InternalServerError(Error):
     status_code = 500
 

@@ -1,1 +1,1 @@
-from .views import BadRequest, InternalServerError  # noqa
+from .views import BadRequest, InternalServerError, Unauthorized  # noqa
