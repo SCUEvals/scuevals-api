@@ -30,7 +30,7 @@ class Student(db.Model):
     email = db.Column(db.Text, unique=True)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text)
-    graduation_year = db.Column(db.Integer, nullable=False)
+    graduation_year = db.Column(db.Integer)
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 
