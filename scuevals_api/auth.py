@@ -40,7 +40,7 @@ def auth(id_token):
     if data['hd'] != 'scu.edu':
         raise BadRequest('invalid id_token')
 
-    user = Student.query.filter_by(email=data['email']).one()
+    user = Student.query.filter_by(email=data['email']).one_or_none()
 
     if user is None:
         # new user
