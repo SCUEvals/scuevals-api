@@ -3,11 +3,15 @@ from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
 
 db = SQLAlchemy()
 
-
 section_professor = db.Table('section_professor', db.metadata,
                              db.Column('section_id', db.Integer, db.ForeignKey('sections.id')),
                              db.Column('professor_id', db.Integer, db.ForeignKey('professors.id')),
                              db.UniqueConstraint('section_id', 'professor_id'))
+
+student_major = db.Table('student_major', db.metadata,
+                         db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
+                         db.Column('major_id', db.Integer, db.ForeignKey('majors.id')),
+                         db.UniqueConstraint('student_id', 'major_id'))
 
 
 class University(db.Model):
@@ -21,6 +25,7 @@ class University(db.Model):
     professors = db.relationship('Professor', back_populates='university')
     schools = db.relationship('School', back_populates='university')
     quarters = db.relationship('Quarter', back_populates='university')
+    majors = db.relationship('Major', back_populates='university')
 
 
 class Student(db.Model):
@@ -36,6 +41,7 @@ class Student(db.Model):
 
     university = db.relationship('University', back_populates='students')
     evaluations = db.relationship('Evaluation', back_populates='student')
+    majors = db.relationship('Major', secondary=student_major, back_populates='students')
 
 
 class Professor(db.Model):
@@ -140,3 +146,14 @@ class Section(db.Model):
     evaluations = db.relationship('Evaluation', back_populates='section')
 
     __table_args__ = (db.UniqueConstraint('quarter_id', 'course_id'),)
+
+
+class Major(db.Model):
+    __tablename__ = 'majors'
+
+    id = db.Column(db.Integer, primary_key=True)
+    university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+    university = db.relationship('University', back_populates='majors')
+    students = db.relationship('Student', secondary=student_major, back_populates='majors')
