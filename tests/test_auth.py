@@ -15,5 +15,5 @@ class AuthTestCase(TestCase):
     def test_auth(self, data):
         rv = self.app.post('/auth', headers={'Content-Type': 'application/json'},
                            data=json.dumps({'id_token': data['id_token']}))
-
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn('Signature has expired', str(rv.data))
