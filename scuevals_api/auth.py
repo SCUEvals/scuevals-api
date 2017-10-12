@@ -90,8 +90,8 @@ def auth(id_token):
 
 @auth_bp.route('/auth/validate', methods=['POST'])
 @use_kwargs({'jwt': fields.String()})
-def validate(jwt):
-    if jwt is missing:
+def validate(token):
+    if token is missing:
         raise BadRequest('missing jwt paramter')
 
     try:
