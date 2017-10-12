@@ -70,6 +70,10 @@ def scrape_majors(args):
             continue
 
         major = regex.sub('', major).strip()
+
+        if major in all_majors:
+            continue
+
         print(major)
         all_majors.append(major)
 

@@ -7,7 +7,7 @@ from sqlalchemy.exc import DatabaseError
 from webargs import missing, fields
 from webargs.flaskparser import parser, use_kwargs
 from scuevals_api.errors import BadRequest
-from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db
+from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major
 from flask_restful import Resource, abort, Api
 
 resources_bp = Blueprint('resources', __name__)
@@ -101,6 +101,8 @@ class Courses(Resource):
             result = db.session.execute(sql, params)
             db.session.commit()
         except DatabaseError as e:
+            db.session.rollback()
+            db.session.remove()
             logging.error('failed to update courses: ' + str(e))
             return {'error': 'database error'}
 
@@ -171,6 +173,50 @@ class Search(Resource):
         }
 
 
+class Majors(Resource):
+    args = {'university_id': fields.Integer()}
+
+    @use_kwargs(args)
+    def get(self, university_id):
+        if university_id is missing:
+            raise BadRequest('missing university_id parameter')
+
+        majors = Major.query.all()
+
+        return [
+            {
+                'id': major.id,
+                'name': major.name
+            }
+            for major in majors
+        ]
+
+    @use_kwargs(args)
+    def post(self, university_id):
+        if request.headers['Content-Type'] != 'application/json':
+            raise BadRequest('wrong mime type')
+
+        if 'majors' not in request.json or not isinstance(request.json['majors'], list):
+            raise BadRequest('invalid json format')
+
+        if university_id is missing:
+            raise BadRequest('missing university_id parameter')
+
+        for major_name in request.json['majors']:
+            major = Major(university_id=university_id, name=major_name)
+            db.session.add(major)
+
+        try:
+            db.session.commit()
+        except DatabaseError as e:
+            db.session.rollback()
+            db.session.remove()
+            logging.error('failed to insert majors: ' + str(e))
+            return {'error': 'database error'}
+
+        return {'result': 'success'}
+
+
 @parser.error_handler
 def handle_request_parsing_error(err):
     """webargs error handler that uses Flask-RESTful's abort function to return
@@ -182,4 +228,5 @@ def handle_request_parsing_error(err):
 api.add_resource(Departments, '/departments')
 api.add_resource(Courses, '/courses')
 api.add_resource(Quarters, '/quarters')
+api.add_resource(Majors, '/majors')
 api.add_resource(Search, '/search')
