@@ -10,6 +10,7 @@ setup(
         ]
     },
     install_requires=[
+        'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
         'Flask-JWT-Simple==0.0.3',
         'Flask-Migrate==2.0.4',
@@ -18,7 +19,10 @@ setup(
         'Flask==0.12.2',
         'gunicorn==19.7.1',
         'psycopg2==2.7.1',
+        'python-jose==1.4.0',
+        'PyYAML==3.12',
         'requests==2.18.4',
-        'webargs==1.8.1'
+        'vcrpy==1.11.1',
+        'webargs==1.8.1',
     ],
 )

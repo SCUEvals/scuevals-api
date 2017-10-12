@@ -1,14 +1,17 @@
+import json
 import os
-import time
 import requests
 from flask import Blueprint, request, jsonify
+from flask_caching import Cache
 from flask_jwt_simple import create_jwt, decode_jwt
+from jose import jwt, JWTError
 from webargs.flaskparser import use_kwargs
 from webargs import missing, fields
 from scuevals_api.models import Student, db
 from scuevals_api.errors import BadRequest, Unauthorized
 
 auth_bp = Blueprint('auth', __name__)
+cache = Cache(config={'CACHE_TYPE': 'simple'})
 
 
 @auth_bp.route('/auth', methods=['POST'])
@@ -17,20 +20,27 @@ def auth(id_token):
     if request.headers['Content-Type'] != 'application/json':
         raise BadRequest('wrong mime type')
 
-    resp = requests.get('https://www.googleapis.com/oauth2/v3/tokeninfo', params={'id_token': id_token})
+    if id_token is missing:
+        raise BadRequest('missing id_token')
 
-    if resp.status_code != 200:
-        raise BadRequest('failed to validate id_token with Google')
+    headers = jwt.get_unverified_header(id_token)
 
-    data = resp.json()
-    if data['iss'] not in ('https://accounts.google.com', 'accounts.google.com'):
-        raise BadRequest('invalid id_token')
+    key = cache.get(headers['kid'])
+    if not key:
+        refresh_key_cache()
 
-    if data['aud'] != os.environ['GOOGLE_CLIENT_ID']:
-        raise BadRequest('invalid id_token')
+    key = cache.get(headers['kid'])
 
-    if float(data['exp']) < time.time():
-        raise BadRequest('invalid id_token')
+    try:
+        data = jwt.decode(
+            id_token,
+            json.dumps(key),
+            audience=os.environ['GOOGLE_CLIENT_ID'],
+            issuer=('https://accounts.google.com', 'accounts.google.com'),
+            options={'verify_at_hash': False}
+        )
+    except JWTError as e:
+        raise BadRequest('invalid id_token: {}'.format(e))
 
     # TODO: Get this value from the database
     # essentially, the only way to figure out which university
@@ -71,11 +81,11 @@ def auth(id_token):
         'last_name': user.last_name
     }
 
-    jwt = create_jwt(identity=ident)
+    token = create_jwt(identity=ident)
 
     db.session.commit()
 
-    return jsonify({'status': status, 'jwt': jwt})
+    return jsonify({'status': status, 'jwt': token})
 
 
 @auth_bp.route('/auth/validate', methods=['POST'])
@@ -89,3 +99,23 @@ def validate(jwt):
     except:
         raise Unauthorized('invalid jwt')
     return jsonify({'jwt': jwt})
+
+
+def refresh_key_cache():
+    jwks = get_certs()
+    for key in jwks['keys']:
+        cache.set(key['kid'], key)
+
+
+def get_certs():
+    resp = requests.get('https://accounts.google.com/.well-known/openid-configuration')
+    if resp.status_code != 200:
+        raise Exception('failed to get Google openid config')
+
+    certs_url = resp.json()['jwks_uri']
+
+    resp = requests.get(certs_url)
+    if resp.status_code != 200:
+        raise Exception('failed to get Google JWKs')
+
+    return resp.json()

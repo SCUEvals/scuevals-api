@@ -34,6 +34,9 @@ def register_extensions(app):
     from flask_jwt_simple import JWTManager
     JWTManager(app)
 
+    from scuevals_api.auth import cache
+    cache.init_app(app)
+
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp)

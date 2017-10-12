@@ -1,0 +1,75 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.18.4]
+    method: GET
+    uri: https://accounts.google.com/.well-known/openid-configuration
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAJbogC/5xTyw7bIBC8+yssn6sgpY9DPqM9VhUieO1sglnEgt206r8XY5w0qaM+brNmZhh2
+        19+rukHmCL451M0pBMcHIZTWFG3gXU/UG9hpGpo3ialiOJHHbyogWQm2dYQ2/EEpSNAs3ItxL2aQ
+        rQJdYNtimqaiVg55cSj6dyLLskFk8Gg7+lePt2JVZhsPI+n/fM+svUC2OU8XltHjX4fQ4AOXBOzI
+        MshwdcCSo3PkA7TJ6nNV142mNt9RerZAbOUv1Uypn+tHSob1K9nTgSULTVV/meNxPJ5Bh1fpXDwa
+        1Ct5tZGMvUXbS2V6OSoTt6QfP+3ff7hdo2nTP3212C6xYFBoFug8dWhuIR+3Sc5dlgOkZW23GmoQ
+        EolBewjSEYfSjofvR8X3d2mjcNiwUvH3aBnKMe1Yh7Aef3UL6NSA5iqtGspMexxT8nuNqqRJf+UC
+        TNpPU07vPIc6RF+KNKNb0jRTqU/KGLA9vG6CSy8q017HUP2ofgYAAP//0uQUFg8EAAA=
+    headers:
+      Accept-Ranges: [bytes]
+      Access-Control-Allow-Origin: ['*']
+      Age: ['2942']
+      Alt-Svc: ['quic=":443"; ma=2592000; v="39,38,37,35"']
+      Cache-Control: ['public, max-age=3600']
+      Content-Encoding: [gzip]
+      Content-Length: ['392']
+      Content-Type: [application/json]
+      Date: ['Thu, 12 Oct 2017 07:28:12 GMT']
+      Expires: ['Thu, 12 Oct 2017 08:28:12 GMT']
+      Last-Modified: ['Mon, 01 Feb 2016 19:53:44 GMT']
+      Server: [sffe]
+      Vary: [Accept-Encoding]
+      X-Content-Type-Options: [nosniff]
+      X-XSS-Protection: [1; mode=block]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.18.4]
+    method: GET
+    uri: https://www.googleapis.com/oauth2/v3/certs
+  response:
+    body: {string: "{\n \"keys\": [\n  {\n   \"kty\": \"RSA\",\n   \"alg\": \"RS256\",\n
+        \  \"use\": \"sig\",\n   \"kid\": \"0265b9c8bf5da1306d16bfc12ebba8afa101da74\",\n
+        \  \"n\": \"zCdNfzaHbLe-p7gO6Lev2EQ8cJAkIYlLPZF58fSpM34kjnr8kP0sjtaISoicjLAnxFkpAW6FRKc7iPsRil1eLA4PHcH8Lhidnfue-A4sryKyqnieJFjfKNpbvhIkv8rBhe3W17TfZXgzOFKF1EqUSxrZjN6X1vizot0eJJ4nS_kh4VhJJrtWDncq9DNlyKa4dAct_OIozga_sYoHDxeZCM8Rnm4J0qrNiPP32j08klBzYCQYSy5uXPPwRSJ6dResrCYsc9u0gBrVzONcKzBO8rrLgYlIAHWKkUEcu9842QChMbYgU_bkiwQIjKmxmOAf_4HvM6vyi8D0L1j818gZaw\",\n
+        \  \"e\": \"AQAB\"\n  },\n  {\n   \"kty\": \"RSA\",\n   \"alg\": \"RS256\",\n
+        \  \"use\": \"sig\",\n   \"kid\": \"c38355e7209e9f9909be85192288d0859654a295\",\n
+        \  \"n\": \"tyAs_guxShOI27EYf3GStSPTOZVxpcr5PHO9gbit_7i8J0R-Xkq6KANSxKsFXSleTDk7hx58VhW-e8sgZfC3dwhiv2nmWCBneolfMpv48OqwnSYZC-sgmd_149_lJ_uVX_jm4x3dOF_xm8JXhUXJXSYpaYMLbdDyk_yQZf5Sqk88x_x1s3ad7Y-YH1Sc49TcXzeCtBkhQ8v-aUWLE_TXmxQvyaAYEl6xBGV2ooKkLGIiPpUwy-fUy6vF2mk9FdbH6B57Kbtw4pIDudXiQT93NMAdgr18ZPrzJUkDLJw3LM7Yooxj8K6cay8A8s7Jt0bO1iPZAxz3lHioRl9P7PQJwQ\",\n
+        \  \"e\": \"AQAB\"\n  },\n  {\n   \"kty\": \"RSA\",\n   \"alg\": \"RS256\",\n
+        \  \"use\": \"sig\",\n   \"kid\": \"13e9c27ac13249dc6b669017df7cb6171acb05fe\",\n
+        \  \"n\": \"0NZbxSRpD96aQ7zEouhZr6hwrynnuuQrcs8Mvoi4jn60x00yByqEDf6RfDxcQCNdylXyM-nN99m1zzBsm9112Fo4cEGZnf2AGBqZcNrCY7pndvwcALI_TUvwKkGXeY8M_8ALXcErfVhbi1YBrncAM7fbupS2n1Y-36vRJBahkDm9aZHUF1XV7AVM-TV0bzL2HTWw-uqwi78bcPsKJfx8UNa1qOBYd_Dj-wTlAHKtNBnA3s2MMSnP8_PmY-dGvmX2dadv20wuNWajeYkXbiuHXIZJvRkM2vUwo5LIRKGyNNRuhQKrh3zWTL6BIJaRz5vYr4SWdzvvvACkULIQectK5Q\",\n
+        \  \"e\": \"AQAB\"\n  },\n  {\n   \"kty\": \"RSA\",\n   \"alg\": \"RS256\",\n
+        \  \"use\": \"sig\",\n   \"kid\": \"3f99525cc3a33e3c2b5dcf9a21f4d82d371be767\",\n
+        \  \"n\": \"udDXYwIANUQq-peeCep5MF3Ro73g7ecvnWWL0Gp2lCYMJ01j8A23U8o3Xk1hlN4on944TfzjgVz64brZByi6HpRhwdnRAMsymXwGcd6_LHeUTY0GcYWWQZhP5xgpS0hHcVE_ThA1-AgmDm10sJskfxFYFHehFoCl2nB9UywmtlCEzYi3j60f7KxdHrsESNR_lgvl7lUxfZ44xL46GF57Nwpp1znTLswaorBJLPxeUvDYZNQ2sinHzi0zB1TL2Fr2O6tmzpldEEFt_d8CWE7LQuJQl2vFyo1ggYw4JG8Hq3ysoIjgw20yoaHTS5FWI4nteWNVAaqotKaEnqv-Jr44bw\",\n
+        \  \"e\": \"AQAB\"\n  }\n ]\n}\n"}
+    headers:
+      Age: ['162']
+      Alt-Svc: ['quic=":443"; ma=2592000; v="39,38,37,35"']
+      Cache-Control: ['public, max-age=20402, must-revalidate, no-transform']
+      Content-Length: ['1957']
+      Content-Type: [application/json; charset=UTF-8]
+      Date: ['Thu, 12 Oct 2017 08:14:32 GMT']
+      Expires: ['Thu, 12 Oct 2017 13:54:34 GMT']
+      Server: [GSE]
+      Vary: [Origin, X-Origin]
+      X-Content-Type-Options: [nosniff]
+      X-Frame-Options: [SAMEORIGIN]
+      X-XSS-Protection: [1; mode=block]
+    status: {code: 200, message: OK}
+version: 1
