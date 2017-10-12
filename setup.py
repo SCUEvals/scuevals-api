@@ -10,6 +10,7 @@ setup(
         ]
     },
     install_requires=[
+        'beautifulsoup4==4.6.0',
         'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
         'Flask-JWT-Simple==0.0.3',

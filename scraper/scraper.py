@@ -1,7 +1,10 @@
 import requests
 import argparse
+import re
+from bs4 import BeautifulSoup
 
-SCU_URL = 'https://www.scu.edu/apps/ws/courseavail/'
+SCU_URL = 'https://www.scu.edu/'
+SCU_API_URL = SCU_URL + 'apps/ws/courseavail/'
 
 
 def main():
@@ -17,13 +20,16 @@ def main():
     deps_parser = subparsers.add_parser('departments')
     deps_parser.set_defaults(func=scrape_departments)
 
+    majors_parser = subparsers.add_parser('majors')
+    majors_parser.set_defaults(func=scrape_majors)
+
     args = parser.parse_args()
 
     args.func(args)
 
 
 def scrape_departments(args):
-    resp = requests.get(SCU_URL + 'autocomplete/departments')
+    resp = requests.get(SCU_API_URL + 'autocomplete/departments')
     if not resp.status_code == 200:
         raise Exception('Non-OK status code: ' + str(resp.status_code))
 
@@ -37,12 +43,43 @@ def scrape_courses(args):
 
     for dep in deps:
         params = {'dept': dep['abbr'], 'school': dep['school']}
-        resp = requests.post(SCU_URL + 'search/{}/ugrad'.format(args.quarter_id), data=params)
+        resp = requests.post(SCU_API_URL + 'search/{}/ugrad'.format(args.quarter_id), data=params)
         if not resp.status_code == 200:
             raise Exception('Non-OK status code: ' + str(resp.status_code))
 
         courses = {'courses': resp.json()['results']}
         post(args.api + '/courses', courses)
+
+
+def scrape_majors(args):
+    resp = requests.get(SCU_URL + 'academics/undergraduate-programs/')
+    if not resp.status_code == 200:
+        raise Exception('Non-OK status code: ' + str(resp.status_code))
+
+    soup = BeautifulSoup(resp.text, 'html.parser')
+    elements = soup.select_one('.intro').parent.select('li a')
+
+    exclusions = ['Modern Languages and Literatures']
+    all_majors = []
+
+    regex = re.compile(r'\(.+\)')
+
+    for element in elements:
+        major = element.string
+        if major is None or major in exclusions:
+            continue
+
+        major = regex.sub('', major).strip()
+        print(major)
+        all_majors.append(major)
+
+    confirm = input('\nDo you want to submit these majors to the API? (Y/n): ')
+
+    if confirm != 'Y':
+        return
+
+    majors = {'majors': all_majors}
+    post(args.api + '/majors', majors)
 
 
 def get(api):
