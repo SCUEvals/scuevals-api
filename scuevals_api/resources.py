@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 from flask import Blueprint, request
 from flask_jwt_simple import jwt_required, get_jwt_identity
 from sqlalchemy import text, func
@@ -236,8 +237,18 @@ class Students(Resource):
 
         data = request.get_json()
 
+        if not (datetime.now().year <= data['graduation_year'] <= datetime.now().year + 10):
+            raise BadRequest('graduation year out of bounds')
+
         student.graduation_year = data['graduation_year']
+
+        if not data['gender'] in ('m', 'f', 'o'):
+            raise BadRequest('invalid gender')
+
         student.gender = data['gender']
+
+        if not (0 < len(data['majors']) <= 3):
+            raise BadRequest('number of majors out of bounds')
 
         try:
             student.majors_list = data['majors']
