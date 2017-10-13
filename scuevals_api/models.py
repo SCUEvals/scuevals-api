@@ -32,7 +32,7 @@ class Student(db.Model):
     __tablename__ = 'students'
 
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.Text, unique=True)
+    email = db.Column(db.Text, unique=True, nullable=False)
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text)
     graduation_year = db.Column(db.Integer)
