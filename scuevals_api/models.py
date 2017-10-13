@@ -46,6 +46,25 @@ class Student(db.Model):
 
     __table_args__ = (db.CheckConstraint(gender.in_(['m', 'f', 'o'])),)
 
+    def _get_majors(self):
+        return [major.id for major in self.majors]
+
+    def _set_majors(self, value):
+        while self.majors:
+            del self.majors[0]
+
+        for major_id in value:
+            major = Major.query.get(major_id)
+            if major is None:
+                raise ValueError('major does not exist: {}'.format(major_id))
+
+            self.majors.append(major)
+
+    majors_list = property(_get_majors,
+                           _set_majors,
+                           None,
+                           'Property majors_list is a simple wrapper for majors relation')
+
 
 class Professor(db.Model):
     __tablename__ = 'professors'
