@@ -1,6 +1,6 @@
 from flask import json
 from helper import TestCase
-from models import db, Major
+from models import db, Major, Student
 
 
 class StudentsTestCase(TestCase):
@@ -28,3 +28,9 @@ class StudentsTestCase(TestCase):
         rv = self.app.patch('/students/0', headers=headers, data=json.dumps(data))
 
         self.assertEqual(rv.status_code, 200)
+
+        with self.appx.app_context():
+            student = Student.query.get(0)
+            self.assertEqual(student.graduation_year, data['graduation_year'])
+            self.assertEqual(student.gender, data['gender'])
+            self.assertEqual(student.majors_list, data['majors'])
