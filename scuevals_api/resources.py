@@ -255,6 +255,8 @@ class Students(Resource):
         except ValueError:
             raise BadRequest('invalid major(s) specified')
 
+        db.session.commit()
+
         return {'result': 'success'}
 
 
