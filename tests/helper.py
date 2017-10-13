@@ -2,8 +2,9 @@ import unittest
 import os
 import yaml
 from functools import wraps
+from flask_jwt_simple import create_jwt
 from cmd import init_db, seed_db
-from models import db
+from models import db, Student
 from scuevals_api import create_app
 
 
@@ -15,9 +16,30 @@ class TestCase(unittest.TestCase):
         self.appx = app
         self.app = app.test_client()
 
+        student = Student(
+            id=0,
+            email='jdoe@scu.edu',
+            first_name='John',
+            last_name='Doe',
+            university_id=1
+        )
+
+        ident = {
+            'id': student.id,
+            'email': student.email,
+            'first_name': student.first_name,
+            'last_name': student.last_name
+        }
+
         with app.app_context():
+            db.drop_all()
             init_db(app, db)
             seed_db(db)
+
+            db.session.add(student)
+            db.session.commit()
+
+            self.jwt = create_jwt(identity=ident)
 
     def tearDown(self):
         with self.appx.app_context():
