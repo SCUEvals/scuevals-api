@@ -36,12 +36,15 @@ class Student(db.Model):
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text)
     graduation_year = db.Column(db.Integer)
+    gender = db.Column(db.String(1))
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 
     university = db.relationship('University', back_populates='students')
     evaluations = db.relationship('Evaluation', back_populates='student')
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
+
+    __table_args__ = (db.CheckConstraint(gender.in_(['m', 'f', 'o'])),)
 
 
 class Professor(db.Model):
