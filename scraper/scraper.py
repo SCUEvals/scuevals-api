@@ -111,7 +111,10 @@ def post(api, data):
     if 'error' in json:
         raise Exception('Error: ' + json['error'])
 
-    print('Updated {} records.'.format(json['updated_count']))
+    if 'updated_count' in json:
+        print('Updated {} records.'.format(json['updated_count']))
+    else:
+        print('Success')
 
 
 main()
