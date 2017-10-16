@@ -67,6 +67,10 @@ def auth(id_token):
         db.session.add(user)
         db.session.flush()
     else:
+        # update the image of the existing user
+        if 'picture' in data:
+            user.picture = data['picture']
+
         # check if user is complete
         if user.graduation_year is None or user.gender is None or len(user.majors_list) == 0:
             status = 'incomplete'
