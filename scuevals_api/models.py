@@ -61,6 +61,19 @@ class Student(db.Model):
 
             self.majors.append(major)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'university_id': self.university_id,
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'gender': self.gender,
+            'picture': self.picture,
+            'graduation_year': self.graduation_year,
+            'majors': self.majors_list
+        }
+
     majors_list = property(_get_majors,
                            _set_majors,
                            None,

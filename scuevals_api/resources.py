@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from flask import Blueprint, request
-from flask_jwt_simple import jwt_required, get_jwt_identity
+from flask_jwt_simple import jwt_required, get_jwt_identity, create_jwt
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from webargs import missing, fields
@@ -257,7 +257,13 @@ class Students(Resource):
 
         db.session.commit()
 
-        return {'result': 'success'}
+        ident = student.to_dict()
+        ident['status'] = 'ok'
+
+        return {
+            'result': 'success',
+            'jwt': create_jwt(identity=ident)
+        }
 
 
 @parser.error_handler

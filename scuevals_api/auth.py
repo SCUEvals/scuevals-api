@@ -68,19 +68,15 @@ def auth(id_token):
         db.session.flush()
     else:
         # check if user is complete
-        if user.graduation_year is None:
+        if user.graduation_year is None or user.gender is None or len(user.majors_list) == 0:
             status = 'incomplete'
             user.first_name = data['given_name']
             user.last_name = data['family_name']
         else:
             status = 'ok'
 
-    ident = {
-        'id': user.id,
-        'email': user.email,
-        'first_name': user.first_name,
-        'last_name': user.last_name
-    }
+    ident = user.to_dict()
+    ident['status'] = status
 
     token = create_jwt(identity=ident)
 
@@ -96,10 +92,13 @@ def validate(jwt):
         raise BadRequest('missing jwt paramter')
 
     try:
-        decode_jwt(jwt)
+        data = decode_jwt(jwt)
     except:
         raise Unauthorized('invalid jwt')
-    return jsonify({'jwt': jwt})
+
+    new_token = create_jwt(identity=data['sub'])
+
+    return jsonify({'jwt': new_token})
 
 
 def refresh_key_cache():
