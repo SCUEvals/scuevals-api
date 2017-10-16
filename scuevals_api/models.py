@@ -37,6 +37,7 @@ class Student(db.Model):
     last_name = db.Column(db.Text)
     graduation_year = db.Column(db.Integer)
     gender = db.Column(db.String(1))
+    picture = db.Column(db.Text)
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 

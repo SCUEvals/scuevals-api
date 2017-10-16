@@ -60,6 +60,7 @@ def auth(id_token):
             email=data['email'],
             first_name=data['given_name'],
             last_name=data['family_name'],
+            picture=data['picture'] if 'picture' in data else None,
             university_id=1
         )
 
