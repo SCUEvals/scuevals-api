@@ -129,14 +129,16 @@ class Quarters(Resource):
 
 
 class Search(Resource):
-    args = {'university_id': fields.Integer(), 'q': fields.String(), 'limit': fields.Integer()}
+    args = {'q': fields.String(), 'limit': fields.Integer()}
 
     @jwt_required
     @role_required
     @use_kwargs(args)
-    def get(self, university_id, q, limit):
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
+    def get(self, q, limit):
+        jwt_data = get_jwt_identity()
+
+        if 'university_id' not in jwt_data:
+            raise BadRequest('malformed jwt')
 
         if q is missing:
             raise BadRequest('missing q parameter')
@@ -147,7 +149,9 @@ class Search(Resource):
         # strip any characters that would cause matching issues
         q = q.replace(',', '')
 
-        courses = Course.query.join(Course.department).filter(
+        courses = Course.query.join(Course.department, Department.school).filter(
+            School.university_id == jwt_data['university_id']
+        ).filter(
             func.concat(Department.abbreviation, ' ', Course.number, ' ', Course.title).ilike('%{}%'.format(q))
         ).limit(limit).all()
 
