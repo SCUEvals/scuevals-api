@@ -26,7 +26,6 @@ class StudentsTestCase(TestCase):
         }
 
         rv = self.app.patch('/students/0', headers=headers, data=json.dumps(data))
-
         self.assertEqual(rv.status_code, 200)
 
         with self.appx.app_context():

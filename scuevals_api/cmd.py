@@ -5,7 +5,7 @@ from flask.cli import FlaskGroup
 from sqlalchemy import text
 
 from scuevals_api import create_app
-from scuevals_api.models import University, School
+from scuevals_api.models import University, School, Role
 
 
 def init_db(app, db):
@@ -32,6 +32,10 @@ def seed_db(db):
     db.session.add(School(abbreviation='UNV', name='Generic', university=scu))
     db.session.add(School(abbreviation='CPE', name='Education and Counseling Psychology', university=scu))
     db.session.add(School(abbreviation='LAW', name='Law', university=scu))
+
+    db.session.add(Role(id=0, name='Incomplete'))
+    db.session.add(Role(id=1, name='Student'))
+    db.session.add(Role(id=2, name='Administrator'))
 
     db.session.commit()
 

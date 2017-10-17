@@ -13,6 +13,11 @@ student_major = db.Table('student_major', db.metadata,
                          db.Column('major_id', db.Integer, db.ForeignKey('majors.id')),
                          db.UniqueConstraint('student_id', 'major_id'))
 
+student_role = db.Table('student_role', db.metadata,
+                        db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
+                        db.Column('role_id', db.Integer, db.ForeignKey('roles.id')),
+                        db.UniqueConstraint('student_id', 'role_id'))
+
 
 class University(db.Model):
     __tablename__ = 'universities'
@@ -44,6 +49,7 @@ class Student(db.Model):
     university = db.relationship('University', back_populates='students')
     evaluations = db.relationship('Evaluation', back_populates='student')
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
+    roles = db.relationship('Role', secondary=student_role, back_populates='students')
 
     __table_args__ = (db.CheckConstraint(gender.in_(['m', 'f', 'o'])),)
 
@@ -61,6 +67,20 @@ class Student(db.Model):
 
             self.majors.append(major)
 
+    def _get_roles(self):
+        return [role.id for role in self.roles]
+
+    def _set_roles(self, value):
+        while self.roles:
+            del self.roles[0]
+
+        for role_id in value:
+            role = Role.query.get(role_id)
+            if role is None:
+                raise ValueError('role does not exist: {}'.format(role_id))
+
+            self.majors.append(role)
+
     def to_dict(self):
         student = {
             'id': self.id,
@@ -71,7 +91,8 @@ class Student(db.Model):
             'gender': self.gender,
             'picture': self.picture,
             'graduation_year': self.graduation_year,
-            'majors': self.majors_list
+            'majors': self.majors_list,
+            'roles': self.roles_list
         }
 
         return {k: v for k, v in student.items() if v is not None}
@@ -80,6 +101,11 @@ class Student(db.Model):
                            _set_majors,
                            None,
                            'Property majors_list is a simple wrapper for majors relation')
+
+    roles_list = property(_get_roles,
+                          _set_roles,
+                          None,
+                          'Property roles_list is a simple wrapper for roles relation')
 
 
 class Professor(db.Model):
@@ -195,3 +221,16 @@ class Major(db.Model):
 
     university = db.relationship('University', back_populates='majors')
     students = db.relationship('Student', secondary=student_major, back_populates='majors')
+
+
+class Role(db.Model):
+    Incomplete = 0
+    Student = 1
+    Administrator = 10
+
+    __tablename__ = 'roles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+
+    students = db.relationship('Student', secondary=student_role, back_populates='roles')

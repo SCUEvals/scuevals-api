@@ -7,7 +7,8 @@ from flask_jwt_simple import create_jwt, decode_jwt
 from jose import jwt, JWTError
 from webargs.flaskparser import use_kwargs
 from webargs import missing, fields
-from scuevals_api.models import Student, db
+
+from scuevals_api.models import Student, db, Role
 from scuevals_api.errors import BadRequest, Unauthorized
 
 auth_bp = Blueprint('auth', __name__)
@@ -61,6 +62,7 @@ def auth(id_token):
             first_name=data['given_name'],
             last_name=data['family_name'],
             picture=data['picture'] if 'picture' in data else None,
+            roles=[Role.query.get(Role.Incomplete)],
             university_id=1
         )
 
@@ -72,15 +74,12 @@ def auth(id_token):
             user.picture = data['picture']
 
         # check if user is complete
-        if user.graduation_year is None or user.gender is None or len(user.majors_list) == 0:
+        if Role.Incomplete in user.roles_list:
             status = 'incomplete'
-            user.first_name = data['given_name']
-            user.last_name = data['family_name']
         else:
             status = 'ok'
 
     ident = user.to_dict()
-    ident['status'] = status
 
     token = create_jwt(identity=ident)
 

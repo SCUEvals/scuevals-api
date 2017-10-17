@@ -7,8 +7,9 @@ from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from webargs import missing, fields
 from webargs.flaskparser import parser, use_kwargs
+from scuevals_api.roles import role_required
 from scuevals_api.errors import BadRequest, Unauthorized, InternalServerError
-from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student
+from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role
 from flask_restful import Resource, abort, Api
 
 resources_bp = Blueprint('resources', __name__)
@@ -131,6 +132,7 @@ class Search(Resource):
     args = {'university_id': fields.Integer(), 'q': fields.String(), 'limit': fields.Integer()}
 
     @jwt_required
+    @role_required
     @use_kwargs(args)
     def get(self, university_id, q, limit):
         if university_id is missing:
@@ -223,6 +225,7 @@ class Majors(Resource):
 
 class Students(Resource):
     @jwt_required
+    @role_required(Role.Incomplete)
     def patch(self, s_id):
         user = get_jwt_identity()
         if user['id'] != s_id:
@@ -255,10 +258,14 @@ class Students(Resource):
         except ValueError:
             raise BadRequest('invalid major(s) specified')
 
+        inc = Role.query.get(Role.Incomplete)
+        if inc in student.roles:
+            student.roles.remove(inc)
+            student.roles.add(Role.query.get(Role.Student))
+
         db.session.commit()
 
         ident = student.to_dict()
-        ident['status'] = 'ok'
 
         return {
             'result': 'success',

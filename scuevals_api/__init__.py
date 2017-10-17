@@ -2,6 +2,7 @@ import datetime
 import os
 from flask import Flask
 
+from scuevals_api.models import Role
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
 from scuevals_api.errors import errors_bp
@@ -13,6 +14,7 @@ def create_app(config=None):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
     app.config['JWT_EXPIRES'] = datetime.timedelta(days=30)
+    app.config['DEFAULT_ROLE'] = Role.Student
 
     register_extensions(app)
     register_blueprints(app)
