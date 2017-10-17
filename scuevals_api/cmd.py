@@ -23,7 +23,7 @@ def init_db(app, db):
 
 
 def seed_db(db):
-    scu = University(abbreviation='SCU', name='Santa Clara University')
+    scu = University(id=1, abbreviation='SCU', name='Santa Clara University')
 
     db.session.add(scu)
     db.session.add(School(abbreviation='BUS', name='Business', university=scu))
