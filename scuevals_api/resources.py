@@ -5,10 +5,11 @@ from flask import Blueprint, request
 from flask_jwt_simple import jwt_required, get_jwt_identity, create_jwt
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
-from webargs import missing, fields
-from webargs.flaskparser import parser, use_kwargs
+from webargs import missing
+from marshmallow import fields, validate
+from webargs.flaskparser import parser, use_kwargs, use_args
 from scuevals_api.roles import role_required
-from scuevals_api.errors import BadRequest, Unauthorized, InternalServerError
+from scuevals_api.errors import BadRequest, Unauthorized, InternalServerError, UnprocessableEntity
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role
 from flask_restful import Resource, abort, Api
 
@@ -227,10 +228,21 @@ class Majors(Resource):
         return {'result': 'success'}
 
 
+def year_in_range(year):
+    return datetime.now().year <= year <= datetime.now().year + 10
+
+
 class Students(Resource):
+    args = {
+        'graduation_year': fields.Int(required=True, validate=year_in_range),
+        'gender': fields.Str(required=True, validate=validate.OneOf(['m', 'f', 'o'])),
+        'majors': fields.List(fields.Int(), required=True, validate=validate.Length(1, 3)),
+    }
+
     @jwt_required
     @role_required(Role.Incomplete)
-    def patch(self, s_id):
+    @use_args(args, locations=('json',))
+    def patch(self, args, s_id):
         user = get_jwt_identity()
         if user['id'] != s_id:
             raise Unauthorized('you do not have the rights to modify another student')
@@ -239,28 +251,13 @@ class Students(Resource):
         if student is None:
             raise InternalServerError('user does not exist')
 
-        if request.headers['Content-Type'] != 'application/json':
-            raise BadRequest('wrong mime type')
-
-        data = request.get_json()
-
-        if not (datetime.now().year <= data['graduation_year'] <= datetime.now().year + 10):
-            raise BadRequest('graduation year out of bounds')
-
-        student.graduation_year = data['graduation_year']
-
-        if not data['gender'] in ('m', 'f', 'o'):
-            raise BadRequest('invalid gender')
-
-        student.gender = data['gender']
-
-        if not (0 < len(data['majors']) <= 3):
-            raise BadRequest('number of majors out of bounds')
+        student.graduation_year = args['graduation_year']
+        student.gender = args['gender']
 
         try:
-            student.majors_list = data['majors']
+            student.majors_list = args['majors']
         except ValueError:
-            raise BadRequest('invalid major(s) specified')
+            raise UnprocessableEntity('invalid major(s) specified')
 
         inc = Role.query.get(Role.Incomplete)
         if inc in student.roles:

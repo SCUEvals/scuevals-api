@@ -23,6 +23,10 @@ class Unauthorized(Error):
     status_code = 401
 
 
+class UnprocessableEntity(Error):
+    status_code = 422
+
+
 class InternalServerError(Error):
     status_code = 500
 
