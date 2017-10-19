@@ -13,7 +13,7 @@ setup(
         'beautifulsoup4==4.6.0',
         'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
-        'Flask-JWT-Simple==0.0.3',
+        'Flask-JWT-Extended==3.3.1',
         'Flask-Migrate==2.0.4',
         'Flask-RESTful==0.3.6',
         'Flask-SQLAlchemy==2.2',

@@ -2,7 +2,7 @@ import unittest
 import os
 import yaml
 from functools import wraps
-from flask_jwt_simple import create_jwt
+from flask_jwt_extended import create_access_token
 from cmd import init_db, seed_db
 from models import db, Student, Role
 from scuevals_api import create_app
@@ -35,7 +35,7 @@ class TestCase(unittest.TestCase):
             db.session.add(student)
             db.session.commit()
 
-            self.jwt = create_jwt(identity=ident)
+            self.jwt = create_access_token(identity=ident)
 
     def tearDown(self):
         with self.appx.app_context():

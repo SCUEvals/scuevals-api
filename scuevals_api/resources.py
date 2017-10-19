@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from flask import Blueprint, request
-from flask_jwt_simple import jwt_required, get_jwt_identity, create_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from webargs import missing
@@ -270,7 +270,7 @@ class Students(Resource):
 
         return {
             'result': 'success',
-            'jwt': create_jwt(identity=ident)
+            'jwt': create_access_token(identity=ident)
         }
 
 

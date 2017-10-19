@@ -1,14 +1,16 @@
 import json
 import os
+import datetime
 import requests
 from flask import Blueprint, request, jsonify
 from flask_caching import Cache
-from flask_jwt_simple import create_jwt, decode_jwt
+from flask_jwt_extended import create_access_token, decode_token
 from jose import jwt, JWTError
+from marshmallow import fields
 from webargs.flaskparser import use_kwargs
-from webargs import missing, fields
+from webargs import missing
 
-from scuevals_api.models import Student, db, Role
+from scuevals_api.models import Student, db, Role, APIKey
 from scuevals_api.errors import BadRequest, Unauthorized
 
 auth_bp = Blueprint('auth', __name__)
@@ -81,7 +83,7 @@ def auth(id_token):
 
     ident = user.to_dict()
 
-    token = create_jwt(identity=ident)
+    token = create_access_token(identity=ident)
 
     db.session.commit()
 
@@ -89,19 +91,34 @@ def auth(id_token):
 
 
 @auth_bp.route('/auth/validate', methods=['POST'])
-@use_kwargs({'jwt': fields.String()})
+@use_kwargs({'jwt': fields.String(required=True)})
 def validate(jwt):
-    if jwt is missing:
-        raise BadRequest('missing jwt paramter')
-
     try:
-        data = decode_jwt(jwt)
+        data = decode_token(jwt)
     except:
         raise Unauthorized('invalid jwt')
 
-    new_token = create_jwt(identity=data['sub'])
+    new_token = create_access_token(identity=data['sub'])
 
     return jsonify({'jwt': new_token})
+
+
+@auth_bp.route('/auth/api', methods=['POST'])
+@use_kwargs({'api_key': fields.String(required=True)})
+def auth_api(api_key):
+    key = APIKey.query.filter(APIKey.key == api_key).one_or_none()
+
+    if key is None:
+        raise Unauthorized('invalid api key')
+
+    ident = {
+        'university_id': key.university_id,
+        'roles': [20]
+    }
+
+    token = create_access_token(identity=ident, expires_delta=datetime.timedelta(hours=24))
+
+    return jsonify({'jwt': token})
 
 
 def refresh_key_cache():

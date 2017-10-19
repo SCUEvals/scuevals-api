@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
 
 db = SQLAlchemy()
@@ -31,6 +32,7 @@ class University(db.Model):
     schools = db.relationship('School', back_populates='university')
     quarters = db.relationship('Quarter', back_populates='university')
     majors = db.relationship('Major', back_populates='university')
+    api_keys = db.relationship('APIKey', back_populates='university')
 
 
 class Student(db.Model):
@@ -234,3 +236,14 @@ class Role(db.Model):
     name = db.Column(db.Text, nullable=False, unique=True)
 
     students = db.relationship('Student', secondary=student_role, back_populates='roles')
+
+
+class APIKey(db.Model):
+    __tablename__ = 'api_keys'
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.Text, nullable=False, unique=True)
+    issued_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+    university_id = db.Column('university_id', db.Integer, db.ForeignKey('universities.id'), nullable=False)
+
+    university = db.relationship('University', back_populates='api_keys')

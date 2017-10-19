@@ -13,7 +13,8 @@ def create_app(config=None):
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
-    app.config['JWT_EXPIRES'] = datetime.timedelta(days=30)
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+    app.config['JWT_IDENTITY_CLAIM'] = 'sub'
     app.config['DEFAULT_ROLE'] = Role.Student
 
     register_extensions(app)
@@ -33,7 +34,7 @@ def register_extensions(app):
     from flask_cors import CORS
     CORS(app)
 
-    from flask_jwt_simple import JWTManager
+    from flask_jwt_extended import JWTManager
     JWTManager(app)
 
     from scuevals_api.auth import cache

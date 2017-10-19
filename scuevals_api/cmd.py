@@ -35,7 +35,8 @@ def seed_db(db):
 
     db.session.add(Role(id=0, name='Incomplete'))
     db.session.add(Role(id=1, name='Student'))
-    db.session.add(Role(id=2, name='Administrator'))
+    db.session.add(Role(id=10, name='Administrator'))
+    db.session.add(Role(id=20, name='API Key'))
 
     db.session.commit()
 
