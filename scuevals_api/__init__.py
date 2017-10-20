@@ -9,11 +9,15 @@ from scuevals_api.errors import errors_bp
 
 def create_app(config=None):
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
-    app.config['JWT_IDENTITY_CLAIM'] = 'sub'
+
+    if config is not None:
+        app.config.from_object(config)
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
+        app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+        app.config['JWT_IDENTITY_CLAIM'] = 'sub'
 
     register_extensions(app)
     register_blueprints(app)
