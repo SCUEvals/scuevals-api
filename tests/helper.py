@@ -12,8 +12,8 @@ from scuevals_api import create_app
 class TestCase(unittest.TestCase):
     def setUp(self):
         app = create_app()
-        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['TEST_DATABASE_URL']
         app.testing = True
+
         self.appx = app
         self.app = app.test_client()
 

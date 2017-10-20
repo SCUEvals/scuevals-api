@@ -1,4 +1,3 @@
-import datetime
 import os
 from flask import Flask
 
@@ -7,17 +6,18 @@ from scuevals_api.resources import resources_bp
 from scuevals_api.errors import errors_bp
 
 
-def create_app(config=None):
+def create_app(config_object=None):
     app = Flask(__name__)
+    load_config(app, 'default')
 
-    if config is not None:
-        app.config.from_object(config)
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
-        app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
-        app.config['JWT_IDENTITY_CLAIM'] = 'sub'
+    if 'FLASK_CONFIG' in os.environ:
+        try:
+            load_config(app, os.environ['FLASK_CONFIG'])
+        except IOError:
+            raise Exception('invalid config specified')
+
+    if config_object is not None:
+        app.config.from_object(config_object)
 
     register_extensions(app)
     register_blueprints(app)
@@ -59,3 +59,8 @@ def register_cli(app):
     def seeddb():
         from scuevals_api.cmd import seed_db
         seed_db(db)
+
+
+def load_config(app, config):
+    config_dir = os.path.join(os.path.dirname(app.root_path), 'config')
+    app.config.from_pyfile(os.path.join(config_dir, config + '.py'))
