@@ -4,7 +4,7 @@ from jose import jwt
 from json import JSONDecodeError
 from vcr import VCR
 from helper import TestCase, use_data
-from models import db, APIKey
+from scuevals_api.models import db, APIKey
 
 vcr = VCR(
     cassette_library_dir='fixtures/cassettes',

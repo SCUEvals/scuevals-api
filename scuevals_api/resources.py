@@ -1,15 +1,14 @@
 import json
 import logging
 from datetime import datetime
-from flask import Blueprint, request
+from flask import Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
-from webargs import missing
 from marshmallow import fields, validate
-from webargs.flaskparser import parser, use_kwargs, use_args
+from webargs.flaskparser import parser, use_args
 from scuevals_api.roles import role_required
-from scuevals_api.errors import BadRequest, Unauthorized, InternalServerError, UnprocessableEntity
+from scuevals_api.errors import Unauthorized, InternalServerError, UnprocessableEntity
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role
 from flask_restful import Resource, abort, Api
 
@@ -18,14 +17,15 @@ api = Api(resources_bp)
 
 
 class Departments(Resource):
-    args = {'university_id': fields.Integer()}
 
-    @use_kwargs(args)
-    def get(self, university_id):
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
+    @jwt_required
+    @role_required(Role.Student, Role.API_Key)
+    def get(self):
+        jwt_data = get_jwt_identity()
 
-        departments = Department.query.join(Department.school).filter(School.university_id == university_id).all()
+        departments = Department.query.join(Department.school).filter(
+            School.university_id == jwt_data['university_id']
+        ).all()
 
         return [
             {
@@ -37,19 +37,14 @@ class Departments(Resource):
             for department in departments
         ]
 
-    @use_kwargs(args)
-    def post(self, university_id):
-        if request.headers['Content-Type'] != 'application/json':
-            raise BadRequest('wrong mime type')
+    @jwt_required
+    @role_required(Role.API_Key)
+    @use_args({'departments': fields.List(fields.Raw(), required=True)}, locations=('json',))
+    def post(self, args):
 
-        data = request.get_json()
-        if 'departments' not in data or not isinstance(data['departments'], list):
-            raise BadRequest('invalid json format')
+        jwt_data = get_jwt_identity()
 
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
-
-        params = {'u_id': university_id, 'data': json.dumps(data)}
+        params = {'u_id': jwt_data['university_id'], 'data': json.dumps(args)}
 
         try:
             sql = text('select update_departments(:u_id, (:data)::jsonb)')
@@ -63,18 +58,16 @@ class Departments(Resource):
 
 
 class Courses(Resource):
-    args = {'university_id': fields.Integer(), 'quarter_id': fields.Integer()}
 
-    @use_kwargs(args)
-    def get(self, university_id, quarter_id):
+    @jwt_required
+    @role_required(Role.Student)
+    @use_args({'quarter_id': fields.Integer()})
+    def get(self, args):
 
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
-
-        if quarter_id is missing:
+        if 'quarter_id' not in args:
             courses = Course.query.all()
         else:
-            courses = Course.query.join(Course.sections).filter(Section.quarter_id == quarter_id).all()
+            courses = Course.query.join(Course.sections).filter(Section.quarter_id == args['quarter_id']).all()
 
         return [
             {
@@ -87,19 +80,11 @@ class Courses(Resource):
             for course in courses
         ]
 
-    @use_kwargs(args)
-    def post(self, university_id):
-        if request.headers['Content-Type'] != 'application/json':
-            raise BadRequest('wrong mime type')
-
-        data = request.get_json()
-        if 'courses' not in data or not isinstance(data['courses'], list):
-            raise BadRequest('invalid json format')
-
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
-
-        params = {'u_id': university_id, 'data': json.dumps(data)}
+    @jwt_required
+    @role_required(Role.API_Key)
+    @use_args({'courses': fields.List(fields.Raw(), required=True)}, locations=('json',))
+    def post(self, args):
+        params = {'u_id': args['university_id'], 'data': json.dumps(args)}
 
         try:
             sql = text('select update_courses(:u_id, (:data)::jsonb)')
@@ -115,6 +100,9 @@ class Courses(Resource):
 
 
 class Quarters(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
     def get(self):
         quarters = Quarter.query.all()
 
@@ -130,36 +118,30 @@ class Quarters(Resource):
 
 
 class Search(Resource):
-    args = {'q': fields.String(), 'limit': fields.Integer()}
+    args = {'q': fields.String(required=True), 'limit': fields.Integer()}
 
     @jwt_required
-    @role_required
-    @use_kwargs(args)
-    def get(self, q, limit):
+    @role_required(Role.Student)
+    @use_args(args)
+    def get(self, args):
         jwt_data = get_jwt_identity()
 
-        if 'university_id' not in jwt_data:
-            raise BadRequest('malformed jwt')
-
-        if q is missing:
-            raise BadRequest('missing q parameter')
-
-        if limit is missing or limit > 50:
-            limit = 50
+        if 'limit' not in args or args['limit'] > 50:
+            args['limit'] = 50
 
         # strip any characters that would cause matching issues
-        q = q.replace(',', '')
+        q = args['q'].replace(',', '')
 
         courses = Course.query.join(Course.department, Department.school).filter(
             School.university_id == jwt_data['university_id']
         ).filter(
             func.concat(Department.abbreviation, ' ', Course.number, ' ', Course.title).ilike('%{}%'.format(q))
-        ).limit(limit).all()
+        ).limit(args['limit']).all()
 
         professors = Professor.query.filter(
             func.concat(Professor.last_name, ' ', Professor.first_name).ilike('%{}%'.format(q)) |
             func.concat(Professor.first_name, ' ', Professor.last_name).ilike('%{}%'.format(q))
-        ).limit(limit).all()
+        ).limit(args['limit']).all()
 
         return {
             'courses': [
@@ -184,13 +166,10 @@ class Search(Resource):
 
 
 class Majors(Resource):
-    args = {'university_id': fields.Integer()}
 
-    @use_kwargs(args)
-    def get(self, university_id):
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
-
+    @jwt_required
+    @role_required(Role.Student, Role.Incomplete)
+    def get(self):
         majors = Major.query.all()
 
         return [
@@ -201,20 +180,14 @@ class Majors(Resource):
             for major in majors
         ]
 
-    @use_kwargs(args)
-    def post(self, university_id):
-        if request.headers['Content-Type'] != 'application/json':
-            raise BadRequest('wrong mime type')
+    @jwt_required
+    @role_required(Role.API_Key)
+    @use_args({'majors': fields.List(fields.Raw(), required=True)})
+    def post(self, args):
+        jwt_data = get_jwt_identity()
 
-        data = request.get_json()
-        if 'majors' not in data or not isinstance(data['majors'], list):
-            raise BadRequest('invalid json format')
-
-        if university_id is missing:
-            raise BadRequest('missing university_id parameter')
-
-        for major_name in data['majors']:
-            major = Major(university_id=university_id, name=major_name)
+        for major_name in args['majors']:
+            major = Major(university_id=jwt_data['university_id'], name=major_name)
             db.session.add(major)
 
         try:
@@ -240,7 +213,7 @@ class Students(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Incomplete)
+    @role_required(Role.Student, Role.Incomplete)
     @use_args(args, locations=('json',))
     def patch(self, args, s_id):
         user = get_jwt_identity()

@@ -3,8 +3,9 @@ import os
 import yaml
 from functools import wraps
 from flask_jwt_extended import create_access_token
-from cmd import init_db, seed_db
-from models import db, Student, Role
+
+from scuevals_api.cmd import init_db, seed_db
+from scuevals_api.models import db, Student, Role
 from scuevals_api import create_app
 
 

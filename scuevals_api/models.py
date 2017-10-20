@@ -229,6 +229,7 @@ class Role(db.Model):
     Incomplete = 0
     Student = 1
     Administrator = 10
+    API_Key = 20
 
     __tablename__ = 'roles'
 

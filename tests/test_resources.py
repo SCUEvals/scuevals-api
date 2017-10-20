@@ -1,11 +1,10 @@
 from urllib.parse import urlencode
 from flask import json
 from helper import TestCase
-from models import db, Major, Student, Professor, Course, Department
+from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section
 
 
 class StudentsTestCase(TestCase):
-
     def setUp(self):
         super(StudentsTestCase, self).setUp()
 
@@ -53,7 +52,6 @@ class SearchTestCase(TestCase):
         }
 
         rv = self.app.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
-
         self.assertEqual(rv.status_code, 200)
 
         data = json.loads(rv.data)
@@ -61,3 +59,46 @@ class SearchTestCase(TestCase):
         self.assertIn('professors', data)
         self.assertEqual(len(data['courses']), 1)
         self.assertEqual(len(data['professors']), 1)
+
+
+class CoursesTestCase(TestCase):
+    def setUp(self):
+        super(CoursesTestCase, self).setUp()
+
+        with self.appx.app_context():
+            db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
+                                   period='[2017-01-01, 2017-02-01]', university_id=1))
+            db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
+                                   period='[2017-03-01, 2017-04-01]', university_id=1))
+            db.session.add(Department(abbreviation='GEN', name='General', school_id=1))
+            db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
+            db.session.add(Course(id=2, title='Arts Course', number='2', department_id=1))
+            db.session.add(Section(quarter_id=1, course_id=1))
+            db.session.add(Section(quarter_id=2, course_id=2))
+            db.session.commit()
+
+    def test_courses(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.get('/courses', headers=headers)
+
+        self.assertEqual(rv.status_code, 200)
+
+        data = json.loads(rv.data)
+        self.assertEqual(len(data), 2)
+
+    def test_courses_quarter_id(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.get('/courses', headers=headers, query_string=urlencode({'quarter_id': 1}))
+
+        self.assertEqual(rv.status_code, 200)
+
+        data = json.loads(rv.data)
+        self.assertEqual(len(data), 1)

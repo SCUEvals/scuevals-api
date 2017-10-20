@@ -4,7 +4,7 @@ import datetime
 import requests
 from flask import Blueprint, request, jsonify
 from flask_caching import Cache
-from flask_jwt_extended import create_access_token, decode_token
+from flask_jwt_extended import create_access_token, decode_token, JWTManager
 from jose import jwt, JWTError
 from marshmallow import fields
 from webargs.flaskparser import use_kwargs
@@ -15,6 +15,7 @@ from scuevals_api.errors import BadRequest, Unauthorized
 
 auth_bp = Blueprint('auth', __name__)
 cache = Cache(config={'CACHE_TYPE': 'simple'})
+jwtm = JWTManager()
 
 
 @auth_bp.route('/auth', methods=['POST'])
@@ -119,6 +120,18 @@ def auth_api(api_key):
     token = create_access_token(identity=ident, expires_delta=datetime.timedelta(hours=24))
 
     return jsonify({'jwt': token})
+
+
+@jwtm.user_loader_callback_loader
+def user_loader_callback_loader(identity):
+    if 'university_id' not in identity or 'roles' not in identity:
+        return None
+    return {}
+
+
+@jwtm.user_loader_error_loader
+def user_loader_error_loader(identity):
+    return jsonify({'error': "missing fields in jwt"}), 422
 
 
 def refresh_key_cache():
