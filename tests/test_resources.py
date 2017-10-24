@@ -60,6 +60,14 @@ class SearchTestCase(TestCase):
         self.assertEqual(len(data['courses']), 1)
         self.assertEqual(len(data['professors']), 1)
 
+    def test_search_no_mimetype(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+        }
+
+        rv = self.app.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
+        self.assertEqual(rv.status_code, 415)
+
 
 class CoursesTestCase(TestCase):
     def setUp(self):

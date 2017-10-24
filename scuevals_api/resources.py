@@ -6,11 +6,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_tok
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from marshmallow import fields, validate
-from webargs.flaskparser import parser, use_args
+from flask_restful import Resource, Api
+
 from scuevals_api.roles import role_required
 from scuevals_api.errors import Unauthorized, InternalServerError, UnprocessableEntity
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role
-from flask_restful import Resource, abort, Api
+from scuevals_api.utils import use_args
+
 
 resources_bp = Blueprint('resources', __name__)
 api = Api(resources_bp)
@@ -245,14 +247,6 @@ class Students(Resource):
             'result': 'success',
             'jwt': create_access_token(identity=ident)
         }
-
-
-@parser.error_handler
-def handle_request_parsing_error(err):
-    """webargs error handler that uses Flask-RESTful's abort function to return
-    a JSON error response to the client.
-    """
-    abort(422, errors=err.messages)
 
 
 api.add_resource(Departments, '/departments')

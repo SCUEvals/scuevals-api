@@ -2,16 +2,15 @@ import json
 import os
 import datetime
 import requests
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify
 from flask_caching import Cache
-from flask_jwt_extended import create_access_token, decode_token, JWTManager
+from flask_jwt_extended import create_access_token, decode_token, JWTManager, get_jwt_identity
 from jose import jwt, JWTError
 from marshmallow import fields
-from webargs.flaskparser import use_kwargs
-from webargs import missing
 
 from scuevals_api.models import Student, db, Role, APIKey
-from scuevals_api.errors import BadRequest, Unauthorized
+from scuevals_api.errors import Unauthorized, UnprocessableEntity
+from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
 cache = Cache(config={'CACHE_TYPE': 'simple'})
@@ -19,15 +18,9 @@ jwtm = JWTManager()
 
 
 @auth_bp.route('/auth', methods=['POST'])
-@use_kwargs({'id_token': fields.String()})
-def auth(id_token):
-    if request.headers['Content-Type'] != 'application/json':
-        raise BadRequest('wrong mime type')
-
-    if id_token is missing:
-        raise BadRequest('missing id_token')
-
-    headers = jwt.get_unverified_header(id_token)
+@use_args({'id_token': fields.String(required=True)})
+def auth(args):
+    headers = jwt.get_unverified_header(args['id_token'])
 
     key = cache.get(headers['kid'])
     if not key:
@@ -37,14 +30,14 @@ def auth(id_token):
 
     try:
         data = jwt.decode(
-            id_token,
+            args['id_token'],
             json.dumps(key),
             audience=os.environ['GOOGLE_CLIENT_ID'],
             issuer=('https://accounts.google.com', 'accounts.google.com'),
             options={'verify_at_hash': False}
         )
     except JWTError as e:
-        raise BadRequest('invalid id_token: {}'.format(e))
+        raise UnprocessableEntity('invalid id_token: {}'.format(e))
 
     # TODO: Get this value from the database
     # essentially, the only way to figure out which university
@@ -52,7 +45,7 @@ def auth(id_token):
     # which domain the request came from (needs to be HTTPS as well)
     # there also needs to be a debug mode where this verification is skipped
     if data['hd'] != 'scu.edu':
-        raise BadRequest('invalid id_token')
+        raise UnprocessableEntity('invalid id_token')
 
     user = Student.query.filter_by(email=data['email']).one_or_none()
 
@@ -92,10 +85,10 @@ def auth(id_token):
 
 
 @auth_bp.route('/auth/validate', methods=['POST'])
-@use_kwargs({'jwt': fields.String(required=True)})
-def validate(jwt):
+@use_args({'jwt': fields.String(required=True)})
+def validate(args):
     try:
-        data = decode_token(jwt)
+        data = decode_token(args['jwt'])
     except:
         raise Unauthorized('invalid jwt')
 
@@ -105,9 +98,9 @@ def validate(jwt):
 
 
 @auth_bp.route('/auth/api', methods=['POST'])
-@use_kwargs({'api_key': fields.String(required=True)})
-def auth_api(api_key):
-    key = APIKey.query.filter(APIKey.key == api_key).one_or_none()
+@use_args({'api_key': fields.String(required=True)})
+def auth_api(args):
+    key = APIKey.query.filter(APIKey.key == args['api_key']).one_or_none()
 
     if key is None:
         raise Unauthorized('invalid api key')
@@ -122,16 +115,12 @@ def auth_api(api_key):
     return jsonify({'jwt': token})
 
 
-@jwtm.user_loader_callback_loader
-def user_loader_callback_loader(identity):
+@jwtm.claims_verification_loader
+def claims_verification_loader(user_claims):
+    identity = get_jwt_identity()
     if 'university_id' not in identity or 'roles' not in identity:
-        return None
-    return {}
-
-
-@jwtm.user_loader_error_loader
-def user_loader_error_loader(identity):
-    return jsonify({'error': "missing fields in jwt"}), 422
+        return False
+    return True
 
 
 def refresh_key_cache():
