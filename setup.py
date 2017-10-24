@@ -11,6 +11,7 @@ setup(
     },
     install_requires=[
         'beautifulsoup4==4.6.0',
+        'blinker==1.4',
         'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
         'Flask-JWT-Extended==3.3.4',
@@ -23,6 +24,7 @@ setup(
         'python-jose==1.4.0',
         'PyYAML==3.12',
         'requests==2.18.4',
+        'rollbar==0.13.16',
         'vcrpy==1.11.1',
         'webargs==1.8.1',
     ],
