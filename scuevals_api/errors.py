@@ -1,5 +1,4 @@
-from flask import Blueprint
-
+from flask import Blueprint, jsonify
 
 errors_bp = Blueprint('errors', __name__)
 
@@ -29,3 +28,13 @@ class UnprocessableEntity(Error):
 
 class InternalServerError(Error):
     status_code = 500
+
+
+@errors_bp.app_errorhandler(Error)
+@errors_bp.app_errorhandler(BadRequest)
+@errors_bp.app_errorhandler(InternalServerError)
+@errors_bp.app_errorhandler(Unauthorized)
+def handle_error(error):
+    resp = jsonify(error.to_dict())
+    resp.status_code = error.status_code
+    return resp
