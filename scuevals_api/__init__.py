@@ -40,6 +40,10 @@ def register_extensions(app):
     jwtm.init_app(app)
     cache.init_app(app)
 
+    if 'FLASK_CONFIG' in os.environ and os.environ['FLASK_CONFIG'] == 'production':
+        from flask_rollbar import Rollbar
+        Rollbar(app)
+
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp)

@@ -17,6 +17,7 @@ setup(
         'Flask-JWT-Extended==3.3.4',
         'Flask-Migrate==2.0.4',
         'Flask-RESTful==0.3.6',
+        'Flask-Rollbar==1.0.1',
         'Flask-SQLAlchemy==2.2',
         'Flask==0.12.2',
         'gunicorn==19.7.1',
