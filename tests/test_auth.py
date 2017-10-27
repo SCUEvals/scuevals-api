@@ -2,14 +2,8 @@ import json
 import time
 from jose import jwt
 from json import JSONDecodeError
-from vcr import VCR
-from helper import TestCase, use_data
+from tests import TestCase, use_data, vcr
 from scuevals_api.models import db, APIKey
-
-vcr = VCR(
-    cassette_library_dir='fixtures/cassettes',
-    path_transformer=VCR.ensure_suffix('.yaml')
-)
 
 
 class AuthTestCase(TestCase):

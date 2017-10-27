@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 from flask import json
 from flask_jwt_extended import create_access_token
 
-from helper import TestCase
+from tests import TestCase
 from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section, Role
 
 

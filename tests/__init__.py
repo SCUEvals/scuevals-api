@@ -3,10 +3,19 @@ import os
 import yaml
 from functools import wraps
 from flask_jwt_extended import create_access_token
+from vcr import VCR
 
 from scuevals_api.cmd import init_db, seed_db
 from scuevals_api.models import db, Student, Role
 from scuevals_api import create_app
+
+
+fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
+
+vcr = VCR(
+    cassette_library_dir=os.path.join(fixtures_path, 'cassettes'),
+    path_transformer=VCR.ensure_suffix('.yaml')
+)
 
 
 class TestCase(unittest.TestCase):
@@ -48,7 +57,7 @@ def use_data(file):
     def use_data_decorator(f):
         @wraps(f)
         def wrapper(*args):
-            with open(os.path.join('fixtures/data', file), 'r') as stream:
+            with open(os.path.join(fixtures_path, 'data', file), 'r') as stream:
                 data = yaml.load(stream)
             args = args + (data, )
 

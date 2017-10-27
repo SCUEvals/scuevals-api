@@ -4,6 +4,7 @@ setup(
     name='scuevals-api',
     packages=['scuevals_api'],
     include_package_data=True,
+    test_suite='tests',
     entry_points={
         'console_scripts': [
             'app=scuevals_api.cmd:cli'
