@@ -1,5 +1,5 @@
-[![Codeship Status for SCUEvals/scuevals-api](https://app.codeship.com/projects/79c54590-9792-0135-c174-3eb644f498b4/status?branch=master)](https://app.codeship.com/projects/251868) 
-[![Coverage Status](https://coveralls.io/repos/github/SCUEvals/scuevals-api/badge.svg?branch=master)](https://coveralls.io/github/SCUEvals/scuevals-api?branch=master)
+[![Codeship Status for SCUEvals/scuevals-api](https://img.shields.io/codeship/79c54590-9792-0135-c174-3eb644f498b4/master.svg)](https://app.codeship.com/projects/251868) 
+[![Coverage Status](https://img.shields.io/coveralls/github/SCUEvals/scuevals-api/master.svg)](https://coveralls.io/github/SCUEvals/scuevals-api?branch=master)
 
 ## Running the API
 1. Install the app and its dependencies by running `pip install -e .` in the root folder.
