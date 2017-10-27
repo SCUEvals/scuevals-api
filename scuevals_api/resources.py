@@ -237,7 +237,7 @@ class Students(Resource):
         inc = Role.query.get(Role.Incomplete)
         if inc in student.roles:
             student.roles.remove(inc)
-            student.roles.add(Role.query.get(Role.Student))
+            student.roles.append(Role.query.get(Role.Student))
 
         db.session.commit()
 
