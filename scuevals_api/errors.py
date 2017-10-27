@@ -34,6 +34,7 @@ class InternalServerError(Error):
 @errors_bp.app_errorhandler(BadRequest)
 @errors_bp.app_errorhandler(InternalServerError)
 @errors_bp.app_errorhandler(Unauthorized)
+@errors_bp.app_errorhandler(UnprocessableEntity)
 def handle_error(error):
     resp = jsonify(error.to_dict())
     resp.status_code = error.status_code
