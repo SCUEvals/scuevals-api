@@ -13,6 +13,7 @@ setup(
     install_requires=[
         'beautifulsoup4==4.6.0',
         'blinker==1.4',
+        'coveralls==1.2.0',
         'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
         'Flask-JWT-Extended==3.3.4',
