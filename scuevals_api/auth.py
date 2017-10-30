@@ -5,6 +5,7 @@ import requests
 from flask import Blueprint, jsonify
 from flask_caching import Cache
 from flask_jwt_extended import create_access_token, decode_token, JWTManager, get_jwt_identity
+from flask_jwt_extended.exceptions import JWTDecodeError
 from jose import jwt, JWTError
 from marshmallow import fields
 
@@ -89,7 +90,7 @@ def auth(args):
 def validate(args):
     try:
         data = decode_token(args['jwt'])
-    except:
+    except JWTDecodeError:
         raise Unauthorized('invalid jwt')
 
     new_token = create_access_token(identity=data['sub'])
