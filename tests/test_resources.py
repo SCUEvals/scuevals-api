@@ -3,7 +3,50 @@ from flask import json
 from flask_jwt_extended import create_access_token
 
 from tests import TestCase
-from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section, Role
+from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section, Role, School
+
+
+class QuartersTestCase(TestCase):
+    def setUp(self):
+        super(QuartersTestCase, self).setUp()
+
+        with self.appx.app_context():
+            db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
+                                   period='[2017-01-01, 2017-02-01]', university_id=1))
+            db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
+                                   period='[2017-03-01, 2017-04-01]', university_id=1))
+            db.session.commit()
+
+    def test_quarters(self):
+        headers = {'Authorization': 'Bearer ' + self.jwt}
+
+        rv = self.app.get('/quarters', headers=headers)
+
+        self.assertEqual(rv.status_code, 200)
+
+        data = json.loads(rv.data)
+        self.assertEqual(len(data), 2)
+
+
+class DepartmentsTestCase(TestCase):
+    def setUp(self):
+        super(DepartmentsTestCase, self).setUp()
+
+        with self.appx.app_context():
+            db.session.add(School(id=0, abbreviation='ARTS', name='Arts & Sciences', university_id=1))
+            db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=0))
+            db.session.add(Department(abbreviation='ENGL', name='English', school_id=0))
+            db.session.commit()
+
+    def test_departments(self):
+        headers = {'Authorization': 'Bearer ' + self.jwt}
+
+        rv = self.app.get('/departments', headers=headers)
+
+        self.assertEqual(rv.status_code, 200)
+
+        data = json.loads(rv.data)
+        self.assertEqual(len(data), 2)
 
 
 class MajorsTestCase(TestCase):
