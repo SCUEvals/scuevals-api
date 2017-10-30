@@ -7,9 +7,9 @@ from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from marshmallow import fields, validate
 from flask_restful import Resource, Api
+from werkzeug.exceptions import Unauthorized, InternalServerError, UnprocessableEntity
 
 from scuevals_api.roles import role_required
-from scuevals_api.errors import Unauthorized, InternalServerError, UnprocessableEntity
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role
 from scuevals_api.utils import use_args
 

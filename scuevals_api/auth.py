@@ -6,11 +6,11 @@ from flask import Blueprint, jsonify
 from flask_caching import Cache
 from flask_jwt_extended import create_access_token, decode_token, JWTManager, get_jwt_identity
 from flask_jwt_extended.exceptions import JWTDecodeError
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
+from werkzeug.exceptions import UnprocessableEntity, Unauthorized
 
 from scuevals_api.models import Student, db, Role, APIKey
-from scuevals_api.errors import Unauthorized, UnprocessableEntity
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -19,7 +19,7 @@ jwtm = JWTManager()
 
 
 @auth_bp.route('/auth', methods=['POST'])
-@use_args({'id_token': fields.String(required=True)})
+@use_args({'id_token': fields.String(required=True)}, locations=('json',))
 def auth(args):
     headers = jwt.get_unverified_header(args['id_token'])
 
@@ -37,8 +37,10 @@ def auth(args):
             issuer=('https://accounts.google.com', 'accounts.google.com'),
             options={'verify_at_hash': False}
         )
+    except ExpiredSignatureError:
+        raise Unauthorized(description='token is expired')
     except JWTError as e:
-        raise UnprocessableEntity('invalid id_token: {}'.format(e))
+        raise UnprocessableEntity(description='invalid id_token: {}'.format(e))
 
     # TODO: Get this value from the database
     # essentially, the only way to figure out which university
@@ -46,7 +48,7 @@ def auth(args):
     # which domain the request came from (needs to be HTTPS as well)
     # there also needs to be a debug mode where this verification is skipped
     if data['hd'] != 'scu.edu':
-        raise UnprocessableEntity('invalid id_token')
+        raise UnprocessableEntity(description='invalid id_token')
 
     user = Student.query.filter_by(email=data['email']).one_or_none()
 
@@ -86,7 +88,7 @@ def auth(args):
 
 
 @auth_bp.route('/auth/validate', methods=['POST'])
-@use_args({'jwt': fields.String(required=True)})
+@use_args({'jwt': fields.String(required=True)}, locations=('json',))
 def validate(args):
     try:
         data = decode_token(args['jwt'])
@@ -99,7 +101,7 @@ def validate(args):
 
 
 @auth_bp.route('/auth/api', methods=['POST'])
-@use_args({'api_key': fields.String(required=True)})
+@use_args({'api_key': fields.String(required=True)}, locations=('json',))
 def auth_api(args):
     key = APIKey.query.filter(APIKey.key == args['api_key']).one_or_none()
 

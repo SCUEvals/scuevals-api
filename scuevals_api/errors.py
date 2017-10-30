@@ -1,41 +1,13 @@
-from flask import Blueprint, jsonify
-
-errors_bp = Blueprint('errors', __name__)
-
-
-class Error(Exception):
-    def __init__(self, message, status_code=None):
-        Exception.__init__(self)
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-
-    def to_dict(self):
-        return {'error': self.message}
+from functools import wraps
+from flask import jsonify
 
 
-class BadRequest(Error):
-    status_code = 400
+def get_http_exception_handler(app):
+    """Overrides the default http exception handler to return JSON."""
+    handle_http_exception = app.handle_http_exception
 
-
-class Unauthorized(Error):
-    status_code = 401
-
-
-class UnprocessableEntity(Error):
-    status_code = 422
-
-
-class InternalServerError(Error):
-    status_code = 500
-
-
-@errors_bp.app_errorhandler(Error)
-@errors_bp.app_errorhandler(BadRequest)
-@errors_bp.app_errorhandler(InternalServerError)
-@errors_bp.app_errorhandler(Unauthorized)
-@errors_bp.app_errorhandler(UnprocessableEntity)
-def handle_error(error):
-    resp = jsonify(error.to_dict())
-    resp.status_code = error.status_code
-    return resp
+    @wraps(handle_http_exception)
+    def ret_val(exception):
+        exc = handle_http_exception(exception)
+        return jsonify({'code': exc.code, 'message': exc.description}), exc.code
+    return ret_val

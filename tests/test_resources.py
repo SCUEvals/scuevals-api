@@ -6,6 +6,28 @@ from tests import TestCase
 from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section, Role
 
 
+class MajorsTestCase(TestCase):
+    def setUp(self):
+        super(MajorsTestCase, self).setUp()
+
+        with self.appx.app_context():
+            db.session.add(Major(id=1, university_id=1, name='Major1'))
+            db.session.add(Major(id=2, university_id=1, name='Major2'))
+            db.session.commit()
+
+    def test_majors(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+        }
+
+        rv = self.app.get('/majors', headers=headers)
+
+        self.assertEqual(rv.status_code, 200)
+
+        data = json.loads(rv.data)
+        self.assertEqual(len(data), 2)
+
+
 class StudentsTestCase(TestCase):
     def setUp(self):
         super(StudentsTestCase, self).setUp()
@@ -64,8 +86,7 @@ class SearchTestCase(TestCase):
 
     def test_search(self):
         headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
+            'Authorization': 'Bearer ' + self.jwt
         }
 
         rv = self.app.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
@@ -76,14 +97,6 @@ class SearchTestCase(TestCase):
         self.assertIn('professors', data)
         self.assertEqual(len(data['courses']), 1)
         self.assertEqual(len(data['professors']), 1)
-
-    def test_search_no_mimetype(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-        }
-
-        rv = self.app.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
-        self.assertEqual(rv.status_code, 415)
 
 
 class CoursesTestCase(TestCase):
@@ -105,7 +118,6 @@ class CoursesTestCase(TestCase):
     def test_courses(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
         }
 
         rv = self.app.get('/courses', headers=headers)
@@ -118,7 +130,6 @@ class CoursesTestCase(TestCase):
     def test_courses_quarter_id(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
         }
 
         rv = self.app.get('/courses', headers=headers, query_string=urlencode({'quarter_id': 1}))

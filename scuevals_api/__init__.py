@@ -3,7 +3,7 @@ from flask import Flask
 
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
-from scuevals_api.errors import errors_bp
+from scuevals_api.errors import get_http_exception_handler
 
 
 def create_app(config_object=None):
@@ -19,6 +19,7 @@ def create_app(config_object=None):
     if config_object is not None:
         app.config.from_object(config_object)
 
+    register_error_handler(app)
     register_extensions(app)
     register_blueprints(app)
     register_cli(app)
@@ -48,7 +49,6 @@ def register_extensions(app):
 def register_blueprints(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(resources_bp)
-    app.register_blueprint(errors_bp)
 
 
 def register_cli(app):
@@ -63,6 +63,10 @@ def register_cli(app):
     def seeddb():
         from scuevals_api.cmd import seed_db
         seed_db(db)
+
+
+def register_error_handler(app):
+    app.handle_http_exception = get_http_exception_handler(app)
 
 
 def load_config(app, config):

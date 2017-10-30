@@ -1,6 +1,6 @@
 from functools import wraps
 from flask_jwt_extended import get_jwt_identity
-from scuevals_api.errors import Unauthorized
+from werkzeug.exceptions import Unauthorized
 
 
 # source: https://stackoverflow.com/a/32292739/998919
