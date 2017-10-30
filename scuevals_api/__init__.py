@@ -42,8 +42,8 @@ def register_extensions(app):
     cache.init_app(app)
 
     if 'FLASK_CONFIG' in os.environ and os.environ['FLASK_CONFIG'] == 'production':
-        from flask_rollbar import Rollbar
-        Rollbar(app)
+        from scuevals_api.errors import rollbar
+        rollbar.init_app(app)
 
 
 def register_blueprints(app):
