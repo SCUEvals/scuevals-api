@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
+from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint, JSONB
 
 db = SQLAlchemy()
 
@@ -151,6 +151,8 @@ class Evaluation(db.Model):
 
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
+    version = db.Column(db.Integer, nullable=False)
+    data = db.Column(JSONB, nullable=False)
 
     student = db.relationship('Student', back_populates='evaluations')
     section = db.relationship('Section', back_populates='evaluations')
