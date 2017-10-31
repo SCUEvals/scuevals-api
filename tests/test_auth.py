@@ -18,10 +18,25 @@ class AuthTestCase(TestCase):
     @use_data('test_auth.yaml')
     @vcr.use_cassette
     def test_auth(self, data):
+        # make sure the new token will have a new expiration time
+        time.sleep(1)
+
+        old_jwt = jwt.get_unverified_claims(self.jwt)
+
         rv = self.app.post('/auth', headers={'Content-Type': 'application/json'},
                            data=json.dumps({'id_token': data['id_token']}))
-        self.assertEqual(rv.status_code, 401)
-        self.assertIn('token is expired', json.loads(rv.data)['message'])
+        self.assertEqual(rv.status_code, 200)
+
+        try:
+            resp = json.loads(rv.data)
+        except JSONDecodeError:
+            self.fail('invalid response')
+
+        self.assertIn('jwt', resp)
+
+        new_data = jwt.get_unverified_claims(resp['jwt'])
+
+        self.assertGreater(new_data['exp'], old_jwt['exp'])
 
     def test_validation(self):
         # make sure the new token will have a new expiration time

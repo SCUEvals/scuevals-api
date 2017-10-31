@@ -2,7 +2,7 @@ import json
 import os
 import datetime
 import requests
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app as app
 from flask_caching import Cache
 from flask_jwt_extended import create_access_token, decode_token, JWTManager, get_jwt_identity
 from flask_jwt_extended.exceptions import JWTDecodeError
@@ -29,13 +29,18 @@ def auth(args):
 
     key = cache.get(headers['kid'])
 
+    decode_options = {'verify_at_hash': False}
+
+    if app.debug:
+        decode_options['verify_exp'] = False
+
     try:
         data = jwt.decode(
             args['id_token'],
             json.dumps(key),
             audience=os.environ['GOOGLE_CLIENT_ID'],
             issuer=('https://accounts.google.com', 'accounts.google.com'),
-            options={'verify_at_hash': False}
+            options=decode_options
         )
     except ExpiredSignatureError:
         raise Unauthorized(description='token is expired')
