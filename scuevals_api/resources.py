@@ -5,7 +5,7 @@ from flask import Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
-from marshmallow import fields, validate
+from marshmallow import fields, validate, Schema
 from flask_restful import Resource, Api
 from werkzeug.exceptions import Unauthorized, InternalServerError, UnprocessableEntity
 
@@ -249,9 +249,40 @@ class Students(Resource):
         }
 
 
+class EvaluationSchemaV1(Schema):
+    attitude = fields.Int(required=True, validate=validate.Range(1, 4))
+    take_again = fields.Int(required=True, validate=validate.Range(1, 4))
+    timeliness = fields.Int(required=True, validate=validate.Range(1, 4))
+
+    evenness = fields.Int(required=True, validate=validate.Range(1, 4))
+    workload = fields.Int(required=True, validate=validate.Range(1, 4))
+
+    comment = fields.Str(required=True, validate=validate.Length(min=1, max=750))
+
+    class Meta:
+        strict = True
+
+
+class Evaluations(Resource):
+    args = {
+        'quarter_id': fields.Int(required=True),
+        'professor_id': fields.Int(required=True),
+        'course_id': fields.Int(required=True),
+        'student_id': fields.Int(required=True),
+        'evaluation': EvaluationSchemaV1
+    }
+
+    @jwt_required
+    @role_required(Role.Student)
+    @use_args(args, locations=('json',))
+    def post(self):
+        pass
+
+
 api.add_resource(Departments, '/departments')
 api.add_resource(Courses, '/courses')
 api.add_resource(Quarters, '/quarters')
 api.add_resource(Majors, '/majors')
 api.add_resource(Search, '/search')
 api.add_resource(Students, '/students/<int:s_id>')
+api.add_resource(Evaluations, '/evaluations')
