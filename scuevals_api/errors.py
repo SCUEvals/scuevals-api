@@ -17,6 +17,11 @@ def get_http_exception_handler(app):
     @wraps(handle_http_exception)
     def ret_val(exception):
         exc = handle_http_exception(exception)
-        return jsonify({'code': exc.code, 'message': exc.description}), exc.code
+        data = {
+            'code': exc.code,
+            'message': exc.description
+        }
+
+        return jsonify(data), exc.code
 
     return ret_val
