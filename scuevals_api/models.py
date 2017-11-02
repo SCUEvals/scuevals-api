@@ -1,8 +1,18 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, MetaData
 from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint, JSONB
 
-db = SQLAlchemy()
+convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
+}
+
+metadata = MetaData(naming_convention=convention)
+db = SQLAlchemy(metadata=metadata)
+
 
 section_professor = db.Table('section_professor', db.metadata,
                              db.Column('section_id', db.Integer, db.ForeignKey('sections.id')),
@@ -53,7 +63,7 @@ class Student(db.Model):
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
     roles = db.relationship('Role', secondary=student_role, back_populates='students')
 
-    __table_args__ = (db.CheckConstraint(gender.in_(['m', 'f', 'o'])),)
+    __table_args__ = (db.CheckConstraint(gender.in_(['m', 'f', 'o']), name='valid_gender'),)
 
     def _get_majors(self):
         return [major.id for major in self.majors]
@@ -121,6 +131,7 @@ class Professor(db.Model):
 
     university = db.relationship('University', back_populates='professors')
     sections = db.relationship('Section', secondary=section_professor, back_populates='professors')
+    evaluations = db.relationship('Evaluation', back_populates='professor')
 
 
 class Quarter(db.Model):
@@ -140,7 +151,7 @@ class Quarter(db.Model):
     __table_args__ = (
         ExcludeConstraint(('period', '&&')),
         db.UniqueConstraint('year', 'name', 'university_id'),
-        db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']))
+        db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']), name='valid_quarter')
     )
 
 
@@ -150,14 +161,18 @@ class Evaluation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    professor_id = db.Column(db.Integer, db.ForeignKey('professors.id'), nullable=False)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     data = db.Column(JSONB, nullable=False)
 
     student = db.relationship('Student', back_populates='evaluations')
+    professor = db.relationship('Professor', back_populates='evaluations')
     section = db.relationship('Section', back_populates='evaluations')
 
-    __table_args__ = (db.UniqueConstraint('student_id', 'section_id'),)
+    __table_args__ = (
+        db.UniqueConstraint('student_id', 'professor_id', 'section_id'),
+    )
 
 
 class Department(db.Model):
@@ -171,7 +186,7 @@ class Department(db.Model):
     courses = db.relationship('Course', back_populates='department')
     school = db.relationship('School', back_populates='departments')
 
-    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id', name='departments_abbreviation_school_id_key'),)
+    __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id'),)
 
 
 class School(db.Model):
@@ -197,7 +212,7 @@ class Course(db.Model):
     department = db.relationship('Department', back_populates='courses')
     sections = db.relationship('Section', back_populates='course')
 
-    __table_args__ = (db.UniqueConstraint('department_id', 'number', name='uix_course'),)
+    __table_args__ = (db.UniqueConstraint('department_id', 'number'),)
 
 
 class Section(db.Model):

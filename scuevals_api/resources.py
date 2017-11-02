@@ -10,7 +10,8 @@ from flask_restful import Resource, Api
 from werkzeug.exceptions import Unauthorized, InternalServerError, UnprocessableEntity
 
 from scuevals_api.roles import role_required
-from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role
+from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role, \
+    Evaluation
 from scuevals_api.utils import use_args
 
 
@@ -251,6 +252,9 @@ class Students(Resource):
 
 class EvaluationSchemaV1(Schema):
     attitude = fields.Int(required=True, validate=validate.Range(1, 4))
+    availability = fields.Int(required=True, validate=validate.Range(1, 4))
+    clarity = fields.Int(required=True, validate=validate.Range(1, 4))
+    handwriting = fields.Int(required=True, validate=validate.Range(1, 4))
     take_again = fields.Int(required=True, validate=validate.Range(1, 4))
     timeliness = fields.Int(required=True, validate=validate.Range(1, 4))
 
@@ -275,8 +279,8 @@ class Evaluations(Resource):
     @jwt_required
     @role_required(Role.Student)
     @use_args(args, locations=('json',))
-    def post(self):
-        pass
+    def post(self, args):
+        Evaluation()
 
 
 api.add_resource(Departments, '/departments')
