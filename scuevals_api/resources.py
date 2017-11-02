@@ -272,15 +272,35 @@ class Evaluations(Resource):
         'quarter_id': fields.Int(required=True),
         'professor_id': fields.Int(required=True),
         'course_id': fields.Int(required=True),
-        'student_id': fields.Int(required=True),
-        'evaluation': EvaluationSchemaV1
+        'evaluation': fields.Nested(EvaluationSchemaV1)
     }
 
     @jwt_required
     @role_required(Role.Student)
     @use_args(args, locations=('json',))
     def post(self, args):
-        Evaluation()
+        section = Section.query.filter(
+            Section.quarter_id == args['quarter_id'],
+            Section.course_id == args['course_id']
+        ).one_or_none()
+
+        if section is None:
+            raise UnprocessableEntity('invalid quarter/course combination')
+
+        ident = get_jwt_identity()
+
+        evaluation = Evaluation(
+            student_id=ident['id'],
+            professor_id=args['professor_id'],
+            section_id=section.id,
+            version=1,
+            data=args['evaluation']
+        )
+
+        db.session.add(evaluation)
+        db.session.commit()
+
+        return {'result': 'success'}, 201
 
 
 api.add_resource(Departments, '/departments')
