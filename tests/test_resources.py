@@ -111,7 +111,6 @@ class MajorsTestCase(TestCase):
         data = {'majors': ['Major1', 'Major2', 'Major3']}
 
         rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
-        print(rv.data)
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual('success', resp['result'])
@@ -242,6 +241,18 @@ class CoursesTestCase(TestCase):
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual(21, resp['updated_count'])
+
+    @use_data('courses_post_missing_department.yaml')
+    def test_post_missing_department(self, data):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.post('/courses', headers=headers, data=data['courses'])
+        self.assertEqual(422, rv.status_code)
+        resp = json.loads(rv.data)
+        self.assertEqual('missing department ACTG', resp['message'])
 
 
 class EvaluationsTestCase(TestCase):
