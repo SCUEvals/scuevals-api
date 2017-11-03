@@ -7,6 +7,29 @@ from scuevals_api.models import db, Major, Student, Professor, Course, Departmen
     Evaluation
 
 
+class ResourceTestCase(TestCase):
+    def setUp(self):
+        super(ResourceTestCase, self).setUp()
+
+        with self.appx.app_context():
+            student = Student(
+                id=0,
+                email='jdoe@scu.edu',
+                first_name='John',
+                last_name='Doe',
+                university_id=1
+            )
+            ident = student.to_dict()
+            self.jwt = create_access_token(identity=ident)
+
+    def test_resource_no_roles(self):
+        headers = {'Authorization': 'Bearer ' + self.jwt}
+
+        rv = self.app.get('/quarters', headers=headers)
+
+        self.assertEqual(rv.status_code, 401)
+
+
 class QuartersTestCase(TestCase):
     def setUp(self):
         super(QuartersTestCase, self).setUp()

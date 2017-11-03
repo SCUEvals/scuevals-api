@@ -1,5 +1,6 @@
 import json
 import time
+
 from jose import jwt
 from json import JSONDecodeError
 from tests import TestCase, use_data, vcr
@@ -77,7 +78,7 @@ class AuthTestCase(TestCase):
         self.assertIn('roles', claims['sub'])
         self.assertEqual([20], claims['sub']['roles'])
 
-    def test_auth_api_unauthorized(self):
+    def test_api_unauthorized(self):
         rv = self.app.post('/auth/api', headers={'Content-Type': 'application/json'},
                            data=json.dumps({'api_key': 'INVALID_KEY'}))
 
