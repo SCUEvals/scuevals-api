@@ -1,3 +1,4 @@
+import logging
 import os
 from flask import Flask
 
@@ -10,11 +11,18 @@ def create_app(config_object=None):
     app = Flask(__name__)
     load_config(app, 'default')
 
-    if 'FLASK_CONFIG' in os.environ:
-        try:
-            load_config(app, os.environ['FLASK_CONFIG'])
-        except IOError:
-            raise Exception('invalid config specified')
+    if 'FLASK_CONFIG' not in os.environ:
+        app.config['FLASK_CONFIG'] = 'development'
+    else:
+        app.config['FLASK_CONFIG'] = os.environ['FLASK_CONFIG']
+
+    try:
+        load_config(app, app.config['FLASK_CONFIG'])
+    except IOError:
+        raise Exception('invalid config specified')
+
+    if app.config['FLASK_CONFIG'] == 'test':
+        logging.disable(logging.CRITICAL)
 
     if config_object is not None:
         app.config.from_object(config_object)

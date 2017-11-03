@@ -4,8 +4,7 @@ import datetime
 import requests
 from flask import Blueprint, jsonify, current_app as app
 from flask_caching import Cache
-from flask_jwt_extended import create_access_token, decode_token, JWTManager, get_jwt_identity
-from flask_jwt_extended.exceptions import JWTDecodeError
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized
@@ -48,10 +47,6 @@ def auth(args):
         raise UnprocessableEntity(description='invalid id_token: {}'.format(e))
 
     # TODO: Get this value from the database
-    # essentially, the only way to figure out which university
-    # the student is allowed/supposed to sign up for, is to check
-    # which domain the request came from (needs to be HTTPS as well)
-    # there also needs to be a debug mode where this verification is skipped
     if data['hd'] != 'scu.edu':
         raise UnprocessableEntity(description='invalid id_token')
 
@@ -92,15 +87,11 @@ def auth(args):
     return jsonify({'status': status, 'jwt': token})
 
 
-@auth_bp.route('/auth/validate', methods=['POST'])
-@use_args({'jwt': fields.String(required=True)}, locations=('json',))
-def validate(args):
-    try:
-        data = decode_token(args['jwt'])
-    except JWTDecodeError:
-        raise Unauthorized('invalid jwt')
-
-    new_token = create_access_token(identity=data['sub'])
+@auth_bp.route('/auth/validate')
+@jwt_required
+def validate():
+    ident = get_jwt_identity()
+    new_token = create_access_token(identity=ident)
 
     return jsonify({'jwt': new_token})
 

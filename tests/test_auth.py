@@ -45,8 +45,7 @@ class AuthTestCase(TestCase):
 
         data = jwt.get_unverified_claims(self.jwt)
 
-        rv = self.app.post('/auth/validate', headers={'Content-Type': 'application/json'},
-                           data=json.dumps({'jwt': self.jwt}))
+        rv = self.app.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
 
         self.assertEqual(rv.status_code, 200)
 
@@ -83,3 +82,7 @@ class AuthTestCase(TestCase):
                            data=json.dumps({'api_key': 'INVALID_KEY'}))
 
         self.assertEqual(rv.status_code, 401)
+
+    def test_invalid_jwt(self):
+        rv = self.app.get('/auth/validate', headers={'Authorization': 'Bearer foobar'})
+        self.assertEqual(rv.status_code, 422)
