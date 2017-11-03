@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 from flask import json
 from flask_jwt_extended import create_access_token
 
-from tests import TestCase
+from tests import TestCase, use_data
 from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section, Role, School, \
     Evaluation
 
@@ -62,7 +62,7 @@ class DepartmentsTestCase(TestCase):
             db.session.add(Department(abbreviation='ENGL', name='English', school_id=0))
             db.session.commit()
 
-    def test_departments(self):
+    def test_get(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
         rv = self.app.get('/departments', headers=headers)
@@ -71,6 +71,18 @@ class DepartmentsTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(len(data), 2)
+
+    @use_data('departments_post.yaml')
+    def test_post(self, data):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.post('/departments', headers=headers, data=data['departments'])
+        self.assertEqual(200, rv.status_code)
+        resp = json.loads(rv.data)
+        self.assertEqual(74, resp['updated_count'])
 
 
 class MajorsTestCase(TestCase):
@@ -83,9 +95,7 @@ class MajorsTestCase(TestCase):
             db.session.commit()
 
     def test_majors(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-        }
+        headers = {'Authorization': 'Bearer ' + self.jwt}
 
         rv = self.app.get('/majors', headers=headers)
 
@@ -175,14 +185,17 @@ class CoursesTestCase(TestCase):
                                    period='[2017-01-01, 2017-02-01]', university_id=1))
             db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
                                    period='[2017-03-01, 2017-04-01]', university_id=1))
-            db.session.add(Department(abbreviation='GEN', name='General', school_id=1))
-            db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-            db.session.add(Course(id=2, title='Arts Course', number='2', department_id=1))
-            db.session.add(Section(quarter_id=1, course_id=1))
-            db.session.add(Section(quarter_id=2, course_id=2))
+            db.session.add(Quarter(id=3900, year=2017, name='Fall', current=False,
+                                   period='[2017-05-01, 2017-06-01]', university_id=1))
+            db.session.add(Department(abbreviation='ANTH', name='Anthropology', school_id=1))
+            db.session.add(Department(abbreviation='COMM', name='Communications', school_id=1))
+            db.session.add(Course(id=1000, title='Math Course', number='1', department_id=1))
+            db.session.add(Course(id=1001, title='Arts Course', number='2', department_id=1))
+            db.session.add(Section(quarter_id=1, course_id=1000))
+            db.session.add(Section(quarter_id=2, course_id=1001))
             db.session.commit()
 
-    def test_courses(self):
+    def test_get(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
         }
@@ -194,7 +207,7 @@ class CoursesTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual(len(data), 2)
 
-    def test_courses_quarter_id(self):
+    def test_get_quarter_id(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
         }
@@ -205,6 +218,18 @@ class CoursesTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(len(data), 1)
+
+    @use_data('courses_post.yaml')
+    def test_post(self, data):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.post('/courses', headers=headers, data=data['courses'])
+        self.assertEqual(200, rv.status_code)
+        resp = json.loads(rv.data)
+        self.assertEqual(21, resp['updated_count'])
 
 
 class EvaluationsTestCase(TestCase):

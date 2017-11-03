@@ -47,6 +47,13 @@ class TestCase(unittest.TestCase):
 
             self.jwt = create_access_token(identity=ident)
 
+            api_ident = {
+                'university_id': 1,
+                'roles': [Role.API_Key]
+            }
+
+            self.api_jwt = create_access_token(identity=api_ident)
+
     def tearDown(self):
         with self.appx.app_context():
             db.session.remove()

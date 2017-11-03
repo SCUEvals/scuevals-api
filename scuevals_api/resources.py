@@ -12,11 +12,19 @@ from werkzeug.exceptions import Unauthorized, InternalServerError, Unprocessable
 from scuevals_api.roles import role_required
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role, \
     Evaluation
-from scuevals_api.utils import use_args
-
+from scuevals_api.utils import use_args, get_pg_error_msg
 
 resources_bp = Blueprint('resources', __name__)
 api = Api(resources_bp)
+
+
+class DepartmentSchema(Schema):
+    value = fields.Str(required=True)
+    label = fields.Str(required=True)
+    school = fields.Str(required=True)
+
+    class Meta:
+        strict = True
 
 
 class Departments(Resource):
@@ -42,9 +50,8 @@ class Departments(Resource):
 
     @jwt_required
     @role_required(Role.API_Key)
-    @use_args({'departments': fields.List(fields.Raw(), required=True)}, locations=('json',))
+    @use_args({'departments': fields.List(fields.Nested(DepartmentSchema), required=True)}, locations=('json',))
     def post(self, args):
-
         jwt_data = get_jwt_identity()
 
         params = {'u_id': jwt_data['university_id'], 'data': json.dumps(args)}
@@ -54,10 +61,25 @@ class Departments(Resource):
             result = db.session.execute(sql, params)
             db.session.commit()
         except DatabaseError as e:
+            db.session.rollback()
+            db.session.remove()
             logging.error('failed to update departments: ' + str(e))
-            return {'error': 'database error'}
+            raise UnprocessableEntity()
 
         return {'result': 'success', 'updated_count': int(result.first()[0])}
+
+
+class CourseSchema(Schema):
+    term = fields.Str(required=True)
+    catalog_nbr = fields.Str(required=True)
+    subject = fields.Str(required=True)
+    class_descr = fields.Str(required=True)
+    instr_1 = fields.Str(required=True)
+    instr_2 = fields.Str(required=True)
+    instr_3 = fields.Str(required=True)
+
+    class Meta:
+        strict = True
 
 
 class Courses(Resource):
@@ -85,9 +107,10 @@ class Courses(Resource):
 
     @jwt_required
     @role_required(Role.API_Key)
-    @use_args({'courses': fields.List(fields.Raw(), required=True)}, locations=('json',))
+    @use_args({'courses': fields.List(fields.Nested(CourseSchema), required=True)}, locations=('json',))
     def post(self, args):
-        params = {'u_id': args['university_id'], 'data': json.dumps(args)}
+        jwt_data = get_jwt_identity()
+        params = {'u_id': jwt_data['university_id'], 'data': json.dumps(args)}
 
         try:
             sql = text('select update_courses(:u_id, (:data)::jsonb)')
@@ -96,8 +119,14 @@ class Courses(Resource):
         except DatabaseError as e:
             db.session.rollback()
             db.session.remove()
+
+            if e.orig.pgcode == 'MIDEP':
+                msg = get_pg_error_msg(e.orig)
+                logging.error(msg)
+                raise UnprocessableEntity(msg)
+
             logging.error('failed to update courses: ' + str(e))
-            return {'error': 'database error'}
+            raise UnprocessableEntity
 
         return {'result': 'success', 'updated_count': int(result.first()[0])}
 

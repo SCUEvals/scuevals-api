@@ -1,4 +1,25 @@
-create or replace function update_departments(_university_id numeric, _json jsonb)
+"""Update constraint name in function
+
+Revision ID: 8c0d5ff8631d
+Revises: fba9c57320a8
+Create Date: 2017-11-03 09:45:23.175072
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision = '8c0d5ff8631d'
+down_revision = 'fba9c57320a8'
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    conn = op.get_bind()
+    conn.execute('drop function if exists update_departments(jsonb)')
+    conn.execute(sa.text("""create or replace function update_departments(_university_id numeric, _json jsonb)
   returns numeric as $func$
 declare
   _s_id   numeric;
@@ -31,4 +52,8 @@ begin
 
   return _count;
 end;
-$func$ language plpgsql;
+$func$ language plpgsql;"""))
+
+
+def downgrade():
+    pass

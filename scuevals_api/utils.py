@@ -23,3 +23,8 @@ def handle_request_parsing_error(err):
     a JSON error response to the client.
     """
     abort(422, errors=err.messages)
+
+
+def get_pg_error_msg(e):
+    parts = str(e).split('\n')
+    return None if len(parts) == 0 else parts[0]

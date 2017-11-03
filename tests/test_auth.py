@@ -16,7 +16,7 @@ class AuthTestCase(TestCase):
             db.session.add(APIKey(key='API_KEY', university_id=1))
             db.session.commit()
 
-    @use_data('test_auth.yaml')
+    @use_data('auth.yaml')
     @vcr.use_cassette
     def test_auth(self, data):
         # make sure the new token will have a new expiration time
