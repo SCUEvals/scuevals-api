@@ -126,7 +126,7 @@ class Courses(Resource):
                 raise UnprocessableEntity(msg)
 
             logging.error('failed to update courses: ' + str(e))
-            raise UnprocessableEntity
+            raise UnprocessableEntity()
 
         return {'result': 'success', 'updated_count': int(result.first()[0])}
 
@@ -214,7 +214,7 @@ class Majors(Resource):
 
     @jwt_required
     @role_required(Role.API_Key)
-    @use_args({'majors': fields.List(fields.Raw(), required=True)})
+    @use_args({'majors': fields.List(fields.Str(), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()
 
@@ -228,7 +228,7 @@ class Majors(Resource):
             db.session.rollback()
             db.session.remove()
             logging.error('failed to insert majors: ' + str(e))
-            return {'error': 'database error'}
+            raise UnprocessableEntity()
 
         return {'result': 'success'}
 

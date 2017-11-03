@@ -86,15 +86,13 @@ class DepartmentsTestCase(TestCase):
 
 
 class MajorsTestCase(TestCase):
-    def setUp(self):
-        super(MajorsTestCase, self).setUp()
 
+    def test_majors(self):
         with self.appx.app_context():
             db.session.add(Major(id=1, university_id=1, name='Major1'))
             db.session.add(Major(id=2, university_id=1, name='Major2'))
             db.session.commit()
 
-    def test_majors(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
         rv = self.app.get('/majors', headers=headers)
@@ -103,6 +101,20 @@ class MajorsTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(len(data), 2)
+
+    def test_post(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        data = {'majors': ['Major1', 'Major2', 'Major3']}
+
+        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        print(rv.data)
+        self.assertEqual(200, rv.status_code)
+        resp = json.loads(rv.data)
+        self.assertEqual('success', resp['result'])
 
 
 class StudentsTestCase(TestCase):
