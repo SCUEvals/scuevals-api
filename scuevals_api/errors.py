@@ -1,5 +1,6 @@
 from functools import wraps
 from flask import jsonify
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_rollbar import Rollbar
 from werkzeug.exceptions import (
     BadRequest, Unauthorized, Forbidden, NotFound,
@@ -7,7 +8,8 @@ from werkzeug.exceptions import (
 )
 
 rollbar = Rollbar(ignore_exc=[BadRequest, Unauthorized, Forbidden, NotFound, UnprocessableEntity,
-                              MethodNotAllowed, UnsupportedMediaType])
+                              MethodNotAllowed, UnsupportedMediaType,
+                              NoAuthorizationError])
 
 
 def get_http_exception_handler(app):
