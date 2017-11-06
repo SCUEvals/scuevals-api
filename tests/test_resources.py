@@ -22,12 +22,32 @@ class ResourceTestCase(TestCase):
             ident = student.to_dict()
             self.jwt = create_access_token(identity=ident)
 
-    def test_resource_no_roles(self):
+    def test_no_roles(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
         rv = self.app.get('/quarters', headers=headers)
-
         self.assertEqual(rv.status_code, 401)
+
+    def test_wrong_mimetype(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+        }
+
+        data = {'majors': ['Major1']}
+
+        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        self.assertEqual(415, rv.status_code)
+
+    def test_wrong_args(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        data = {'invalid': 'data'}
+
+        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        self.assertEqual(422, rv.status_code)
 
 
 class QuartersTestCase(TestCase):
