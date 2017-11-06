@@ -19,7 +19,7 @@ def create_app(config_object=None):
     try:
         load_config(app, app.config['FLASK_CONFIG'])
     except IOError:
-        raise Exception('invalid config specified')
+        raise ValueError('invalid config specified')
 
     if app.config['FLASK_CONFIG'] == 'test':
         logging.disable(logging.CRITICAL)
