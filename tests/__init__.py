@@ -21,8 +21,6 @@ vcr = VCR(
 class TestCase(unittest.TestCase):
     def setUp(self):
         app = create_app()
-        app.testing = True
-
         self.appx = app
         self.app = app.test_client()
 
