@@ -91,7 +91,7 @@ class Student(db.Model):
             if role is None:
                 raise ValueError('role does not exist: {}'.format(role_id))
 
-            self.majors.append(role)
+            self.roles.append(role)
 
     def to_dict(self):
         student = {
