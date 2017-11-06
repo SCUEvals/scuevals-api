@@ -72,7 +72,7 @@ class DepartmentsTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual(len(data), 2)
 
-    @use_data('departments_post.yaml')
+    @use_data('departments.yaml')
     def test_post(self, data):
         headers = {
             'Authorization': 'Bearer ' + self.api_jwt,
@@ -83,6 +83,16 @@ class DepartmentsTestCase(TestCase):
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual(74, resp['updated_count'])
+
+    @use_data('departments.yaml')
+    def test_post_invalid_school(self, data):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.post('/departments', headers=headers, data=data['departments_invalid'])
+        self.assertEqual(422, rv.status_code)
 
 
 class MajorsTestCase(TestCase):
@@ -115,10 +125,27 @@ class MajorsTestCase(TestCase):
         resp = json.loads(rv.data)
         self.assertEqual('success', resp['result'])
 
+    def test_post_duplicate_majors(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        data = {'majors': ['Major1', 'Major1']}
+
+        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        self.assertEqual(422, rv.status_code)
+
 
 class StudentsTestCase(TestCase):
     def setUp(self):
         super(StudentsTestCase, self).setUp()
+
+        self.patch_data = {
+            'graduation_year': 2018,
+            'gender': 'm',
+            'majors': [1, 2]
+        }
 
         with self.appx.app_context():
             db.session.add(Major(id=1, university_id=1, name='Major1'))
@@ -140,26 +167,57 @@ class StudentsTestCase(TestCase):
 
             self.jwt = create_access_token(identity=ident)
 
-    def test_students_patch(self):
+    def test_patch(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
             'Content-Type': 'application/json'
         }
 
-        data = {
-            'graduation_year': 2018,
-            'gender': 'm',
-            'majors': [1, 2]
-        }
-
-        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(data))
+        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 200)
 
         with self.appx.app_context():
             student = Student.query.get(1)
-            self.assertEqual(student.graduation_year, data['graduation_year'])
-            self.assertEqual(student.gender, data['gender'])
-            self.assertEqual(student.majors_list, data['majors'])
+            self.assertEqual(student.graduation_year, self.patch_data['graduation_year'])
+            self.assertEqual(student.gender, self.patch_data['gender'])
+            self.assertEqual(student.majors_list, self.patch_data['majors'])
+
+    def test_patch_wrong_user(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
+        self.assertEqual(rv.status_code, 401)
+
+    def test_patch_non_existing_user(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+            'Content-Type': 'application/json'
+        }
+
+        with self.appx.app_context():
+            db.session.delete(Student.query.get(1))
+            db.session.commit()
+
+        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        self.assertEqual(rv.status_code, 422)
+        resp = json.loads(rv.data)
+        self.assertEqual('user does not exist', resp['message'])
+
+    def test_patch_invalid_majors(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+            'Content-Type': 'application/json'
+        }
+
+        self.patch_data['majors'] = [-1]
+
+        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        self.assertEqual(rv.status_code, 422)
+        resp = json.loads(rv.data)
+        self.assertEqual('invalid major(s) specified', resp['message'])
 
 
 class SearchTestCase(TestCase):
@@ -230,7 +288,7 @@ class CoursesTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual(len(data), 1)
 
-    @use_data('courses_post.yaml')
+    @use_data('courses.yaml')
     def test_post(self, data):
         headers = {
             'Authorization': 'Bearer ' + self.api_jwt,
@@ -242,17 +300,27 @@ class CoursesTestCase(TestCase):
         resp = json.loads(rv.data)
         self.assertEqual(21, resp['updated_count'])
 
-    @use_data('courses_post_missing_department.yaml')
+    @use_data('courses.yaml')
     def test_post_missing_department(self, data):
         headers = {
             'Authorization': 'Bearer ' + self.api_jwt,
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.post('/courses', headers=headers, data=data['courses'])
+        rv = self.app.post('/courses', headers=headers, data=data['courses_missing_department'])
         self.assertEqual(422, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual('missing department ACTG', resp['message'])
+
+    @use_data('courses.yaml')
+    def test_post_invalid_quarter(self, data):
+        headers = {
+            'Authorization': 'Bearer ' + self.api_jwt,
+            'Content-Type': 'application/json'
+        }
+
+        rv = self.app.post('/courses', headers=headers, data=data['courses_invalid_quarter'])
+        self.assertEqual(422, rv.status_code)
 
 
 class EvaluationsTestCase(TestCase):
@@ -304,3 +372,32 @@ class EvaluationsTestCase(TestCase):
                 self.fail('evaluation was not inserted')
 
             self.assertEqual(data['evaluation'], evaluation.data)
+
+    def test_post_evaluation_invalid_section(self):
+        headers = {
+            'Authorization': 'Bearer ' + self.jwt,
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            'quarter_id': -1,
+            'professor_id': 1,
+            'course_id': -1,
+            'evaluation': {
+                'attitude': 1,
+                'availability': 1,
+                'clarity': 1,
+                'handwriting': 1,
+                'take_again': 1,
+                'timeliness': 1,
+                'evenness': 1,
+                'workload': 1,
+                'comment': 'Test'
+            }
+        }
+
+        rv = self.app.post('/evaluations', headers=headers, data=json.dumps(data))
+        self.assertEqual(422, rv.status_code)
+
+        resp = json.loads(rv.data)
+        self.assertEqual('invalid quarter/course combination', resp['message'])

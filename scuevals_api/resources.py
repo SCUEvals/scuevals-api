@@ -7,7 +7,7 @@ from sqlalchemy import text, func
 from sqlalchemy.exc import DatabaseError
 from marshmallow import fields, validate, Schema
 from flask_restful import Resource, Api
-from werkzeug.exceptions import Unauthorized, InternalServerError, UnprocessableEntity
+from werkzeug.exceptions import Unauthorized, UnprocessableEntity
 
 from scuevals_api.roles import role_required
 from scuevals_api.models import Course, Quarter, Department, School, Section, Professor, db, Major, Student, Role, \
@@ -254,7 +254,7 @@ class Students(Resource):
 
         student = Student.query.get(s_id)
         if student is None:
-            raise InternalServerError('user does not exist')
+            raise UnprocessableEntity('user does not exist')
 
         student.graduation_year = args['graduation_year']
         student.gender = args['gender']
