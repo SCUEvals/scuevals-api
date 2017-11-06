@@ -1,0 +1,38 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.18.4]
+    method: GET
+    uri: https://accounts.google.com/.well-known/openid-configuration
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAJbogC/5xTyw7bIBC8+yssn6sgpY9DPqM9VhUieO1sglnEgt206r8XY5w0qaM+brNmZhh2
+        19+rukHmCL451M0pBMcHIZTWFG3gXU/UG9hpGpo3ialiOJHHbyogWQm2dYQ2/EEpSNAs3ItxL2aQ
+        rQJdYNtimqaiVg55cSj6dyLLskFk8Gg7+lePt2JVZhsPI+n/fM+svUC2OU8XltHjX4fQ4AOXBOzI
+        MshwdcCSo3PkA7TJ6nNV142mNt9RerZAbOUv1Uypn+tHSob1K9nTgSULTVV/meNxPJ5Bh1fpXDwa
+        1Ct5tZGMvUXbS2V6OSoTt6QfP+3ff7hdo2nTP3212C6xYFBoFug8dWhuIR+3Sc5dlgOkZW23GmoQ
+        EolBewjSEYfSjofvR8X3d2mjcNiwUvH3aBnKMe1Yh7Aef3UL6NSA5iqtGspMexxT8nuNqqRJf+UC
+        TNpPU07vPIc6RF+KNKNb0jRTqU/KGLA9vG6CSy8q017HUP2ofgYAAP//0uQUFg8EAAA=
+    headers:
+      Accept-Ranges: [bytes]
+      Access-Control-Allow-Origin: ['*']
+      Age: ['2942']
+      Alt-Svc: ['quic=":443"; ma=2592000; v="39,38,37,35"']
+      Cache-Control: ['public, max-age=3600']
+      Content-Encoding: [gzip]
+      Content-Length: ['392']
+      Content-Type: [application/json]
+      Date: ['Thu, 12 Oct 2017 07:28:12 GMT']
+      Expires: ['Thu, 12 Oct 2017 08:28:12 GMT']
+      Last-Modified: ['Mon, 01 Feb 2016 19:53:44 GMT']
+      Server: [sffe]
+      Vary: [Accept-Encoding]
+      X-Content-Type-Options: [nosniff]
+      X-XSS-Protection: [1; mode=block]
+    status: {code: 400, message: Bad Request}
+version: 1

@@ -7,7 +7,7 @@ from flask_caching import Cache
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
-from werkzeug.exceptions import UnprocessableEntity, Unauthorized
+from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
 from scuevals_api.models import Student, db, Role, APIKey
 from scuevals_api.utils import use_args
@@ -20,11 +20,17 @@ jwtm = JWTManager()
 @auth_bp.route('/auth', methods=['POST'])
 @use_args({'id_token': fields.String(required=True)}, locations=('json',))
 def auth(args):
-    headers = jwt.get_unverified_header(args['id_token'])
+    try:
+        headers = jwt.get_unverified_header(args['id_token'])
+    except JWTError as e:
+        raise UnprocessableEntity('invalid id_token format: {}'.format(e))
 
     key = cache.get(headers['kid'])
     if not key:
-        refresh_key_cache()
+        try:
+            refresh_key_cache(cache)
+        except HTTPException as e:
+            raise InternalServerError('failed to get certificates from Google: {}'.format(e))
 
     key = cache.get(headers['kid'])
 
@@ -42,13 +48,12 @@ def auth(args):
             options=decode_options
         )
     except ExpiredSignatureError:
-        raise Unauthorized(description='token is expired')
+        raise Unauthorized('token is expired')
     except JWTError as e:
-        raise UnprocessableEntity(description='invalid id_token: {}'.format(e))
+        raise UnprocessableEntity('invalid id_token: {}'.format(e))
 
-    # TODO: Get this value from the database
     if data['hd'] != 'scu.edu':
-        raise UnprocessableEntity(description='invalid id_token')
+        raise UnprocessableEntity('invalid id_token')
 
     user = Student.query.filter_by(email=data['email']).one_or_none()
 
@@ -122,21 +127,21 @@ def claims_verification_loader(user_claims):
     return True
 
 
-def refresh_key_cache():
+def refresh_key_cache(data_store):
     jwks = get_certs()
     for key in jwks['keys']:
-        cache.set(key['kid'], key)
+        data_store.set(key['kid'], key)
 
 
 def get_certs():
     resp = requests.get('https://accounts.google.com/.well-known/openid-configuration')
     if resp.status_code != 200:
-        raise Exception('failed to get Google openid config')
+        raise HTTPException('failed to get Google openid config')
 
     certs_url = resp.json()['jwks_uri']
 
     resp = requests.get(certs_url)
     if resp.status_code != 200:
-        raise Exception('failed to get Google JWKs')
+        raise HTTPException('failed to get Google JWKs')
 
     return resp.json()
