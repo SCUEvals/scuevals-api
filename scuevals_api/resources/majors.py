@@ -11,7 +11,7 @@ from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
 
-class Majors(Resource):
+class MajorsResource(Resource):
 
     @jwt_required
     @role_required(Role.Student, Role.Incomplete)

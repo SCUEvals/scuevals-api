@@ -13,7 +13,7 @@ def year_in_range(year):
     return datetime.now().year <= year <= datetime.now().year + 10
 
 
-class Students(Resource):
+class StudentsResource(Resource):
     args = {
         'graduation_year': fields.Int(required=True, validate=year_in_range),
         'gender': fields.Str(required=True, validate=validate.OneOf(['m', 'f', 'o'])),

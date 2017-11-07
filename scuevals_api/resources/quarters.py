@@ -5,7 +5,7 @@ from scuevals_api.models import Role, Quarter
 from scuevals_api.roles import role_required
 
 
-class Quarters(Resource):
+class QuartersResource(Resource):
 
     @jwt_required
     @role_required(Role.Student)

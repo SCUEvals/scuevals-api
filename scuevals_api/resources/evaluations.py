@@ -25,7 +25,7 @@ class EvaluationSchemaV1(Schema):
         strict = True
 
 
-class Evaluations(Resource):
+class EvaluationsResource(Resource):
     args = {
         'quarter_id': fields.Int(required=True),
         'professor_id': fields.Int(required=True),

@@ -22,7 +22,7 @@ class DepartmentSchema(Schema):
         strict = True
 
 
-class Departments(Resource):
+class DepartmentsResource(Resource):
 
     @jwt_required
     @role_required(Role.Student, Role.API_Key)

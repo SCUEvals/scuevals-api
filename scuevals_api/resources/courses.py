@@ -26,7 +26,7 @@ class CourseSchema(Schema):
         strict = True
 
 
-class Courses(Resource):
+class CoursesResource(Resource):
 
     @jwt_required
     @role_required(Role.Student)

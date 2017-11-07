@@ -8,7 +8,7 @@ from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
 
-class Search(Resource):
+class SearchResource(Resource):
     args = {'q': fields.String(required=True), 'limit': fields.Integer()}
 
     @jwt_required
