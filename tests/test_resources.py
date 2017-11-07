@@ -3,15 +3,17 @@ from flask import json
 from flask_jwt_extended import create_access_token
 
 from tests import TestCase, use_data
-from scuevals_api.models import db, Major, Student, Professor, Course, Department, Quarter, Section, Role, School, \
-    Evaluation
+from scuevals_api.models import (
+    db, Major, Student, Professor, Course, Department,
+    Quarter, Section, Role, School, Evaluation
+)
 
 
 class ResourceTestCase(TestCase):
     def setUp(self):
         super(ResourceTestCase, self).setUp()
 
-        with self.appx.app_context():
+        with self.app.app_context():
             student = Student(
                 id=0,
                 email='jdoe@scu.edu',
@@ -25,7 +27,7 @@ class ResourceTestCase(TestCase):
     def test_no_roles(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
-        rv = self.app.get('/quarters', headers=headers)
+        rv = self.client.get('/quarters', headers=headers)
         self.assertEqual(rv.status_code, 401)
 
     def test_wrong_mimetype(self):
@@ -35,7 +37,7 @@ class ResourceTestCase(TestCase):
 
         data = {'majors': ['Major1']}
 
-        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/majors', headers=headers, data=json.dumps(data))
         self.assertEqual(415, rv.status_code)
 
     def test_wrong_args(self):
@@ -46,7 +48,7 @@ class ResourceTestCase(TestCase):
 
         data = {'invalid': 'data'}
 
-        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/majors', headers=headers, data=json.dumps(data))
         self.assertEqual(422, rv.status_code)
 
 
@@ -54,7 +56,7 @@ class QuartersTestCase(TestCase):
     def setUp(self):
         super(QuartersTestCase, self).setUp()
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
                                    period='[2017-01-01, 2017-02-01]', university_id=1))
             db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
@@ -64,7 +66,7 @@ class QuartersTestCase(TestCase):
     def test_quarters(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
-        rv = self.app.get('/quarters', headers=headers)
+        rv = self.client.get('/quarters', headers=headers)
 
         self.assertEqual(rv.status_code, 200)
 
@@ -76,7 +78,7 @@ class DepartmentsTestCase(TestCase):
     def setUp(self):
         super(DepartmentsTestCase, self).setUp()
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(School(id=0, abbreviation='ARTS', name='Arts & Sciences', university_id=1))
             db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=0))
             db.session.add(Department(abbreviation='ENGL', name='English', school_id=0))
@@ -85,7 +87,7 @@ class DepartmentsTestCase(TestCase):
     def test_get(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
-        rv = self.app.get('/departments', headers=headers)
+        rv = self.client.get('/departments', headers=headers)
 
         self.assertEqual(rv.status_code, 200)
 
@@ -99,7 +101,7 @@ class DepartmentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.post('/departments', headers=headers, data=data['departments'])
+        rv = self.client.post('/departments', headers=headers, data=data['departments'])
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual(74, resp['updated_count'])
@@ -111,21 +113,20 @@ class DepartmentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.post('/departments', headers=headers, data=data['departments_invalid'])
+        rv = self.client.post('/departments', headers=headers, data=data['departments_invalid'])
         self.assertEqual(422, rv.status_code)
 
 
 class MajorsTestCase(TestCase):
-
     def test_majors(self):
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Major(id=1, university_id=1, name='Major1'))
             db.session.add(Major(id=2, university_id=1, name='Major2'))
             db.session.commit()
 
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
-        rv = self.app.get('/majors', headers=headers)
+        rv = self.client.get('/majors', headers=headers)
 
         self.assertEqual(rv.status_code, 200)
 
@@ -140,7 +141,7 @@ class MajorsTestCase(TestCase):
 
         data = {'majors': ['Major1', 'Major2', 'Major3']}
 
-        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/majors', headers=headers, data=json.dumps(data))
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual('success', resp['result'])
@@ -153,7 +154,7 @@ class MajorsTestCase(TestCase):
 
         data = {'majors': ['Major1', 'Major1']}
 
-        rv = self.app.post('/majors', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/majors', headers=headers, data=json.dumps(data))
         self.assertEqual(422, rv.status_code)
 
 
@@ -167,7 +168,7 @@ class StudentsTestCase(TestCase):
             'majors': [1, 2]
         }
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Major(id=1, university_id=1, name='Major1'))
             db.session.add(Major(id=2, university_id=1, name='Major2'))
 
@@ -193,10 +194,10 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 200)
 
-        with self.appx.app_context():
+        with self.app.app_context():
             student = Student.query.get(1)
             self.assertEqual(student.graduation_year, self.patch_data['graduation_year'])
             self.assertEqual(student.gender, self.patch_data['gender'])
@@ -208,7 +209,7 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 401)
 
     def test_patch_non_existing_user(self):
@@ -217,11 +218,11 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.delete(Student.query.get(1))
             db.session.commit()
 
-        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 422)
         resp = json.loads(rv.data)
         self.assertEqual('user does not exist', resp['message'])
@@ -234,7 +235,7 @@ class StudentsTestCase(TestCase):
 
         self.patch_data['majors'] = [-1]
 
-        rv = self.app.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 422)
         resp = json.loads(rv.data)
         self.assertEqual('invalid major(s) specified', resp['message'])
@@ -244,7 +245,7 @@ class SearchTestCase(TestCase):
     def setUp(self):
         super(SearchTestCase, self).setUp()
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Professor(first_name='Mathias', last_name='Doe', university_id=1))
             db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=1))
             db.session.add(Course(title='Math Course', number='1', department_id=1))
@@ -255,7 +256,7 @@ class SearchTestCase(TestCase):
             'Authorization': 'Bearer ' + self.jwt
         }
 
-        rv = self.app.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
+        rv = self.client.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
         self.assertEqual(rv.status_code, 200)
 
         data = json.loads(rv.data)
@@ -269,7 +270,7 @@ class CoursesTestCase(TestCase):
     def setUp(self):
         super(CoursesTestCase, self).setUp()
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
                                    period='[2017-01-01, 2017-02-01]', university_id=1))
             db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
@@ -289,7 +290,7 @@ class CoursesTestCase(TestCase):
             'Authorization': 'Bearer ' + self.jwt,
         }
 
-        rv = self.app.get('/courses', headers=headers)
+        rv = self.client.get('/courses', headers=headers)
 
         self.assertEqual(rv.status_code, 200)
 
@@ -301,7 +302,7 @@ class CoursesTestCase(TestCase):
             'Authorization': 'Bearer ' + self.jwt,
         }
 
-        rv = self.app.get('/courses', headers=headers, query_string=urlencode({'quarter_id': 1}))
+        rv = self.client.get('/courses', headers=headers, query_string=urlencode({'quarter_id': 1}))
 
         self.assertEqual(rv.status_code, 200)
 
@@ -315,7 +316,7 @@ class CoursesTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.post('/courses', headers=headers, data=data['courses'])
+        rv = self.client.post('/courses', headers=headers, data=data['courses'])
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual(21, resp['updated_count'])
@@ -327,7 +328,7 @@ class CoursesTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.post('/courses', headers=headers, data=data['courses_missing_department'])
+        rv = self.client.post('/courses', headers=headers, data=data['courses_missing_department'])
         self.assertEqual(422, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual('missing department ACTG', resp['message'])
@@ -339,7 +340,7 @@ class CoursesTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.app.post('/courses', headers=headers, data=data['courses_invalid_quarter'])
+        rv = self.client.post('/courses', headers=headers, data=data['courses_invalid_quarter'])
         self.assertEqual(422, rv.status_code)
 
 
@@ -347,7 +348,7 @@ class EvaluationsTestCase(TestCase):
     def setUp(self):
         super(EvaluationsTestCase, self).setUp()
 
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
                                    period='[2017-01-01, 2017-02-01]', university_id=1))
             db.session.add(Department(abbreviation='GEN', name='General', school_id=1))
@@ -379,10 +380,10 @@ class EvaluationsTestCase(TestCase):
             }
         }
 
-        rv = self.app.post('/evaluations', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
         self.assertEqual(rv.status_code, 201)
 
-        with self.appx.app_context():
+        with self.app.app_context():
             evaluation = Evaluation.query.filter(
                 Evaluation.professor_id == 1,
                 Evaluation.student_id == 0
@@ -416,7 +417,7 @@ class EvaluationsTestCase(TestCase):
             }
         }
 
-        rv = self.app.post('/evaluations', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
         self.assertEqual(422, rv.status_code)
 
         resp = json.loads(rv.data)

@@ -5,7 +5,7 @@ from tests import TestCase
 class StudentTestCase(TestCase):
 
     def test_roles_list(self):
-        with self.appx.app_context():
+        with self.app.app_context():
             student = Student.query.get(0)
             student.roles_list = [Role.Student]
             self.assertEqual(student.roles_list, [1])
@@ -13,13 +13,13 @@ class StudentTestCase(TestCase):
             self.assertEqual(student.roles_list, [])
 
     def test_roles_list_invalid_role(self):
-        with self.appx.app_context():
+        with self.app.app_context():
             student = Student.query.get(0)
             with self.assertRaisesRegex(ValueError, 'role does not exist'):
                 student.roles_list = [-1]
 
     def test_majors_list(self):
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.add(Major(id=1, university_id=1, name='Major1'))
             student = Student.query.get(0)
             student.majors_list = [1]
@@ -28,7 +28,7 @@ class StudentTestCase(TestCase):
             self.assertEqual(student.majors_list, [])
 
     def test_majors_list_invalid_major(self):
-        with self.appx.app_context():
+        with self.app.app_context():
             student = Student.query.get(0)
             with self.assertRaisesRegex(ValueError, 'major does not exist'):
                 student.majors_list = [1]

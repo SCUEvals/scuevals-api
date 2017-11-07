@@ -21,8 +21,8 @@ vcr = VCR(
 class TestCase(unittest.TestCase):
     def setUp(self):
         app = create_app()
-        self.appx = app
-        self.app = app.test_client()
+        self.app = app
+        self.client = app.test_client()
 
         with app.app_context():
             db.drop_all()
@@ -53,7 +53,7 @@ class TestCase(unittest.TestCase):
             self.api_jwt = create_access_token(identity=api_ident)
 
     def tearDown(self):
-        with self.appx.app_context():
+        with self.app.app_context():
             db.session.remove()
             db.drop_all()
 
