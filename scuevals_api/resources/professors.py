@@ -2,7 +2,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from sqlalchemy.orm import subqueryload
 
-from auth import validate_university_id
+from scuevals_api.auth import validate_university_id
 from scuevals_api.models import Role, Professor
 from scuevals_api.roles import role_required
 
