@@ -12,7 +12,7 @@ def create_app(config_object=None):
     load_config(app, 'default')
 
     if 'FLASK_CONFIG' not in os.environ:
-        app.config['FLASK_CONFIG'] = 'development'
+        raise ValueError('FLASK_CONFIG env var not set')
     else:
         app.config['FLASK_CONFIG'] = os.environ['FLASK_CONFIG']
 
@@ -49,7 +49,7 @@ def register_extensions(app):
     jwtm.init_app(app)
     cache.init_app(app)
 
-    if 'FLASK_CONFIG' in os.environ and os.environ['FLASK_CONFIG'] == 'production':
+    if app.config['FLASK_CONFIG'] == 'production':
         from scuevals_api.errors import rollbar
         rollbar.init_app(app)
 
