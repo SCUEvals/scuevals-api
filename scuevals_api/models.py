@@ -133,6 +133,13 @@ class Professor(db.Model):
     sections = db.relationship('Section', secondary=section_professor, back_populates='professors')
     evaluations = db.relationship('Evaluation', back_populates='professor')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'first_name': self.first_name,
+            'last_name': self.last_name
+        }
+
 
 class Quarter(db.Model):
     __tablename__ = 'quarters'
@@ -213,6 +220,17 @@ class Course(db.Model):
     sections = db.relationship('Section', back_populates='course')
 
     __table_args__ = (db.UniqueConstraint('department_id', 'number'),)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.number,
+            'title': self.title,
+            'department': {
+                'id': self.department_id,
+                'abbreviation': self.department.abbreviation
+            },
+        }
 
 
 class Section(db.Model):

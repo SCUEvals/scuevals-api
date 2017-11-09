@@ -145,3 +145,10 @@ def get_certs():
         raise HTTPException('failed to get Google JWKs')
 
     return resp.json()
+
+
+def validate_university_id(u_id):
+    ident = get_jwt_identity()
+
+    if u_id != ident['university_id']:
+        raise Unauthorized('not allowed to access resource from another university')

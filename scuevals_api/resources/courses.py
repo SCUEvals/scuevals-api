@@ -7,8 +7,9 @@ from marshmallow import fields, Schema
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
-from werkzeug.exceptions import UnprocessableEntity, Unauthorized
+from werkzeug.exceptions import UnprocessableEntity
 
+from auth import validate_university_id
 from scuevals_api.models import Role, Course, Section, db
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args, get_pg_error_msg
@@ -85,31 +86,18 @@ class CourseResource(Resource):
             subqueryload(Course.sections).subqueryload(Section.evaluations)
         ).get(c_id)
 
-        ident = get_jwt_identity()
+        validate_university_id(course.department.school.university_id)
 
-        if course.department.school.university_id != ident['university_id']:
-            raise Unauthorized('not allowed to access course from other university')
+        data = course.to_dict()
+        data['evaluations'] = [
+            {
+                'id': ev.id,
+                'quarter_id': ev.section.quarter_id,
+                'version': ev.version,
+                'data': ev.data,
+                'professor': ev.professor.to_dict(),
+            }
+            for section in course.sections for ev in section.evaluations
+        ]
 
-        return {
-            'id': course.id,
-            'name': course.number,
-            'title': course.title,
-            'department': {
-                'id': course.department_id,
-                'abbreviation': course.department.abbreviation
-            },
-            'evaluations': [
-                {
-                    'id': ev.id,
-                    'quarter_id': ev.section.quarter_id,
-                    'version': ev.version,
-                    'data': ev.data,
-                    'professor': {
-                        'id': ev.professor.id,
-                        'first_name': ev.professor.first_name,
-                        'last_name': ev.professor.last_name
-                    },
-                }
-                for section in course.sections for ev in section.evaluations
-            ]
-        }
+        return data
