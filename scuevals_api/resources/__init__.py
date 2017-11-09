@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_restful import Api
 
-from resources.professors import ProfessorsResource, ProfessorResource
+from .professors import ProfessorsResource, ProfessorResource
 from .courses import CoursesResource, CourseResource
 from .departments import DepartmentsResource
 from .evaluations import EvaluationsResource
