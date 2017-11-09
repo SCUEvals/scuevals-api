@@ -1,7 +1,9 @@
 import json
 from urllib.parse import urlencode
 
-from scuevals_api.models import db, Quarter, Department, Course, Section, Evaluation, Professor
+from flask_jwt_extended import create_access_token
+
+from scuevals_api.models import db, Quarter, Department, Course, Section, Evaluation, Professor, Student, University
 from tests import TestCase, use_data
 
 
@@ -101,3 +103,41 @@ class CourseTestCase(TestCase):
         rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + self.jwt})
         self.assertEqual(200, rv.status_code)
 
+        expected = {
+            'id': 1,
+            'department': {
+                'id': 1,
+                'abbreviation': 'MATH'
+            },
+            'name': '1',
+            'title': 'Math Course',
+            'evaluations': [
+                {
+                    'id': 1,
+                    'quarter_id': 1,
+                    'version': 1,
+                    'data': {'q1': 'a1'},
+                    'professor': {
+                        'id': 1,
+                        'first_name': 'Ben',
+                        'last_name': 'Stiller'
+                    }
+                }
+            ]
+        }
+
+        self.assertEqual(expected, json.loads(rv.data))
+
+    def test_get_wrong_university(self):
+        with self.app.app_context():
+            db.session.add(University(id=2, abbreviation='UCB', name='UC Berkeley'))
+            student = Student.query.get(0)
+            student.university_id = 2
+
+            ident = student.to_dict()
+            db.session.commit()
+
+            self.jwt = create_access_token(identity=ident)
+
+        rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(401, rv.status_code)

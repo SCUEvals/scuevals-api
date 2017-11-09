@@ -6,7 +6,8 @@ from flask_restful import Resource
 from marshmallow import fields, Schema
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
-from werkzeug.exceptions import UnprocessableEntity
+from sqlalchemy.orm import subqueryload
+from werkzeug.exceptions import UnprocessableEntity, Unauthorized
 
 from scuevals_api.models import Role, Course, Section, db
 from scuevals_api.roles import role_required
@@ -73,3 +74,42 @@ class CoursesResource(Resource):
             raise UnprocessableEntity()
 
         return {'result': 'success', 'updated_count': int(result.first()[0])}
+
+
+class CourseResource(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
+    def get(self, c_id):
+        course = Course.query.options(
+            subqueryload(Course.sections).subqueryload(Section.evaluations)
+        ).get(c_id)
+
+        ident = get_jwt_identity()
+
+        if course.department.school.university_id != ident['university_id']:
+            raise Unauthorized('not allowed to access course from other university')
+
+        return {
+            'id': course.id,
+            'name': course.number,
+            'title': course.title,
+            'department': {
+                'id': course.department_id,
+                'abbreviation': course.department.abbreviation
+            },
+            'evaluations': [
+                {
+                    'id': ev.id,
+                    'quarter_id': ev.section.quarter_id,
+                    'version': ev.version,
+                    'data': ev.data,
+                    'professor': {
+                        'id': ev.professor.id,
+                        'first_name': ev.professor.first_name,
+                        'last_name': ev.professor.last_name
+                    },
+                }
+                for section in course.sections for ev in section.evaluations
+            ]
+        }
