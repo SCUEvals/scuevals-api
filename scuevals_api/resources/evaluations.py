@@ -74,4 +74,3 @@ class EvaluationResource(Resource):
         validate_university_id(evaluation.section.course.department.school.university_id)
 
         return evaluation.to_dict()
-

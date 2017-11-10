@@ -22,4 +22,3 @@ class CmdsTestCase(unittest.TestCase):
     def test_seeddb(self):
         result = self.cli_run('seeddb')
         self.assertEqual(0, result.exit_code)
-

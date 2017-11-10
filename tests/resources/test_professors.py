@@ -1,10 +1,7 @@
 import json
-from urllib.parse import urlencode
 
-from flask_jwt_extended import create_access_token
-
-from scuevals_api.models import db, Quarter, Department, Course, Section, Evaluation, Professor, Student, University
-from tests import TestCase, use_data
+from scuevals_api.models import db, Quarter, Department, Course, Section, Evaluation, Professor
+from tests import TestCase
 
 
 class ProfessorsTestCase(TestCase):
