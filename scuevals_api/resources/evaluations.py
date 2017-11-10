@@ -1,8 +1,9 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
-from werkzeug.exceptions import UnprocessableEntity
+from werkzeug.exceptions import UnprocessableEntity, NotFound
 
+from scuevals_api.auth import validate_university_id
 from scuevals_api.models import Role, Section, Evaluation, db
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
@@ -59,3 +60,18 @@ class EvaluationsResource(Resource):
         db.session.commit()
 
         return {'result': 'success'}, 201
+
+
+class EvaluationResource(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
+    def get(self, e_id):
+        evaluation = Evaluation.query.get(e_id)
+        if evaluation is None:
+            raise NotFound('evaluation with the specified id not found')
+
+        validate_university_id(evaluation.section.course.department.school.university_id)
+
+        return evaluation.to_dict()
+

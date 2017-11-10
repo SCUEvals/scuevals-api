@@ -141,3 +141,9 @@ class CourseTestCase(TestCase):
 
         rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + self.jwt})
         self.assertEqual(401, rv.status_code)
+
+    def test_get_non_existing(self):
+        rv = self.client.get('/courses/0', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not found', data['message'])

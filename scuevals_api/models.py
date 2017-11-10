@@ -181,6 +181,13 @@ class Evaluation(db.Model):
         db.UniqueConstraint('student_id', 'professor_id', 'section_id'),
     )
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'version': self.version,
+            'data': self.data
+        }
+
 
 class Department(db.Model):
     __tablename__ = 'departments'

@@ -74,16 +74,8 @@ class ProfessorTestCase(TestCase):
 
         self.assertEqual(expected, json.loads(rv.data))
 
-    def test_get_wrong_university(self):
-        with self.app.app_context():
-            db.session.add(University(id=2, abbreviation='UCB', name='UC Berkeley'))
-            student = Student.query.get(0)
-            student.university_id = 2
-
-            ident = student.to_dict()
-            db.session.commit()
-
-            self.jwt = create_access_token(identity=ident)
-
-        rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + self.jwt})
-        self.assertEqual(401, rv.status_code)
+    def test_get_non_existing(self):
+        rv = self.client.get('/professors/0', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not found', data['message'])

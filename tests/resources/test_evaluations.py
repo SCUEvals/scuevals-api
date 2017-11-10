@@ -82,3 +82,38 @@ class EvaluationsTestCase(TestCase):
 
         resp = json.loads(rv.data)
         self.assertEqual('invalid quarter/course combination', resp['message'])
+
+
+class EvaluationTestCase(TestCase):
+    def setUp(self):
+        super(EvaluationTestCase, self).setUp()
+
+        with self.app.app_context():
+            db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
+                                   period='[2017-01-01, 2017-02-01]', university_id=1))
+            db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=1))
+            db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
+            db.session.add(Section(id=1, quarter_id=1, course_id=1))
+            db.session.add(Professor(id=1, first_name='Mary', last_name='Doe', university_id=1))
+            db.session.add(Evaluation(id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
+            db.session.commit()
+
+    def test_get(self):
+        rv = self.client.get('/evaluations/1', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(200, rv.status_code)
+
+        expected = {
+            'id': 1,
+            'version': 1,
+            'data': {
+                'q1': 'a1'
+            }
+        }
+
+        self.assertEqual(expected, json.loads(rv.data))
+
+    def test_get_non_existing(self):
+        rv = self.client.get('/evaluations/0', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not found', data['message'])

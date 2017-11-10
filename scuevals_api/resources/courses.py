@@ -7,7 +7,7 @@ from marshmallow import fields, Schema
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
-from werkzeug.exceptions import UnprocessableEntity
+from werkzeug.exceptions import UnprocessableEntity, NotFound
 
 from scuevals_api.auth import validate_university_id
 from scuevals_api.models import Role, Course, Section, db
@@ -85,6 +85,9 @@ class CourseResource(Resource):
         course = Course.query.options(
             subqueryload(Course.sections).subqueryload(Section.evaluations)
         ).get(c_id)
+
+        if course is None:
+            raise NotFound('course with the specified id not found')
 
         validate_university_id(course.department.school.university_id)
 

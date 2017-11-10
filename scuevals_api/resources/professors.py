@@ -1,6 +1,7 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from sqlalchemy.orm import subqueryload
+from werkzeug.exceptions import NotFound
 
 from scuevals_api.auth import validate_university_id
 from scuevals_api.models import Role, Professor
@@ -24,6 +25,9 @@ class ProfessorResource(Resource):
     @role_required(Role.Student)
     def get(self, p_id):
         professor = Professor.query.options(subqueryload(Professor.evaluations)).get(p_id)
+
+        if professor is None:
+            raise NotFound('professor with the specified id not found')
 
         validate_university_id(professor.university_id)
 
