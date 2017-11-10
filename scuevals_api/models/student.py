@@ -16,6 +16,7 @@ class Student(db.Model):
 
     university = db.relationship('University', back_populates='students')
     evaluations = db.relationship('Evaluation', back_populates='student')
+    votes = db.relationship('Vote', back_populates='student')
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
     roles = db.relationship('Role', secondary=student_role, back_populates='students')
 

@@ -34,3 +34,4 @@ from .school import School
 from .section import Section
 from .student import Student
 from .university import University
+from .vote import Vote
