@@ -166,12 +166,12 @@ class Evaluation(db.Model):
     __tablename__ = 'evaluations'
 
     id = db.Column(db.Integer, primary_key=True)
+    version = db.Column(db.Integer, nullable=False)
+    data = db.Column(JSONB, nullable=False)
 
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     professor_id = db.Column(db.Integer, db.ForeignKey('professors.id'), nullable=False)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
-    version = db.Column(db.Integer, nullable=False)
-    data = db.Column(JSONB, nullable=False)
 
     student = db.relationship('Student', back_populates='evaluations')
     professor = db.relationship('Professor', back_populates='evaluations')
