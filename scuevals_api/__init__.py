@@ -2,6 +2,7 @@ import logging
 import os
 from flask import Flask
 
+from scuevals_api.models import models_bp, db
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
 from scuevals_api.errors import get_http_exception_handler
@@ -36,9 +37,6 @@ def create_app(config_object=None):
 
 
 def register_extensions(app):
-    from scuevals_api.models import db
-    db.init_app(app)
-
     from flask_migrate import Migrate
     Migrate(app, db)
 
@@ -55,6 +53,7 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
+    app.register_blueprint(models_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(resources_bp)
 
