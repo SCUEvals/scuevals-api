@@ -4,7 +4,7 @@ from flask_restful import Api
 from .professors import ProfessorsResource, ProfessorResource
 from .courses import CoursesResource, CourseResource
 from .departments import DepartmentsResource
-from .evaluations import EvaluationsResource, EvaluationResource, EvaluationUpVoteResource, EvaluationDownVoteResource
+from .evaluations import EvaluationsResource, EvaluationResource, EvaluationVoteResource
 from .majors import MajorsResource
 from .quarters import QuartersResource
 from .search import SearchResource
@@ -21,8 +21,7 @@ api.add_resource(DepartmentsResource, '/departments')
 
 api.add_resource(EvaluationsResource, '/evaluations')
 api.add_resource(EvaluationResource, '/evaluations/<int:e_id>')
-api.add_resource(EvaluationUpVoteResource, '/evaluations/<int:e_id>/upvote')
-api.add_resource(EvaluationDownVoteResource, '/evaluations/<int:e_id>/downvote')
+api.add_resource(EvaluationVoteResource, '/evaluations/<int:e_id>/vote')
 
 api.add_resource(MajorsResource, '/majors')
 

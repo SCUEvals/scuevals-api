@@ -77,76 +77,61 @@ class EvaluationResource(Resource):
         return evaluation.to_dict()
 
 
-class EvaluationUpVoteResource(Resource):
+class EvaluationVoteResource(Resource):
+
+    values = {
+        'u': Vote.UPVOTE,
+        'd': Vote.DOWNVOTE
+    }
 
     @jwt_required
     @role_required(Role.Student)
-    def put(self, e_id):
+    @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
+    def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
-        return update_vote(e_id, student_id, Vote.UPVOTE)
+        value = self.values[args['value']]
+
+        evaluation = Evaluation.query.get(e_id)
+        if evaluation is None:
+            raise NotFound('evaluation with the specified id not found')
+
+        validate_university_id(evaluation.section.course.department.school.university_id)
+
+        vote = Vote.query.filter(
+            Vote.evaluation == evaluation,
+            Vote.student_id == student_id
+        ).one_or_none()
+
+        if vote is None:
+            db.session.add(Vote(value=value, student_id=student_id, evaluation=evaluation))
+            db.session.commit()
+            return '', 201
+        elif vote.value != value:
+            vote.value = value
+            db.session.commit()
+
+        return '', 204
 
     @jwt_required
     @role_required(Role.Student)
     def delete(self, e_id):
         student_id = get_jwt_identity()['id']
-        return delete_vote(e_id, student_id, Vote.UPVOTE)
 
+        evaluation = Evaluation.query.get(e_id)
+        if evaluation is None:
+            raise NotFound('evaluation with the specified id not found')
 
-class EvaluationDownVoteResource(Resource):
+        validate_university_id(evaluation.section.course.department.school.university_id)
 
-    @jwt_required
-    @role_required(Role.Student)
-    def put(self, e_id):
-        student_id = get_jwt_identity()['id']
-        return update_vote(e_id, student_id, Vote.DOWNVOTE)
+        vote = Vote.query.filter(
+            Vote.evaluation == evaluation,
+            Vote.student_id == student_id
+        ).one_or_none()
 
-    @jwt_required
-    @role_required(Role.Student)
-    def delete(self, e_id):
-        student_id = get_jwt_identity()['id']
-        return delete_vote(e_id, student_id, Vote.DOWNVOTE)
+        if vote is None:
+            raise NotFound('vote not found')
 
-
-def update_vote(eval_id, student_id, value):
-    evaluation = Evaluation.query.get(eval_id)
-    if evaluation is None:
-        raise NotFound('evaluation with the specified id not found')
-
-    validate_university_id(evaluation.section.course.department.school.university_id)
-
-    vote = Vote.query.filter(
-        Vote.evaluation == evaluation,
-        Vote.student_id == student_id
-    ).one_or_none()
-
-    if vote is None:
-        db.session.add(Vote(value=value, student_id=student_id, evaluation=evaluation))
-        db.session.commit()
-        return '', 201
-    elif vote.value != value:
-        vote.value = value
+        db.session.delete(vote)
         db.session.commit()
 
-    return '', 204
-
-
-def delete_vote(eval_id, student_id, value):
-    evaluation = Evaluation.query.get(eval_id)
-    if evaluation is None:
-        raise NotFound('evaluation with the specified id not found')
-
-    validate_university_id(evaluation.section.course.department.school.university_id)
-
-    vote = Vote.query.filter(
-        Vote.evaluation == evaluation,
-        Vote.student_id == student_id,
-        Vote.value == value
-    ).one_or_none()
-
-    if vote is None:
-        raise NotFound('vote not found')
-
-    db.session.delete(vote)
-    db.session.commit()
-
-    return '', 204
+        return '', 204

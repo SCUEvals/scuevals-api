@@ -52,10 +52,18 @@ class TestCase(unittest.TestCase):
 
             self.api_jwt = create_access_token(identity=api_ident)
 
+        # these are just shorthands to DRY up the code
+        self.head_auth = {'Authorization': 'Bearer ' + self.jwt}
+        self.head_auth_json = self.head_auth
+        self.head_auth_json['Content-Type'] = 'application/json'
+
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+
+    def put(self):
+        pass
 
 
 def use_data(file):
