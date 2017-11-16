@@ -2,6 +2,9 @@ from . import db
 
 
 class Vote(db.Model):
+    UPVOTE = 1
+    DOWNVOTE = -1
+
     __tablename__ = 'votes'
 
     value = db.Column(db.Integer, nullable=False)

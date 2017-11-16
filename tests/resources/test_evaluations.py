@@ -1,6 +1,6 @@
 import json
 
-from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation
+from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote
 from tests import TestCase
 
 
@@ -117,3 +117,53 @@ class EvaluationTestCase(TestCase):
         self.assertEqual(404, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('not found', data['message'])
+
+    def test_put_upvote(self):
+        rv = self.client.put('/evaluations/1/upvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(201, rv.status_code)
+
+    def test_put_downvote(self):
+        rv = self.client.put('/evaluations/1/downvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(201, rv.status_code)
+
+    def test_del_upvote(self):
+        with self.app.app_context():
+            db.session.add(Vote(value=Vote.UPVOTE, student_id=0, evaluation_id=1))
+            db.session.commit()
+
+        rv = self.client.delete('/evaluations/1/upvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(204, rv.status_code)
+
+    def test_del_downvote(self):
+        with self.app.app_context():
+            db.session.add(Vote(value=Vote.DOWNVOTE, student_id=0, evaluation_id=1))
+            db.session.commit()
+
+        rv = self.client.delete('/evaluations/1/downvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(204, rv.status_code)
+
+    def test_put_upvote_non_existing_eval(self):
+        rv = self.client.put('/evaluations/0/upvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('evaluation with the specified id not found', data['message'])
+
+    def test_del_upvote_non_existing_eval(self):
+        rv = self.client.delete('/evaluations/0/upvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('evaluation with the specified id not found', data['message'])
+
+    def test_del_non_existing_upvote(self):
+        rv = self.client.delete('/evaluations/1/upvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('vote not found', data['message'])
+
+    def test_put_upvote_existing_downvote(self):
+        with self.app.app_context():
+            db.session.add(Vote(value=Vote.DOWNVOTE, student_id=0, evaluation_id=1))
+            db.session.commit()
+
+        rv = self.client.put('/evaluations/1/upvote', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(204, rv.status_code)

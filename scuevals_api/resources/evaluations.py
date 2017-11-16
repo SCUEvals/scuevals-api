@@ -3,6 +3,7 @@ from flask_restful import Resource
 from marshmallow import fields, Schema, validate
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
+from scuevals_api.models import Vote
 from scuevals_api.auth import validate_university_id
 from scuevals_api.models import Role, Section, Evaluation, db
 from scuevals_api.roles import role_required
@@ -74,3 +75,78 @@ class EvaluationResource(Resource):
         validate_university_id(evaluation.section.course.department.school.university_id)
 
         return evaluation.to_dict()
+
+
+class EvaluationUpVoteResource(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
+    def put(self, e_id):
+        student_id = get_jwt_identity()['id']
+        return update_vote(e_id, student_id, Vote.UPVOTE)
+
+    @jwt_required
+    @role_required(Role.Student)
+    def delete(self, e_id):
+        student_id = get_jwt_identity()['id']
+        return delete_vote(e_id, student_id, Vote.UPVOTE)
+
+
+class EvaluationDownVoteResource(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
+    def put(self, e_id):
+        student_id = get_jwt_identity()['id']
+        return update_vote(e_id, student_id, Vote.DOWNVOTE)
+
+    @jwt_required
+    @role_required(Role.Student)
+    def delete(self, e_id):
+        student_id = get_jwt_identity()['id']
+        return delete_vote(e_id, student_id, Vote.DOWNVOTE)
+
+
+def update_vote(eval_id, student_id, value):
+    evaluation = Evaluation.query.get(eval_id)
+    if evaluation is None:
+        raise NotFound('evaluation with the specified id not found')
+
+    validate_university_id(evaluation.section.course.department.school.university_id)
+
+    vote = Vote.query.filter(
+        Vote.evaluation == evaluation,
+        Vote.student_id == student_id
+    ).one_or_none()
+
+    if vote is None:
+        db.session.add(Vote(value=value, student_id=student_id, evaluation=evaluation))
+        db.session.commit()
+        return '', 201
+    elif vote.value != value:
+        vote.value = value
+        db.session.commit()
+
+    return '', 204
+
+
+def delete_vote(eval_id, student_id, value):
+    evaluation = Evaluation.query.get(eval_id)
+    if evaluation is None:
+        raise NotFound('evaluation with the specified id not found')
+
+    validate_university_id(evaluation.section.course.department.school.university_id)
+
+    vote = Vote.query.filter(
+        Vote.evaluation == evaluation,
+        Vote.student_id == student_id,
+        Vote.value == value
+    ).one_or_none()
+
+    if vote is None:
+        raise NotFound('vote not found')
+
+    db.session.delete(vote)
+    db.session.commit()
+
+    return '', 204
