@@ -23,6 +23,7 @@ setup(
         'Flask-SQLAlchemy==2.3.2',
         'Flask==0.12.2',
         'gunicorn==19.7.1',
+        'newrelic==2.96.0.80',
         'psycopg2==2.7.3.2',
         'python-jose==1.4.0',
         'PyYAML==3.12',
