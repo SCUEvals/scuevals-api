@@ -27,11 +27,7 @@ class CoursesTestCase(TestCase):
             db.session.commit()
 
     def test_get(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-        }
-
-        rv = self.client.get('/courses', headers=headers)
+        rv = self.client.get('/courses', headers=self.head_auth)
 
         self.assertEqual(rv.status_code, 200)
 
@@ -39,11 +35,7 @@ class CoursesTestCase(TestCase):
         self.assertEqual(len(data), 2)
 
     def test_get_quarter_id(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-        }
-
-        rv = self.client.get('/courses', headers=headers, query_string=urlencode({'quarter_id': 1}))
+        rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({'quarter_id': 1}))
 
         self.assertEqual(rv.status_code, 200)
 
@@ -100,7 +92,7 @@ class CourseTestCase(TestCase):
             db.session.commit()
 
     def test_get(self):
-        rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + self.jwt})
+        rv = self.client.get('/courses/1', headers=self.head_auth)
         self.assertEqual(200, rv.status_code)
 
         expected = {
@@ -143,7 +135,7 @@ class CourseTestCase(TestCase):
         self.assertEqual(401, rv.status_code)
 
     def test_get_non_existing(self):
-        rv = self.client.get('/courses/0', headers={'Authorization': 'Bearer ' + self.jwt})
+        rv = self.client.get('/courses/0', headers=self.head_auth)
         self.assertEqual(404, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('not found', data['message'])
