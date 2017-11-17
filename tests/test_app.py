@@ -5,6 +5,7 @@ from unittest import mock
 from scuevals_api import create_app
 
 
+@mock.patch.dict(os.environ, os.environ)
 class AppTestCase(unittest.TestCase):
     def test_create_app(self):
         create_app()
