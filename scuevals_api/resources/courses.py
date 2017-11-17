@@ -38,7 +38,9 @@ class CoursesResource(Resource):
         if 'quarter_id' not in args:
             courses = Course.query.all()
         else:
-            courses = Course.query.join(Course.sections).filter(Section.quarter_id == args['quarter_id']).all()
+            courses = Course.query.options(
+                subqueryload(Course.department)
+            ).join(Section, Course.sections).filter(Section.quarter_id == args['quarter_id']).all()
 
         return [
             {
@@ -46,7 +48,6 @@ class CoursesResource(Resource):
                 'department': course.department.abbreviation,
                 'number': course.number,
                 'title': course.title,
-                'quarters': [section.quarter.id for section in course.sections]
             }
             for course in courses
         ]
