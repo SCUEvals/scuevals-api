@@ -2,6 +2,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields
 from sqlalchemy import func
+from sqlalchemy.orm import subqueryload
 
 from scuevals_api.models import Role, Course, Department, School, Professor
 from scuevals_api.roles import role_required
@@ -23,7 +24,9 @@ class SearchResource(Resource):
         # strip any characters that would cause matching issues
         q = args['q'].replace(',', '')
 
-        courses = Course.query.join(Course.department, Department.school).filter(
+        courses = Course.query.options(
+            subqueryload(Course.department)
+        ).join(Course.department, Department.school).filter(
             School.university_id == jwt_data['university_id']
         ).filter(
             func.concat(Department.abbreviation, ' ', Course.number, ' ', Course.title).ilike('%{}%'.format(q))

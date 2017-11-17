@@ -40,7 +40,7 @@ class CoursesResource(Resource):
         else:
             courses = Course.query.options(
                 subqueryload(Course.department)
-            ).join(Section, Course.sections).filter(Section.quarter_id == args['quarter_id']).all()
+            ).join(Course.sections).filter(Section.quarter_id == args['quarter_id']).all()
 
         return [
             {
