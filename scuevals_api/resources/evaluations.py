@@ -15,12 +15,12 @@ class EvaluationSchemaV1(Schema):
     availability = fields.Int(required=True, validate=validate.Range(1, 4))
     clarity = fields.Int(required=True, validate=validate.Range(1, 4))
     handwriting = fields.Int(required=True, validate=validate.Range(1, 4))
-    take_again = fields.Int(required=True, validate=validate.Range(1, 4))
     timeliness = fields.Int(required=True, validate=validate.Range(1, 4))
 
     evenness = fields.Int(required=True, validate=validate.Range(1, 4))
     workload = fields.Int(required=True, validate=validate.Range(1, 4))
 
+    recommended = fields.Int(required=True, validate=validate.Range(1, 4))
     comment = fields.Str(required=True, validate=validate.Length(min=1, max=750))
 
     class Meta:
