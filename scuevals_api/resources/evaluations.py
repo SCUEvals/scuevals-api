@@ -17,7 +17,6 @@ class EvaluationSchemaV1(Schema):
     handwriting = fields.Int(required=True, validate=validate.Range(1, 4))
     timeliness = fields.Int(required=True, validate=validate.Range(1, 4))
 
-    evenness = fields.Int(required=True, validate=validate.Range(1, 4))
     workload = fields.Int(required=True, validate=validate.Range(1, 4))
 
     recommended = fields.Int(required=True, validate=validate.Range(1, 4))
