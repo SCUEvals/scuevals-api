@@ -5,7 +5,7 @@ from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
 from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Professor, Section
+from scuevals_api.models import Role, Professor, Section, Evaluation
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -33,7 +33,9 @@ class ProfessorResource(Resource):
     @jwt_required
     @role_required(Role.Student)
     def get(self, p_id):
-        professor = Professor.query.options(subqueryload(Professor.evaluations)).get(p_id)
+        professor = Professor.query.options(
+            subqueryload(Professor.evaluations).subqueryload(Evaluation.votes)
+        ).get(p_id)
 
         if professor is None:
             raise NotFound('professor with the specified id not found')
@@ -47,6 +49,7 @@ class ProfessorResource(Resource):
                 'quarter_id': ev.section.quarter_id,
                 'version': ev.version,
                 'data': ev.data,
+                'votes_score': ev.votes_value(),
                 'course': ev.section.course.to_dict(),
             }
             for ev in professor.evaluations

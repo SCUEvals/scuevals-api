@@ -71,6 +71,7 @@ class ProfessorTestCase(TestCase):
                     'data': {
                         'q1': 'a1'
                     },
+                    'votes_score': 0,
                     'course': {
                         'id': 1,
                         'name': '1',

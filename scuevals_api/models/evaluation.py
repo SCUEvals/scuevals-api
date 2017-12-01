@@ -27,5 +27,9 @@ class Evaluation(db.Model):
         return {
             'id': self.id,
             'version': self.version,
-            'data': self.data
+            'data': self.data,
+            'votes_score': self.votes_value()
         }
+
+    def votes_value(self):
+        return sum(v.value for v in self.votes)

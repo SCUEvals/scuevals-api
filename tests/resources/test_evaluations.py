@@ -32,16 +32,15 @@ class EvaluationsTestCase(TestCase):
                 'availability': 1,
                 'clarity': 1,
                 'handwriting': 1,
-                'take_again': 1,
+                'recommended': 1,
                 'timeliness': 1,
-                'evenness': 1,
                 'workload': 1,
                 'comment': 'Test'
             }
         }
 
         rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
-        self.assertEqual(rv.status_code, 201)
+        self.assertEqual(201, rv.status_code)
 
         with self.app.app_context():
             evaluation = Evaluation.query.filter(
@@ -69,9 +68,8 @@ class EvaluationsTestCase(TestCase):
                 'availability': 1,
                 'clarity': 1,
                 'handwriting': 1,
-                'take_again': 1,
+                'recommended': 1,
                 'timeliness': 1,
-                'evenness': 1,
                 'workload': 1,
                 'comment': 'Test'
             }
@@ -105,6 +103,7 @@ class EvaluationTestCase(TestCase):
         expected = {
             'id': 1,
             'version': 1,
+            'votes_score': 0,
             'data': {
                 'q1': 'a1'
             }
