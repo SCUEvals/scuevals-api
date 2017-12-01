@@ -95,10 +95,8 @@ class CourseResource(Resource):
         data = course.to_dict()
         data['evaluations'] = [
             {
-                'id': ev.id,
+                **ev.to_dict(),
                 'quarter_id': ev.section.quarter_id,
-                'version': ev.version,
-                'data': ev.data,
                 'professor': ev.professor.to_dict(),
             }
             for section in course.sections for ev in section.evaluations

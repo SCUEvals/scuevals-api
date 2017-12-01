@@ -45,11 +45,8 @@ class ProfessorResource(Resource):
         data = professor.to_dict()
         data['evaluations'] = [
             {
-                'id': ev.id,
+                **ev.to_dict(),
                 'quarter_id': ev.section.quarter_id,
-                'version': ev.version,
-                'data': ev.data,
-                'votes_score': ev.votes_value(),
                 'course': ev.section.course.to_dict(),
             }
             for ev in professor.evaluations
