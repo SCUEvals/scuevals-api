@@ -31,9 +31,10 @@ class EvaluationsTestCase(TestCase):
                 'attitude': 1,
                 'availability': 1,
                 'clarity': 1,
-                'handwriting': 1,
+                'difficulty': 1,
+                'grading_speed': 1,
                 'recommended': 1,
-                'timeliness': 1,
+                'resourcefulness': 1,
                 'workload': 1,
                 'comment': 'Test'
             }
@@ -67,9 +68,10 @@ class EvaluationsTestCase(TestCase):
                 'attitude': 1,
                 'availability': 1,
                 'clarity': 1,
-                'handwriting': 1,
+                'difficulty': 1,
+                'grading_speed': 1,
                 'recommended': 1,
-                'timeliness': 1,
+                'resourcefulness': 1,
                 'workload': 1,
                 'comment': 'Test'
             }

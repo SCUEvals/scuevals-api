@@ -14,9 +14,10 @@ class EvaluationSchemaV1(Schema):
     attitude = fields.Int(required=True, validate=validate.Range(1, 4))
     availability = fields.Int(required=True, validate=validate.Range(1, 4))
     clarity = fields.Int(required=True, validate=validate.Range(1, 4))
-    handwriting = fields.Int(required=True, validate=validate.Range(1, 4))
-    timeliness = fields.Int(required=True, validate=validate.Range(1, 4))
+    grading_speed = fields.Int(required=True, validate=validate.Range(1, 4))
+    resourcefulness = fields.Int(required=True, validate=validate.Range(1, 4))
 
+    difficulty = fields.Int(required=True, validate=validate.Range(1, 4))
     workload = fields.Int(required=True, validate=validate.Range(1, 4))
 
     recommended = fields.Int(required=True, validate=validate.Range(1, 4))
