@@ -12,10 +12,18 @@ WHERE pg_stat_activity.datname = '$1'
     dropdb ${1} || true
 }
 
-delete_db ${TMP_DB}
+delete_db ${TMP_DB} &>/dev/null
 
-heroku pg:pull DATABASE_URL ${TMP_DB} || exit 1
+echo Fetching $MAIN_DB from Heroku...
 
-delete_db ${MAIN_DB}
+heroku pg:pull DATABASE_URL ${TMP_DB}
 
-psql -c "ALTER DATABASE $TMP_DB RENAME TO $MAIN_DB;"
+read -p "Please confirm the replacement of the existing $MAIN_DB db? (y/n) " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    echo Replacing $MAIN_DB with $TMP_DB...
+
+    delete_db ${MAIN_DB}
+
+    psql -c "ALTER DATABASE $TMP_DB RENAME TO $MAIN_DB;"
+fi
