@@ -1,5 +1,6 @@
 from sqlalchemy.dialects.postgresql import JSONB
 
+from scuevals_api.models.vote import Vote
 from . import db
 
 
@@ -30,6 +31,10 @@ class Evaluation(db.Model):
             'data': self.data,
             'votes_score': self.votes_value()
         }
+
+    def user_vote(self, user):
+        vote = Vote.query.filter(Vote.student_id == user.id, Vote.evaluation_id == self.id).one_or_none()
+        return None if vote is None else vote.value
 
     def votes_value(self):
         return sum(v.value for v in self.votes)

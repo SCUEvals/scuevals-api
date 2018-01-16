@@ -109,6 +109,7 @@ class CourseTestCase(TestCase):
                     'quarter_id': 1,
                     'version': 1,
                     'votes_score': 0,
+                    'user_vote': None,
                     'data': {'q1': 'a1'},
                     'professor': {
                         'id': 1,

@@ -10,7 +10,7 @@ from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
 from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Course, Section, db
+from scuevals_api.models import Role, Course, Section, Student, db
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args, get_pg_error_msg
 
@@ -92,10 +92,14 @@ class CourseResource(Resource):
 
         validate_university_id(course.department.school.university_id)
 
+        user = get_jwt_identity()
+        student = Student.query.get(user['id'])
+
         data = course.to_dict()
         data['evaluations'] = [
             {
                 **ev.to_dict(),
+                'user_vote': ev.user_vote(student),
                 'quarter_id': ev.section.quarter_id,
                 'professor': ev.professor.to_dict(),
             }
