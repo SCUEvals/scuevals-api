@@ -1,4 +1,11 @@
 #!/bin/bash
+
+if [ $# -eq 0 ]
+  then
+    echo "Usage: compile_alembic_template alembic/versions/<file>"
+    exit 1
+fi
+
 if [ "${PWD##*/}" == "scripts" ]; then
   cd ../db || exit 1
 else
