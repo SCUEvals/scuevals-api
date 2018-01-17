@@ -1,6 +1,6 @@
 import json
 
-from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote
+from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote, Student
 from tests import TestCase
 
 
@@ -132,7 +132,9 @@ class TestEvaluationVoteTestCase(TestCase):
             db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
             db.session.add(Section(id=1, quarter_id=1, course_id=1))
             db.session.add(Professor(id=1, first_name='Mary', last_name='Doe', university_id=1))
-            db.session.add(Evaluation(id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
+            db.session.add(Student(id=1, email='sdoe@scu.edu', first_name='Sandra', last_name='Doe', university_id=1))
+            db.session.add(Evaluation(id=1, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
+            db.session.add(Evaluation(id=2, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
             db.session.commit()
 
     def test_put_upvote(self):
@@ -171,6 +173,12 @@ class TestEvaluationVoteTestCase(TestCase):
         self.assertEqual(404, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('evaluation with the specified id not found', data['message'])
+
+    def test_put_vote_own_evaluation(self):
+        rv = self.client.put('/evaluations/2/vote', headers=self.head_auth, data=json.dumps({'value': 'u'}))
+        self.assertEqual(403, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not allowed to vote on your own evaluations', data['message'])
 
     def test_del_vote(self):
         with self.app.app_context():

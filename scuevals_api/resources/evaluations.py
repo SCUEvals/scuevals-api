@@ -1,7 +1,7 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
-from werkzeug.exceptions import UnprocessableEntity, NotFound
+from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden
 
 from scuevals_api.models import Vote
 from scuevals_api.auth import validate_university_id
@@ -96,6 +96,10 @@ class EvaluationVoteResource(Resource):
             raise NotFound('evaluation with the specified id not found')
 
         validate_university_id(evaluation.section.course.department.school.university_id)
+
+        # do not allow voting on your own evaluations
+        if evaluation.student_id == student_id:
+            raise Forbidden('not allowed to vote on your own evaluations')
 
         vote = Vote.query.filter(
             Vote.evaluation == evaluation,
