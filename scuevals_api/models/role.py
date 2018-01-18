@@ -1,4 +1,4 @@
-from . import db, student_role
+from . import db, user_role
 
 
 class Role(db.Model):
@@ -12,4 +12,4 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
 
-    students = db.relationship('Student', secondary=student_role, back_populates='roles')
+    users = db.relationship('User', secondary=user_role, back_populates='roles')

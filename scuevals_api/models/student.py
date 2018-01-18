@@ -1,24 +1,24 @@
-from . import db, student_major, student_role, Major, Role
+from . import db
+from .assoc import student_major
+from .major import Major
+from .user import User
 
 
-class Student(db.Model):
+class Student(User):
     __tablename__ = 'students'
 
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.Text, unique=True, nullable=False)
-    first_name = db.Column(db.Text, nullable=False)
-    last_name = db.Column(db.Text)
+    id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     graduation_year = db.Column(db.Integer)
     gender = db.Column(db.String(1))
-    picture = db.Column(db.Text)
 
-    university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
-
-    university = db.relationship('University', back_populates='students')
     evaluations = db.relationship('Evaluation', back_populates='student')
-    votes = db.relationship('Vote', back_populates='student')
+
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
-    roles = db.relationship('Role', secondary=student_role, back_populates='students')
+    votes = db.relationship('Vote', back_populates='student')
+
+    __mapper_args__ = {
+        'polymorphic_identity': 's',
+    }
 
     __table_args__ = (db.CheckConstraint(gender.in_(['m', 'f', 'o']), name='valid_gender'),)
 
@@ -35,20 +35,6 @@ class Student(db.Model):
                 raise ValueError('major does not exist: {}'.format(major_id))
 
             self.majors.append(major)
-
-    def _get_roles(self):
-        return [role.id for role in self.roles]
-
-    def _set_roles(self, value):
-        while self.roles:
-            del self.roles[0]
-
-        for role_id in value:
-            role = Role.query.get(role_id)
-            if role is None:
-                raise ValueError('role does not exist: {}'.format(role_id))
-
-            self.roles.append(role)
 
     def to_dict(self):
         student = {
@@ -71,7 +57,4 @@ class Student(db.Model):
                            None,
                            'Property majors_list is a simple wrapper for majors relation')
 
-    roles_list = property(_get_roles,
-                          _set_roles,
-                          None,
-                          'Property roles_list is a simple wrapper for roles relation')
+

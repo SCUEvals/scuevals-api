@@ -22,7 +22,7 @@ def on_load(state):
 
 
 from .api_key import APIKey
-from .assoc import student_role, student_major, section_professor
+from .assoc import user_role, student_major, section_professor
 from .course import Course
 from .department import Department
 from .evaluation import Evaluation
@@ -34,4 +34,5 @@ from .school import School
 from .section import Section
 from .student import Student
 from .university import University
+from .user import User
 from .vote import Vote
