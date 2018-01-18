@@ -9,7 +9,7 @@ from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, db, Role, APIKey
+from scuevals_api.models import Student, User, db, Role, APIKey
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -55,12 +55,13 @@ def auth(args):
     if data['hd'] != 'scu.edu':
         raise UnprocessableEntity('invalid id_token')
 
-    user = Student.query.filter_by(email=data['email']).one_or_none()
+    user = User.query.filter_by(email=data['email']).one_or_none()
 
     if user is None:
         # new user
         status = 'new'
 
+        # assume new user is a student for now
         user = Student(
             email=data['email'],
             first_name=data['given_name'],
