@@ -6,7 +6,7 @@ class Professor(db.Model):
     __tablename__ = 'professors'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True)
 
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text)
