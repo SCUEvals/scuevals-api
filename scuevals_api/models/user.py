@@ -11,7 +11,7 @@ class User(db.Model):
     first_name = db.Column(db.Text, nullable=False)
     last_name = db.Column(db.Text)
     picture = db.Column(db.Text)
-    type = db.Column(db.String(1), nullable=False)
+    type = db.Column(db.String(1), nullable=False, server_default='u')
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 
