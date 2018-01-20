@@ -5,6 +5,8 @@ class Vote(db.Model):
     UPVOTE = 1
     DOWNVOTE = -1
 
+    SYMBOLS = {UPVOTE: 'u', DOWNVOTE: 'd'}
+
     __tablename__ = 'votes'
 
     value = db.Column(db.Integer, nullable=False)
