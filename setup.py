@@ -11,7 +11,7 @@ setup(
         ]
     },
     install_requires=[
-        'alembic==0.9.7'
+        'alembic==0.9.7',
         'beautifulsoup4==4.6.0',
         'blinker==1.4',
         'coveralls==1.2.0',
