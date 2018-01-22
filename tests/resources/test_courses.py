@@ -121,6 +121,10 @@ class CourseTestCase(TestCase):
                         'id': 1,
                         'first_name': 'Ben',
                         'last_name': 'Stiller'
+                    },
+                    'author': {
+                        'graduation_year': 2020,
+                        'majors': [0]
                     }
                 },
                 {
@@ -134,6 +138,10 @@ class CourseTestCase(TestCase):
                         'id': 1,
                         'first_name': 'Ben',
                         'last_name': 'Stiller'
+                    },
+                    'author': {
+                        'majors': [],
+                        'graduation_year': None
                     }
                 }
             ]

@@ -81,6 +81,10 @@ class ProfessorTestCase(TestCase):
                             'id': 1,
                             'abbreviation': 'MATH'
                         }
+                    },
+                    'author': {
+                        'graduation_year': 2020,
+                        'majors': [0]
                     }
                 }
             ]

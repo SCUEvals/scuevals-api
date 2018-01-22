@@ -36,6 +36,11 @@ class Student(User):
 
             self.majors.append(major)
 
+    majors_list = property(_get_majors,
+                           _set_majors,
+                           None,
+                           'Property majors_list is a simple wrapper for majors relation')
+
     def to_dict(self):
         student = {
             'id': self.id,
@@ -52,9 +57,5 @@ class Student(User):
 
         return {k: v for k, v in student.items() if v is not None}
 
-    majors_list = property(_get_majors,
-                           _set_majors,
-                           None,
-                           'Property majors_list is a simple wrapper for majors relation')
 
 

@@ -52,6 +52,10 @@ class ProfessorResource(Resource):
                 'user_vote': ev.user_vote(student),
                 'quarter_id': ev.section.quarter_id,
                 'course': ev.section.course.to_dict(),
+                'author': {
+                    'majors': ev.student.majors_list,
+                    'graduation_year': ev.student.graduation_year
+                }
             }
             for ev in professor.evaluations
         ]

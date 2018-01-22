@@ -6,7 +6,7 @@ from flask_jwt_extended import create_access_token
 from vcr import VCR
 
 from scuevals_api.cmd import init_db, seed_db
-from scuevals_api.models import db, Student, Role
+from scuevals_api.models import db, Student, Role, Major
 from scuevals_api import create_app
 
 
@@ -35,7 +35,9 @@ class TestCase(unittest.TestCase):
                 first_name='John',
                 last_name='Doe',
                 roles=[Role.query.get(Role.Student)],
-                university_id=1
+                university_id=1,
+                majors=[Major(id=0, name='Computer Science & Engineering', university_id=1)],
+                graduation_year=2020,
             )
 
             ident = student.to_dict()
