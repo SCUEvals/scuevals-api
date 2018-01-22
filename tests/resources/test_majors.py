@@ -6,19 +6,12 @@ from tests import TestCase
 
 class MajorsTestCase(TestCase):
     def test_majors(self):
-        with self.app.app_context():
-            db.session.add(Major(id=1, university_id=1, name='Major1'))
-            db.session.add(Major(id=2, university_id=1, name='Major2'))
-            db.session.commit()
+        rv = self.client.get('/majors', headers=self.head_auth)
 
-        headers = {'Authorization': 'Bearer ' + self.jwt}
-
-        rv = self.client.get('/majors', headers=headers)
-
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(200, rv.status_code)
 
         data = json.loads(rv.data)
-        self.assertEqual(len(data), 2)
+        self.assertEqual(1, len(data))
 
     def test_post(self):
         headers = {
