@@ -26,7 +26,7 @@ setup(
         'gunicorn==19.7.1',
         'newrelic==2.100.0.84',
         'psycopg2==2.7.3.2',
-        'pycryptodome>=3.4.7'
+        'pycryptodome>=3.4.7',
         'python-jose==2.0.1',
         'PyYAML==3.12',
         'requests==2.18.4',
