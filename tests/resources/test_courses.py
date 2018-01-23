@@ -123,6 +123,7 @@ class CourseTestCase(TestCase):
                         'last_name': 'Stiller'
                     },
                     'author': {
+                        'self': True,
                         'graduation_year': 2020,
                         'majors': [0]
                     }
@@ -140,6 +141,7 @@ class CourseTestCase(TestCase):
                         'last_name': 'Stiller'
                     },
                     'author': {
+                        'self': False,
                         'majors': [],
                         'graduation_year': None
                     }

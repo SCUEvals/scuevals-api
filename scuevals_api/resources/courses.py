@@ -103,6 +103,7 @@ class CourseResource(Resource):
                 'quarter_id': ev.section.quarter_id,
                 'professor': ev.professor.to_dict(),
                 'author': {
+                    'self': student.id == ev.student.id,
                     'majors': ev.student.majors_list,
                     'graduation_year': ev.student.graduation_year
                 }

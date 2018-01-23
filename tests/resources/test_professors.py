@@ -83,6 +83,7 @@ class ProfessorTestCase(TestCase):
                         }
                     },
                     'author': {
+                        'self': True,
                         'graduation_year': 2020,
                         'majors': [0]
                     }
