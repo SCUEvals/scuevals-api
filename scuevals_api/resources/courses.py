@@ -10,7 +10,7 @@ from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
 from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Course, Section, Student, db
+from scuevals_api.models import Role, Course, Section, Student, db, Department, School, Professor
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args, get_pg_error_msg
 
@@ -32,25 +32,21 @@ class CoursesResource(Resource):
 
     @jwt_required
     @role_required(Role.Student)
-    @use_args({'quarter_id': fields.Integer()})
+    @use_args({'professor_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
+        ident = get_jwt_identity()
+        courses = Course.query.options(
+            subqueryload(Course.department).subqueryload(Department.school),
+            subqueryload(Course.sections).subqueryload(Section.professors)
+        ).outerjoin(Course.sections, Section.professors).filter(School.university_id == ident['university_id'])
 
-        if 'quarter_id' not in args:
-            courses = Course.query.all()
-        else:
-            courses = Course.query.options(
-                subqueryload(Course.department)
-            ).join(Course.sections).filter(Section.quarter_id == args['quarter_id']).all()
+        if 'professor_id' in args:
+            courses = courses.filter(Professor.id == args['professor_id'])
 
-        return [
-            {
-                'id': course.id,
-                'department': course.department.abbreviation,
-                'number': course.number,
-                'title': course.title,
-            }
-            for course in courses
-        ]
+        if 'quarter_id' in args:
+            courses = courses.filter(Section.quarter_id == args['quarter_id'])
+
+        return [course.to_dict() for course in courses.all()]
 
     @jwt_required
     @role_required(Role.API_Key)

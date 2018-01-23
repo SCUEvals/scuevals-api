@@ -17,10 +17,7 @@ class Course(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'name': self.number,
+            'number': self.number,
             'title': self.title,
-            'department': {
-                'id': self.department_id,
-                'abbreviation': self.department.abbreviation
-            },
+            'department_id': self.department_id
         }

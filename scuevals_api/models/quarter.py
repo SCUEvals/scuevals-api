@@ -22,3 +22,11 @@ class Quarter(db.Model):
         db.UniqueConstraint('year', 'name', 'university_id'),
         db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']), name='valid_quarter')
     )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'year': self.year,
+            'name': self.name,
+            'current': self.current
+        }

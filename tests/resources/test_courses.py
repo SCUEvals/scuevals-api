@@ -26,24 +26,36 @@ class CoursesTestCase(TestCase):
             db.session.add(Course(id=1000, title='Math Course', number='1', department_id=1))
             db.session.add(Course(id=1001, title='Arts Course', number='2', department_id=1))
             db.session.add(Section(quarter_id=1, course_id=1000))
-            db.session.add(Section(quarter_id=2, course_id=1001))
+
+            section = Section(quarter_id=2, course_id=1001)
+            db.session.add(section)
+
+            section.professors.append(Professor(id=0, first_name='Peter', university_id=1))
             db.session.commit()
 
     def test_get(self):
         rv = self.client.get('/courses', headers=self.head_auth)
 
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(200, rv.status_code)
 
         data = json.loads(rv.data)
-        self.assertEqual(len(data), 2)
+        self.assertEqual(2, len(data))
 
     def test_get_quarter_id(self):
         rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({'quarter_id': 1}))
 
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(200, rv.status_code)
 
         data = json.loads(rv.data)
-        self.assertEqual(len(data), 1)
+        self.assertEqual(1, len(data))
+
+    def test_get_professor_id(self):
+        rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({'professor_id': 0}))
+
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual(1, len(data))
 
     @use_data('courses.yaml')
     def test_post(self, data):
@@ -103,12 +115,9 @@ class CourseTestCase(TestCase):
 
         expected = {
             'id': 1,
-            'department': {
-                'id': 1,
-                'abbreviation': 'MATH'
-            },
-            'name': '1',
+            'number': '1',
             'title': 'Math Course',
+            'department_id': 1,
             'evaluations': [
                 {
                     'id': 1,

@@ -17,13 +17,15 @@ class ProfessorsResource(Resource):
     @use_args({'course_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
-        professors = Professor.query.outerjoin(Section, Professor.sections).filter(
+        professors = Professor.query.outerjoin(Professor.sections).filter(
             Professor.university_id == ident['university_id']
         )
 
-        for arg, value in args.items():
-            d = {arg: value}
-            professors = professors.filter_by(**d)
+        if 'course_id' in args:
+            professors = professors.filter(Section.course_id == args['course_id'])
+
+        if 'quarter_id' in args:
+            professors = professors.filter(Section.quarter_id == args['quarter_id'])
 
         return [professor.to_dict() for professor in professors.all()]
 

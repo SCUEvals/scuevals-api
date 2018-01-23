@@ -75,12 +75,9 @@ class ProfessorTestCase(TestCase):
                     'votes_score': 0,
                     'course': {
                         'id': 1,
-                        'name': '1',
+                        'number': '1',
                         'title': 'Math Course',
-                        'department': {
-                            'id': 1,
-                            'abbreviation': 'MATH'
-                        }
+                        'department_id': 1,
                     },
                     'author': {
                         'self': True,
