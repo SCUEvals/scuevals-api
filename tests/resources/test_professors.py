@@ -52,7 +52,10 @@ class ProfessorTestCase(TestCase):
             db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
             db.session.add(Section(id=1, quarter_id=1, course_id=1))
             db.session.add(Professor(id=1, first_name='Mary', last_name='Doe', university_id=1))
-            db.session.add(Evaluation(student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
+            db.session.add(Evaluation(
+                student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
+                display_grad_year=True, display_majors=False
+            ))
             db.session.commit()
 
     def test_get(self):
@@ -68,9 +71,9 @@ class ProfessorTestCase(TestCase):
                     'id': 1,
                     'quarter_id': 1,
                     'version': 1,
-                    'data': {
-                        'q1': 'a1'
-                    },
+                    'data': {'q1': 'a1'},
+                    'display_grad_year': True,
+                    'display_majors': False,
                     'user_vote': None,
                     'votes_score': 0,
                     'course': {

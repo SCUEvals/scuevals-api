@@ -32,6 +32,8 @@ class EvaluationsResource(Resource):
         'quarter_id': fields.Int(required=True),
         'professor_id': fields.Int(required=True),
         'course_id': fields.Int(required=True),
+        'display_grad_year': fields.Bool(required=True),
+        'display_majors': fields.Bool(required=True),
         'evaluation': fields.Nested(EvaluationSchemaV1)
     }
 
@@ -39,7 +41,7 @@ class EvaluationsResource(Resource):
     @role_required(Role.Student)
     @use_args(args, locations=('json',))
     def post(self, args):
-        section = Section.query.filter(
+        section = db.session.query(Section.id).filter(
             Section.quarter_id == args['quarter_id'],
             Section.course_id == args['course_id'],
             Section.professors.any(Professor.id == args['professor_id'])
@@ -61,7 +63,9 @@ class EvaluationsResource(Resource):
         evaluation = Evaluation(
             student_id=ident['id'],
             professor_id=args['professor_id'],
-            section_id=section.id,
+            section_id=section[0],
+            display_grad_year=args['display_grad_year'],
+            display_majors=args['display_majors'],
             version=1,
             data=args['evaluation']
         )

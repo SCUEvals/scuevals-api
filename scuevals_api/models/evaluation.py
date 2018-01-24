@@ -10,6 +10,8 @@ class Evaluation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     version = db.Column(db.Integer, nullable=False)
     data = db.Column(JSONB, nullable=False)
+    display_grad_year = db.Column(db.Boolean, nullable=False, server_default='t')
+    display_majors = db.Column(db.Boolean, nullable=False, server_default='t')
 
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
     professor_id = db.Column(db.Integer, db.ForeignKey('professors.id'), nullable=False)
@@ -29,7 +31,9 @@ class Evaluation(db.Model):
             'id': self.id,
             'version': self.version,
             'data': self.data,
-            'votes_score': self.votes_value()
+            'votes_score': self.votes_value(),
+            'display_grad_year': self.display_grad_year,
+            'display_majors': self.display_majors
         }
 
     def user_vote(self, user):

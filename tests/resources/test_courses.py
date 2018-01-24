@@ -103,9 +103,15 @@ class CourseTestCase(TestCase):
             db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
             db.session.add(Section(id=1, quarter_id=1, course_id=1))
             db.session.add(Professor(id=1, first_name='Ben', last_name='Stiller', university_id=1))
-            db.session.add(Evaluation(id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
             db.session.add(Student(id=1, email='sdoe@scu.edu', first_name='Sandra', last_name='Doe', university_id=1))
-            db.session.add(Evaluation(id=2, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
+            db.session.add(Evaluation(
+                id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
+                display_grad_year=True, display_majors=False
+            ))
+            db.session.add(Evaluation(
+                id=2, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
+                display_grad_year=True, display_majors=False
+            ))
             db.session.add(Vote(student_id=0, evaluation_id=2, value=Vote.UPVOTE))
             db.session.commit()
 
@@ -126,6 +132,8 @@ class CourseTestCase(TestCase):
                     'votes_score': 0,
                     'user_vote': None,
                     'data': {'q1': 'a1'},
+                    'display_grad_year': True,
+                    'display_majors': False,
                     'professor': {
                         'id': 1,
                         'first_name': 'Ben',
@@ -144,6 +152,8 @@ class CourseTestCase(TestCase):
                     'votes_score': 1,
                     'user_vote': 'u',
                     'data': {'q1': 'a1'},
+                    'display_grad_year': True,
+                    'display_majors': False,
                     'professor': {
                         'id': 1,
                         'first_name': 'Ben',
