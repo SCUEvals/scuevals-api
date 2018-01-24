@@ -1,11 +1,11 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
-from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden
+from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
 from scuevals_api.models import Vote
 from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Section, Evaluation, db
+from scuevals_api.models import Role, Section, Evaluation, db, Professor
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -41,11 +41,20 @@ class EvaluationsResource(Resource):
     def post(self, args):
         section = Section.query.filter(
             Section.quarter_id == args['quarter_id'],
-            Section.course_id == args['course_id']
+            Section.course_id == args['course_id'],
+            Section.professors.any(Professor.id == args['professor_id'])
         ).one_or_none()
 
         if section is None:
-            raise UnprocessableEntity('invalid quarter/course combination')
+            raise UnprocessableEntity('invalid quarter/course/professor combination')
+
+        ev = db.session.query(Evaluation.query.filter(
+            Evaluation.section.has(quarter_id=args['quarter_id'], course_id=args['course_id']),
+            Evaluation.professor_id == args['professor_id']
+        ).exists()).scalar()
+
+        if ev:
+            raise Conflict('evaluation for this combination already exists')
 
         ident = get_jwt_identity()
 

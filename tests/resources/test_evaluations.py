@@ -13,16 +13,12 @@ class EvaluationsTestCase(TestCase):
                                    period='[2017-01-01, 2017-02-01]', university_id=1))
             db.session.add(Department(abbreviation='GEN', name='General', school_id=1))
             db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-            db.session.add(Section(quarter_id=1, course_id=1))
-            db.session.add(Professor(id=1, first_name='Mathias', last_name='Doe', university_id=1))
+            section = Section(quarter_id=1, course_id=1)
+            section.professors.append(Professor(id=1, first_name='Mathias', last_name='Doe', university_id=1))
+            db.session.add(section)
             db.session.commit()
 
     def test_post_evaluation(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
-        }
-
         data = {
             'quarter_id': 1,
             'professor_id': 1,
@@ -40,7 +36,7 @@ class EvaluationsTestCase(TestCase):
             }
         }
 
-        rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
+        rv = self.client.post('/evaluations', headers=self.head_auth, data=json.dumps(data))
         self.assertEqual(201, rv.status_code)
 
         with self.app.app_context():
@@ -53,6 +49,30 @@ class EvaluationsTestCase(TestCase):
                 self.fail('evaluation was not inserted')
 
             self.assertEqual(data['evaluation'], evaluation.data)
+
+    def test_post_evaluation_duplicate(self):
+        data = {
+            'quarter_id': 1,
+            'professor_id': 1,
+            'course_id': 1,
+            'evaluation': {
+                'attitude': 1,
+                'availability': 1,
+                'clarity': 1,
+                'difficulty': 1,
+                'grading_speed': 1,
+                'recommended': 1,
+                'resourcefulness': 1,
+                'workload': 1,
+                'comment': 'Test'
+            }
+        }
+
+        rv = self.client.post('/evaluations', headers=self.head_auth, data=json.dumps(data))
+        self.assertEqual(201, rv.status_code)
+
+        rv = self.client.post('/evaluations', headers=self.head_auth, data=json.dumps(data))
+        self.assertEqual(409, rv.status_code)
 
     def test_post_evaluation_invalid_section(self):
         headers = {
@@ -81,7 +101,7 @@ class EvaluationsTestCase(TestCase):
         self.assertEqual(422, rv.status_code)
 
         resp = json.loads(rv.data)
-        self.assertEqual('invalid quarter/course combination', resp['message'])
+        self.assertEqual('invalid quarter/course/professor combination', resp['message'])
 
 
 class EvaluationTestCase(TestCase):
