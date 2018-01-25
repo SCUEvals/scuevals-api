@@ -24,29 +24,24 @@ class SearchResource(Resource):
         # strip any characters that would cause matching issues
         q = args['q'].replace(',', '')
 
-        courses = Course.query.options(
-            subqueryload(Course.department)
-        ).join(Course.department, Department.school).filter(
-            School.university_id == jwt_data['university_id']
+        courses = Course.query.join(Course.department).filter(
+            Course.department.has(Department.school.has(School.university_id == jwt_data['university_id']))
         ).filter(
             func.concat(Department.abbreviation, ' ', Course.number, ' ', Course.title).ilike('%{}%'.format(q))
-        ).limit(args['limit']).all()
+        ).limit(args['limit'])
 
         professors = Professor.query.filter(
             func.concat(Professor.last_name, ' ', Professor.first_name).ilike('%{}%'.format(q)) |
             func.concat(Professor.first_name, ' ', Professor.last_name).ilike('%{}%'.format(q))
-        ).limit(args['limit']).all()
+        ).limit(args['limit'])
 
         return {
             'courses': [
                 {
-                    'id': course.id,
-                    'department': course.department.abbreviation,
-                    'number': course.number,
-                    'title': course.title,
+                    **course.to_dict(),
                     'quarters': [section.quarter.id for section in course.sections]
                 }
-                for course in courses
+                for course in courses.all()
             ],
             'professors': [
                 {
@@ -54,6 +49,6 @@ class SearchResource(Resource):
                     'first_name': professor.first_name,
                     'last_name': professor.last_name
                 }
-                for professor in professors
+                for professor in professors.all()
             ]
         }
