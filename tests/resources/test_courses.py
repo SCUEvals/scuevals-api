@@ -57,6 +57,16 @@ class CoursesTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual(1, len(data))
 
+    def test_get_quarter_id_professor_id(self):
+        rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({
+            'professor_id': 0, 'quarter_id': 2
+        }))
+
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual(1, len(data))
+
     @use_data('courses.yaml')
     def test_post(self, data):
         headers = {

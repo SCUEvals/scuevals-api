@@ -35,16 +35,17 @@ class CoursesResource(Resource):
     @use_args({'professor_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
-        courses = Course.query.options(
-            subqueryload(Course.department).subqueryload(Department.school),
-            subqueryload(Course.sections).subqueryload(Section.professors)
-        ).outerjoin(Course.sections, Section.professors).filter(School.university_id == ident['university_id'])
+        courses = Course.query.filter(
+            Course.department.has(Department.school.has(School.university_id == ident['university_id']))
+        )
 
         if 'professor_id' in args:
-            courses = courses.filter(Professor.id == args['professor_id'])
+            courses = courses.filter(
+                Course.sections.any(Section.professors.any(Professor.id == args['professor_id']))
+            )
 
         if 'quarter_id' in args:
-            courses = courses.filter(Section.quarter_id == args['quarter_id'])
+            courses = courses.filter(Course.sections.any(Section.quarter_id == args['quarter_id']))
 
         return [course.to_dict() for course in courses.all()]
 
