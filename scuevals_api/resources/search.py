@@ -36,18 +36,9 @@ class SearchResource(Resource):
 
         return {
             'courses': [
-                {
-                    **course.to_dict(),
-                    'quarters': [section.quarter.id for section in course.sections]
-                }
-                for course in courses.all()
+                course.to_dict() for course in courses.all()
             ],
             'professors': [
-                {
-                    'id': professor.id,
-                    'first_name': professor.first_name,
-                    'last_name': professor.last_name
-                }
-                for professor in professors.all()
+                professor.to_dict() for professor in professors.all()
             ]
         }
