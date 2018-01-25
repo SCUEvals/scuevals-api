@@ -14,14 +14,14 @@ class QuartersResource(Resource):
     @use_args({'course_id': fields.Int(), 'professor_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
-        quarters = Quarter.query.outerjoin(Quarter.sections, Section.professors).filter(
-            Quarter.university_id == ident['university_id']
-        )
+        quarters = Quarter.query.filter(Quarter.university_id == ident['university_id'])
 
         if 'course_id' in args:
-            quarters = quarters.filter(Section.course_id == args['course_id'])
+            quarters = quarters.filter(Quarter.sections.any(Section.course_id == args['course_id']))
 
         if 'professor_id' in args:
-            quarters = quarters.filter(Professor.id == args['professor_id'])
+            quarters = quarters.filter(
+                Quarter.sections.any(Section.professors.any(Professor.id == args['professor_id']))
+            )
 
         return [quarter.to_dict() for quarter in quarters.all()]

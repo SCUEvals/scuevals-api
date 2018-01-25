@@ -2,7 +2,6 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields
 from sqlalchemy import func
-from sqlalchemy.orm import subqueryload
 
 from scuevals_api.models import Role, Course, Department, School, Professor
 from scuevals_api.roles import role_required
