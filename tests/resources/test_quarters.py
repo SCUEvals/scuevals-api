@@ -2,7 +2,7 @@ import json
 from urllib.parse import urlencode
 
 from scuevals_api.models import db, Quarter, Department, Course, Section, Professor
-from tests import TestCase
+from tests import TestCase, assert_valid_schema
 
 
 class QuartersTestCase(TestCase):
@@ -33,6 +33,7 @@ class QuartersTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(2, len(data))
+        assert_valid_schema(rv.data, 'quarters.json')
 
     def test_get_course_id(self):
         rv = self.client.get('/quarters', headers=self.head_auth, query_string=urlencode({'course_id': 1000}))
@@ -41,6 +42,7 @@ class QuartersTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(1, len(data))
+        assert_valid_schema(rv.data, 'quarters.json')
 
     def test_get_professor_id(self):
         rv = self.client.get('/quarters', headers=self.head_auth, query_string=urlencode({'professor_id': 0}))
@@ -49,3 +51,4 @@ class QuartersTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(1, len(data))
+        assert_valid_schema(rv.data, 'quarters.json')

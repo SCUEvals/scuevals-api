@@ -24,6 +24,7 @@ setup(
         'Flask-SQLAlchemy==2.3.2',
         'Flask==0.12.2',
         'gunicorn==19.7.1',
+        'jsonschema==2.6.0',
         'newrelic==2.100.0.84',
         'psycopg2==2.7.3.2',
         'pycryptodome>=3.4.7',

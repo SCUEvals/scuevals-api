@@ -1,6 +1,6 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
-from marshmallow import fields
+from marshmallow import fields, Schema
 
 from scuevals_api.models import Role, Quarter, Section, Professor
 from scuevals_api.roles import role_required

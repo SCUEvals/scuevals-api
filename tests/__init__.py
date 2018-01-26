@@ -1,8 +1,10 @@
+import json
 import unittest
 import os
 import yaml
 from functools import wraps
 from flask_jwt_extended import create_access_token
+from jsonschema import validate
 from vcr import VCR
 
 from scuevals_api.cmd import init_db, seed_db
@@ -79,3 +81,22 @@ def use_data(file):
             return f(*args)
         return wrapper
     return use_data_decorator
+
+
+# source: https://medium.com/grammofy/testing-your-python-api-app-with-json-schema-52677fe73351
+def assert_valid_schema(data, schema_file):
+    """ Checks whether the given data matches the schema """
+
+    j = json.loads(data)
+    schema = _load_json_schema(schema_file)
+    return validate(j, schema)
+
+
+def _load_json_schema(filename):
+    """ Loads the given schema file """
+
+    relative_path = os.path.join(fixtures_path, 'schemas', filename)
+    absolute_path = os.path.join(os.path.dirname(__file__), relative_path)
+
+    with open(absolute_path) as schema_file:
+        return json.loads(schema_file.read())
