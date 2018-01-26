@@ -136,8 +136,6 @@ class EvaluationTestCase(TestCase):
             'id': 1,
             'version': 1,
             'votes_score': 1,
-            'display_grad_year': True,
-            'display_majors': False,
             'data': {
                 'q1': 'a1'
             }

@@ -72,8 +72,6 @@ class ProfessorTestCase(TestCase):
                     'quarter_id': 1,
                     'version': 1,
                     'data': {'q1': 'a1'},
-                    'display_grad_year': True,
-                    'display_majors': False,
                     'user_vote': None,
                     'votes_score': 0,
                     'course': {
@@ -85,7 +83,7 @@ class ProfessorTestCase(TestCase):
                     'author': {
                         'self': True,
                         'graduation_year': 2020,
-                        'majors': [0]
+                        'majors': None
                     }
                 }
             ]

@@ -142,8 +142,6 @@ class CourseTestCase(TestCase):
                     'votes_score': 0,
                     'user_vote': None,
                     'data': {'q1': 'a1'},
-                    'display_grad_year': True,
-                    'display_majors': False,
                     'professor': {
                         'id': 1,
                         'first_name': 'Ben',
@@ -152,7 +150,7 @@ class CourseTestCase(TestCase):
                     'author': {
                         'self': True,
                         'graduation_year': 2020,
-                        'majors': [0]
+                        'majors': None
                     }
                 },
                 {
@@ -162,8 +160,6 @@ class CourseTestCase(TestCase):
                     'votes_score': 1,
                     'user_vote': 'u',
                     'data': {'q1': 'a1'},
-                    'display_grad_year': True,
-                    'display_majors': False,
                     'professor': {
                         'id': 1,
                         'first_name': 'Ben',
@@ -171,7 +167,7 @@ class CourseTestCase(TestCase):
                     },
                     'author': {
                         'self': False,
-                        'majors': [],
+                        'majors': None,
                         'graduation_year': None
                     }
                 }

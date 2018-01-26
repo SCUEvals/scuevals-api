@@ -31,9 +31,7 @@ class Evaluation(db.Model):
             'id': self.id,
             'version': self.version,
             'data': self.data,
-            'votes_score': self.votes_value(),
-            'display_grad_year': self.display_grad_year,
-            'display_majors': self.display_majors
+            'votes_score': self.votes_value()
         }
 
     def user_vote(self, user):

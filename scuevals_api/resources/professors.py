@@ -56,8 +56,8 @@ class ProfessorResource(Resource):
                 'course': ev.section.course.to_dict(),
                 'author': {
                     'self': student.id == ev.student.id,
-                    'majors': ev.student.majors_list,
-                    'graduation_year': ev.student.graduation_year
+                    'majors': ev.student.majors_list if ev.display_majors else None,
+                    'graduation_year': ev.student.graduation_year if ev.display_grad_year else None
                 }
             }
             for ev in professor.evaluations
