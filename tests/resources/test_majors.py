@@ -1,6 +1,5 @@
 import json
 
-from scuevals_api.models import db, Major
 from tests import TestCase
 
 

@@ -22,25 +22,13 @@ def init_db(app, db):
             db.engine.execute(text(sql))
 
 
-def seed_db(db):
-    scu = University(id=1, abbreviation='SCU', name='Santa Clara University')
-
-    db.session.add(scu)
-    db.session.add(School(abbreviation='BUS', name='Business', university=scu))
-    db.session.add(School(abbreviation='EGR', name='Engineering', university=scu))
-    db.session.add(School(abbreviation='AS', name='Arts and Sciences', university=scu))
-    db.session.add(School(abbreviation='UNV', name='Generic', university=scu))
-    db.session.add(School(abbreviation='CPE', name='Education and Counseling Psychology', university=scu))
-    db.session.add(School(abbreviation='LAW', name='Law', university=scu))
-
-    db.session.add(Role(id=0, name='Incomplete'))
-    db.session.add(Role(id=1, name='Student'))
-    db.session.add(Role(id=10, name='Administrator'))
-    db.session.add(Role(id=20, name='API Key'))
-
-    db.session.commit()
+def create_cli_app(pointless_arg):
+    """
+    A wrapper for create_app that ignores the ScriptInfo object that Click passes.
+    """
+    return create_app()
 
 
-@click.group(cls=FlaskGroup, create_app=create_app)
+@click.group(cls=FlaskGroup, create_app=create_cli_app)
 def cli():
     pass

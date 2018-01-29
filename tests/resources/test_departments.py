@@ -6,13 +6,11 @@ from tests import TestCase, use_data
 
 class DepartmentsTestCase(TestCase):
     def setUp(self):
-        super(DepartmentsTestCase, self).setUp()
+        super().setUp()
 
-        with self.app.app_context():
-            db.session.add(School(id=0, abbreviation='ARTS', name='Arts & Sciences', university_id=1))
-            db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=0))
-            db.session.add(Department(abbreviation='ENGL', name='English', school_id=0))
-            db.session.commit()
+        db.session.add(School(id=0, abbreviation='ARTS', name='Arts & Sciences', university_id=1))
+        db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=0))
+        db.session.add(Department(abbreviation='ENGL', name='English', school_id=0))
 
     def test_get(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}

@@ -12,26 +12,24 @@ from tests import TestCase, use_data
 
 class CoursesTestCase(TestCase):
     def setUp(self):
-        super(CoursesTestCase, self).setUp()
+        super().setUp()
 
-        with self.app.app_context():
-            db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                                   period='[2017-01-01, 2017-02-01]', university_id=1))
-            db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
-                                   period='[2017-03-01, 2017-04-01]', university_id=1))
-            db.session.add(Quarter(id=3900, year=2017, name='Fall', current=False,
-                                   period='[2017-05-01, 2017-06-01]', university_id=1))
-            db.session.add(Department(abbreviation='ANTH', name='Anthropology', school_id=1))
-            db.session.add(Department(abbreviation='COMM', name='Communications', school_id=1))
-            db.session.add(Course(id=1000, title='Math Course', number='1', department_id=1))
-            db.session.add(Course(id=1001, title='Arts Course', number='2', department_id=1))
-            db.session.add(Section(quarter_id=1, course_id=1000))
+        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
+                               period='[2017-01-01, 2017-02-01]', university_id=1))
+        db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
+                               period='[2017-03-01, 2017-04-01]', university_id=1))
+        db.session.add(Quarter(id=3900, year=2017, name='Fall', current=False,
+                               period='[2017-05-01, 2017-06-01]', university_id=1))
+        db.session.add(Department(id=1, abbreviation='ANTH', name='Anthropology', school_id=1))
+        db.session.add(Department(id=2, abbreviation='COMM', name='Communications', school_id=1))
+        db.session.add(Course(id=1000, title='Math Course', number='1', department_id=1))
+        db.session.add(Course(id=1001, title='Arts Course', number='2', department_id=1))
+        db.session.add(Section(quarter_id=1, course_id=1000))
 
-            section = Section(quarter_id=2, course_id=1001)
-            db.session.add(section)
+        section = Section(quarter_id=2, course_id=1001)
+        db.session.add(section)
 
-            section.professors.append(Professor(id=0, first_name='Peter', university_id=1))
-            db.session.commit()
+        section.professors.append(Professor(id=0, first_name='Peter', university_id=1))
 
     def test_get(self):
         rv = self.client.get('/courses', headers=self.head_auth)
@@ -74,6 +72,8 @@ class CoursesTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
+        db.session.flush()
+
         rv = self.client.post('/courses', headers=headers, data=data['courses'])
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
@@ -104,26 +104,24 @@ class CoursesTestCase(TestCase):
 
 class CourseTestCase(TestCase):
     def setUp(self):
-        super(CourseTestCase, self).setUp()
+        super().setUp()
 
-        with self.app.app_context():
-            db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                                   period='[2017-01-01, 2017-02-01]', university_id=1))
-            db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=1))
-            db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-            db.session.add(Section(id=1, quarter_id=1, course_id=1))
-            db.session.add(Professor(id=1, first_name='Ben', last_name='Stiller', university_id=1))
-            db.session.add(Student(id=1, email='sdoe@scu.edu', first_name='Sandra', last_name='Doe', university_id=1))
-            db.session.add(Evaluation(
-                id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
-                display_grad_year=True, display_majors=False
-            ))
-            db.session.add(Evaluation(
-                id=2, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
-                display_grad_year=True, display_majors=False
-            ))
-            db.session.add(Vote(student_id=0, evaluation_id=2, value=Vote.UPVOTE))
-            db.session.commit()
+        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
+                               period='[2017-01-01, 2017-02-01]', university_id=1))
+        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
+        db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
+        db.session.add(Section(id=1, quarter_id=1, course_id=1))
+        db.session.add(Professor(id=1, first_name='Ben', last_name='Stiller', university_id=1))
+        db.session.add(Student(id=1, email='sdoe@scu.edu', first_name='Sandra', last_name='Doe', university_id=1))
+        db.session.add(Evaluation(
+            id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
+            display_grad_year=True, display_majors=False
+        ))
+        db.session.add(Evaluation(
+            id=2, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
+            display_grad_year=True, display_majors=False
+        ))
+        db.session.add(Vote(student_id=0, evaluation_id=2, value=Vote.UPVOTE))
 
     def test_get(self):
         rv = self.client.get('/courses/1', headers=self.head_auth)
@@ -177,17 +175,16 @@ class CourseTestCase(TestCase):
         self.assertEqual(expected, json.loads(rv.data))
 
     def test_get_wrong_university(self):
-        with self.app.app_context():
-            db.session.add(University(id=2, abbreviation='UCB', name='UC Berkeley'))
-            student = Student.query.get(0)
-            student.university_id = 2
+        db.session.add(University(id=2, abbreviation='UCB', name='UC Berkeley'))
+        student = Student.query.get(0)
+        student.university_id = 2
 
-            ident = student.to_dict()
-            db.session.commit()
+        student = Student.query.get(0)
+        ident = student.to_dict()
 
-            self.jwt = create_access_token(identity=ident)
+        jwt = create_access_token(identity=ident)
 
-        rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + self.jwt})
+        rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + jwt})
         self.assertEqual(401, rv.status_code)
 
     def test_get_non_existing(self):

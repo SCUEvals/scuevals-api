@@ -5,17 +5,18 @@ from unittest import mock
 from flask_jwt_extended import create_access_token
 from jose import jwt
 from json import JSONDecodeError
+
 from tests import TestCase, use_data, vcr
+from scuevals_api.auth import cache
 from scuevals_api.models import db, APIKey, Student, Role
 
 
 class AuthTestCase(TestCase):
     def setUp(self):
-        super(AuthTestCase, self).setUp()
+        super().setUp()
 
-        with self.app.app_context():
-            db.session.add(APIKey(key='API_KEY', university_id=1))
-            db.session.commit()
+        db.session.add(APIKey(key='API_KEY', university_id=1))
+        cache.clear()
 
     @use_data('auth.yaml')
     @vcr.use_cassette
@@ -91,8 +92,7 @@ class AuthTestCase(TestCase):
     def test_invalid_jwt_claims(self):
         invalid_ident = {'university_id': 1}
 
-        with self.app.app_context():
-            self.jwt = create_access_token(identity=invalid_ident)
+        self.jwt = create_access_token(identity=invalid_ident)
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
         self.assertEqual(400, rv.status_code)
@@ -150,10 +150,8 @@ class AuthTestCase(TestCase):
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
     def test_id_token_existing_user_incomplete(self, data, decode_func):
-        with self.app.app_context():
-            student = Student.query.get(0)
-            student.roles_list = [Role.Incomplete]
-            db.session.commit()
+        student = Student.query.get(0)
+        student.roles_list = [Role.Incomplete]
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))

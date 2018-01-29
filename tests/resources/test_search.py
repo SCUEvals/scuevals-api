@@ -7,13 +7,11 @@ from tests import TestCase
 
 class SearchTestCase(TestCase):
     def setUp(self):
-        super(SearchTestCase, self).setUp()
+        super().setUp()
 
-        with self.app.app_context():
-            db.session.add(Professor(first_name='Mathias', last_name='Doe', university_id=1))
-            db.session.add(Department(abbreviation='MATH', name='Mathematics', school_id=1))
-            db.session.add(Course(title='Math Course', number='1', department_id=1))
-            db.session.commit()
+        db.session.add(Professor(first_name='Mathias', last_name='Doe', university_id=1))
+        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
+        db.session.add(Course(title='Math Course', number='1', department_id=1))
 
     def test_search(self):
         headers = {

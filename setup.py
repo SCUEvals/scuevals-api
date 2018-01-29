@@ -15,6 +15,7 @@ setup(
         'beautifulsoup4==4.6.0',
         'blinker==1.4',
         'coveralls==1.2.0',
+        'factory_boy==2.9.2',
         'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
         'Flask-JWT-Extended==3.6.0',

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 from flask import Flask
@@ -8,25 +9,40 @@ from scuevals_api.resources import resources_bp
 from scuevals_api.errors import get_http_exception_handler
 
 
-def create_app(config_object=None):
+class Config:
+    JWT_IDENTITY_CLAIM = 'sub'
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(days=30)
+    JWT_SECRET_KEY = os.environ['JWT_SECRET_KEY']
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+class TestConfig(Config):
+    ENV = 'test'
+    SQLALCHEMY_DATABASE_URI = os.environ['TEST_DATABASE_URL']
+    TESTING = True
+    ROLLBAR_TOKEN = os.environ['ROLLBAR_API_KEY']
+    ROLLBAR_ENV = 'testing'
+
+
+class DevelopmentConfig(Config):
+    ENV = 'development'
+    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+
+
+class ProductionConfig(Config):
+    ENV = 'production'
+    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+    ROLLBAR_TOKEN = os.environ['ROLLBAR_API_KEY']
+    ROLLBAR_ENV = 'production'
+
+
+def create_app(config_object=DevelopmentConfig):
     app = Flask(__name__)
-    load_config(app, 'default')
 
-    if 'FLASK_CONFIG' not in os.environ:
-        raise ValueError('FLASK_CONFIG env var not set')
-    else:
-        app.config['FLASK_CONFIG'] = os.environ['FLASK_CONFIG']
+    app.config.from_object(config_object)
 
-    try:
-        load_config(app, app.config['FLASK_CONFIG'])
-    except IOError:
-        raise ValueError('invalid config specified')
-
-    if app.config['FLASK_CONFIG'] == 'test':
+    if 'ENV' in app.config and app.config['ENV'] == 'test':
         logging.disable(logging.CRITICAL)
-
-    if config_object is not None:
-        app.config.from_object(config_object)
 
     register_error_handler(app)
     register_extensions(app)
@@ -47,7 +63,7 @@ def register_extensions(app):
     jwtm.init_app(app)
     cache.init_app(app)
 
-    if app.config['FLASK_CONFIG'] == 'production':
+    if 'ENV' in app.config and app.config['ENV'] in ('production', 'testing'):
         from scuevals_api.errors import rollbar
         rollbar.init_app(app)
 
@@ -74,8 +90,3 @@ def register_cli(app):
 
 def register_error_handler(app):
     app.handle_http_exception = get_http_exception_handler(app)
-
-
-def load_config(app, config):
-    config_dir = os.path.join(os.path.dirname(app.root_path), 'config')
-    app.config.from_pyfile(os.path.join(config_dir, config + '.py'))

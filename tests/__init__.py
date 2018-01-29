@@ -7,10 +7,9 @@ from flask_jwt_extended import create_access_token
 from jsonschema import validate
 from vcr import VCR
 
-from scuevals_api.cmd import init_db, seed_db
-from scuevals_api.models import db, Student, Role, Major
+from scuevals_api.cmd import init_db
+from scuevals_api.models import db, Student, Role, Major, University, School
 from scuevals_api import create_app
-
 
 fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
 
@@ -21,53 +20,79 @@ vcr = VCR(
 
 
 class TestCase(unittest.TestCase):
-    def setUp(self):
-        app = create_app()
-        self.app = app
-        self.client = app.test_client()
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app('scuevals_api.TestConfig')
+        cls.client = cls.app.test_client()
 
-        with app.app_context():
-            db.drop_all()
-            init_db(app, db)
-            seed_db(db)
+        ctx = cls.app.app_context()
+        ctx.push()
 
-            student = Student(
-                id=0,
-                email='jdoe@scu.edu',
-                first_name='John',
-                last_name='Doe',
-                roles=[Role.query.get(Role.Student)],
-                university_id=1,
-                majors=[Major(id=0, name='Computer Science & Engineering', university_id=1)],
-                graduation_year=2020,
-            )
+        db.drop_all()
+        init_db(cls.app, db)
+        seed_db(db)
 
-            ident = student.to_dict()
+        cls.session = db.session
 
-            db.session.add(student)
-            db.session.commit()
+        student = Student(
+            id=0,
+            email='jdoe@scu.edu',
+            first_name='John',
+            last_name='Doe',
+            roles=[Role.query.get(Role.Student)],
+            university_id=1,
+            majors=[Major(id=0, name='Computer Science & Engineering', university_id=1)],
+            graduation_year=2020,
+        )
 
-            self.jwt = create_access_token(identity=ident)
+        ident = student.to_dict()
 
-            api_ident = {
-                'university_id': 1,
-                'roles': [Role.API_Key]
-            }
+        db.session.add(student)
+        db.session.commit()
 
-            self.api_jwt = create_access_token(identity=api_ident)
+        cls.jwt = create_access_token(identity=ident)
+
+        api_ident = {
+            'university_id': 1,
+            'roles': [Role.API_Key]
+        }
+
+        cls.api_jwt = create_access_token(identity=api_ident)
 
         # these are just shorthands to DRY up the code
-        self.head_auth = {'Authorization': 'Bearer ' + self.jwt}
-        self.head_auth_json = self.head_auth
-        self.head_auth_json['Content-Type'] = 'application/json'
+        cls.head_auth = {'Authorization': 'Bearer ' + cls.jwt}
+        cls.head_auth_json = cls.head_auth
+        cls.head_auth_json['Content-Type'] = 'application/json'
+
+    def setUp(self):
+        db.session.begin_nested()
 
     def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
+        db.session.rollback()
+        db.session.remove()
 
-    def put(self):
-        pass
+
+def seed_db(target):
+    scu = University(id=1, abbreviation='SCU', name='Santa Clara University')
+
+    target.session.add(scu)
+    target.session.add_all([
+        School(abbreviation='BUS', name='Business', university=scu),
+        School(abbreviation='EGR', name='Engineering', university=scu),
+        School(abbreviation='AS', name='Arts and Sciences', university=scu),
+        School(abbreviation='UNV', name='Generic', university=scu),
+        School(abbreviation='CPE', name='Education and Counseling Psychology', university=scu),
+        School(abbreviation='LAW', name='Law', university=scu)
+    ])
+
+    db.session.add_all([
+        Role(id=0, name='Incomplete'),
+        Role(id=1, name='Student'),
+        Role(id=10, name='Administrator'),
+        Role(id=20, name='API Key')
+    ])
+
+    db.session.commit()
 
 
 def use_data(file):
