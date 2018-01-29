@@ -62,7 +62,6 @@ class CoursesResource(Resource):
             db.session.commit()
         except DatabaseError as e:
             db.session.rollback()
-            db.session.remove()
 
             if e.orig.pgcode == 'MIDEP':
                 msg = get_pg_error_msg(e.orig)

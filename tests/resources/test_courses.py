@@ -31,6 +31,8 @@ class CoursesTestCase(TestCase):
 
         section.professors.append(Professor(id=0, first_name='Peter', university_id=1))
 
+        db.session.flush()
+
     def test_get(self):
         rv = self.client.get('/courses', headers=self.head_auth)
 
@@ -71,8 +73,6 @@ class CoursesTestCase(TestCase):
             'Authorization': 'Bearer ' + self.api_jwt,
             'Content-Type': 'application/json'
         }
-
-        db.session.flush()
 
         rv = self.client.post('/courses', headers=headers, data=data['courses'])
         self.assertEqual(200, rv.status_code)
