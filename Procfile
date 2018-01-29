@@ -1,1 +1,1 @@
-web: newrelic-admin run-program gunicorn 'scuevals_api:create_app("scuevals_api.ProductionConfig")'
+web: newrelic-admin run-program gunicorn 'scuevals_api:create_app("production")'

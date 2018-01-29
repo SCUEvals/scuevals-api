@@ -22,7 +22,7 @@ vcr = VCR(
 class TestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = create_app('scuevals_api.TestConfig')
+        cls.app = create_app('test')
         cls.client = cls.app.test_client()
 
         ctx = cls.app.app_context()

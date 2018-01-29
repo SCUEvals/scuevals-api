@@ -1,4 +1,3 @@
-import datetime
 import logging
 import os
 from flask import Flask
@@ -9,37 +8,11 @@ from scuevals_api.resources import resources_bp
 from scuevals_api.errors import get_http_exception_handler
 
 
-class Config:
-    JWT_IDENTITY_CLAIM = 'sub'
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(days=30)
-    JWT_SECRET_KEY = os.environ['JWT_SECRET_KEY']
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-
-class TestConfig(Config):
-    ENV = 'test'
-    SQLALCHEMY_DATABASE_URI = os.environ['TEST_DATABASE_URL']
-    TESTING = True
-    ROLLBAR_TOKEN = os.environ['ROLLBAR_API_KEY']
-    ROLLBAR_ENV = 'testing'
-
-
-class DevelopmentConfig(Config):
-    ENV = 'development'
-    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-
-
-class ProductionConfig(Config):
-    ENV = 'production'
-    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-    ROLLBAR_TOKEN = os.environ['ROLLBAR_API_KEY']
-    ROLLBAR_ENV = 'production'
-
-
-def create_app(config_object=DevelopmentConfig):
+def create_app(config='development'):
     app = Flask(__name__)
 
-    app.config.from_object(config_object)
+    load_config(app, 'default')
+    load_config(app, config)
 
     if 'ENV' in app.config and app.config['ENV'] == 'test':
         logging.disable(logging.CRITICAL)
@@ -63,7 +36,7 @@ def register_extensions(app):
     jwtm.init_app(app)
     cache.init_app(app)
 
-    if 'ENV' in app.config and app.config['ENV'] in ('production', 'testing'):
+    if 'ENV' in app.config and app.config['ENV'] in ('production', 'test'):
         from scuevals_api.errors import rollbar
         rollbar.init_app(app)
 
@@ -81,7 +54,12 @@ def register_cli(app):
     def initdb():
         from scuevals_api.cmd import init_db
         init_db(app, db)
-        
+
 
 def register_error_handler(app):
     app.handle_http_exception = get_http_exception_handler(app)
+
+
+def load_config(app, config):
+    config_dir = os.path.join(os.path.dirname(app.root_path), 'config')
+    app.config.from_pyfile(os.path.join(config_dir, config + '.py'))
