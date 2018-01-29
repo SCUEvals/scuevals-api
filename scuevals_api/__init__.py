@@ -81,12 +81,7 @@ def register_cli(app):
     def initdb():
         from scuevals_api.cmd import init_db
         init_db(app, db)
-
-    @app.cli.command(short_help='Seeds the DB.')
-    def seeddb():
-        from scuevals_api.cmd import seed_db
-        seed_db(db)
-
+        
 
 def register_error_handler(app):
     app.handle_http_exception = get_http_exception_handler(app)
