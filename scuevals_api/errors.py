@@ -4,11 +4,11 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_rollbar import Rollbar
 from werkzeug.exceptions import (
     BadRequest, Unauthorized, Forbidden, NotFound,
-    UnprocessableEntity, MethodNotAllowed, UnsupportedMediaType
-)
+    UnprocessableEntity, MethodNotAllowed, UnsupportedMediaType,
+    Conflict)
 
 rollbar = Rollbar(ignore_exc=[BadRequest, Unauthorized, Forbidden, NotFound, UnprocessableEntity,
-                              MethodNotAllowed, UnsupportedMediaType,
+                              MethodNotAllowed, UnsupportedMediaType, Conflict,
                               NoAuthorizationError])
 
 
