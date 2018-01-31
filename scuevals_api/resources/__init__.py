@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask_restful import Api
 
 from .professors import ProfessorsResource, ProfessorResource
+from .classes import ClassResource
 from .courses import CoursesResource, CourseResource
 from .departments import DepartmentsResource
 from .evaluations import EvaluationsResource, EvaluationResource, EvaluationVoteResource
@@ -13,6 +14,8 @@ from .students import StudentsResource
 
 resources_bp = Blueprint('resources', __name__)
 api = Api(resources_bp)
+
+api.add_resource(ClassResource, '/classes/<int:q_id>/<int:p_id>/<int:c_id>')
 
 api.add_resource(CoursesResource, '/courses')
 api.add_resource(CourseResource, '/courses/<int:c_id>')

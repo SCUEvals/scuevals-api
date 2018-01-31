@@ -3,6 +3,7 @@ import factory
 from scuevals_api import models
 from .course import CourseFactory
 from .quarter import QuarterFactory
+from .professor import ProfessorFactory
 
 
 class SectionFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -12,3 +13,15 @@ class SectionFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     quarter = factory.SubFactory(QuarterFactory)
     course = factory.SubFactory(CourseFactory)
+
+    @factory.post_generation
+    def professors(self, create, extracted):
+        if not create:
+            return
+
+        if extracted:
+            for professor in extracted:
+                self.professors.add(professor)
+        else:
+            self.professors.append(ProfessorFactory())
+            self.professors.append(ProfessorFactory())
