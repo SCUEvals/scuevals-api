@@ -21,7 +21,7 @@ class SectionFactory(factory.alchemy.SQLAlchemyModelFactory):
 
         if extracted:
             for professor in extracted:
-                self.professors.add(professor)
+                self.professors.append(professor)
         else:
             self.professors.append(ProfessorFactory())
             self.professors.append(ProfessorFactory())

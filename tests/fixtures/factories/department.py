@@ -1,4 +1,6 @@
+import random
 import factory
+
 from scuevals_api import models
 
 
@@ -12,4 +14,4 @@ class DepartmentFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     @factory.lazy_attribute
     def school(self):
-        return models.School.query.first()
+        return random.choice(models.School.query.all())
