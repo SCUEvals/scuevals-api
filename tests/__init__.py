@@ -7,8 +7,9 @@ from flask_jwt_extended import create_access_token
 from jsonschema import validate
 from vcr import VCR
 
+from tests.fixtures.factories import StudentFactory, MajorFactory
 from scuevals_api.cmd import init_db
-from scuevals_api.models import db, Student, Role, Major, University, School
+from scuevals_api.models import db, Role, University, School
 from scuevals_api import create_app
 
 fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
@@ -34,20 +35,15 @@ class TestCase(unittest.TestCase):
 
         cls.session = db.session
 
-        student = Student(
+        cls.student = StudentFactory(
             id=0,
-            email='jdoe@scu.edu',
-            first_name='John',
-            last_name='Doe',
             roles=[Role.query.get(Role.Student)],
-            university_id=1,
-            majors=[Major(id=0, name='Computer Science & Engineering', university_id=1)],
-            graduation_year=2020,
+            majors=[MajorFactory()],
         )
 
-        ident = student.to_dict()
+        ident = cls.student.to_dict()
 
-        db.session.add(student)
+        db.session.add(cls.student)
         db.session.commit()
 
         cls.jwt = create_access_token(identity=ident)

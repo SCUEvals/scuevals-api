@@ -28,6 +28,15 @@ class EvaluationSchemaV1(Schema):
 
 
 class EvaluationsResource(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
+    def get(self):
+        ident = get_jwt_identity()
+        evals = Evaluation.query.filter_by(student_id=ident['id'])
+
+        return [ev.to_dict() for ev in evals.all()]
+
     args = {
         'quarter_id': fields.Int(required=True),
         'professor_id': fields.Int(required=True),

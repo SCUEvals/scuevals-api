@@ -6,6 +6,7 @@ from flask_jwt_extended import create_access_token
 from jose import jwt
 from json import JSONDecodeError
 
+from tests.fixtures.factories import StudentFactory
 from tests import TestCase, use_data, vcr
 from scuevals_api.auth import cache
 from scuevals_api.models import db, APIKey, Student, Role
@@ -142,6 +143,7 @@ class AuthTestCase(TestCase):
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
     def test_id_token_existing_user(self, data, decode_func):
+        StudentFactory(email='jdoe@scu.edu')
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
         self.assertEqual(200, rv.status_code)
@@ -150,7 +152,7 @@ class AuthTestCase(TestCase):
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
     def test_id_token_existing_user_incomplete(self, data, decode_func):
-        student = Student.query.get(0)
+        student = StudentFactory(email='jdoe@scu.edu')
         student.roles_list = [Role.Incomplete]
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},

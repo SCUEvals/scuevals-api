@@ -1,26 +1,30 @@
 import json
 
+from tests.fixtures.factories import SectionFactory, EvaluationFactory, QuarterFactory
 from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote, Student
-from tests import TestCase
+from tests import TestCase, assert_valid_schema
 
 
 class EvaluationsTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                               period='[2017-01-01, 2017-02-01]', university_id=1))
-        db.session.add(Department(id=1, abbreviation='GEN', name='General', school_id=1))
-        db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-        section = Section(quarter_id=1, course_id=1)
-        section.professors.append(Professor(id=1, first_name='Mathias', last_name='Doe', university_id=1))
-        db.session.add(section)
+        self.section = SectionFactory()
+        EvaluationFactory(student=self.student)
+        EvaluationFactory(student=self.student)
+
+    def test_get(self):
+        rv = self.client.get('/evaluations', headers=self.head_auth)
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(2, len(evals))
+        assert_valid_schema(rv.data, 'evaluations.json')
 
     def test_post_evaluation(self):
         data = {
-            'quarter_id': 1,
-            'professor_id': 1,
-            'course_id': 1,
+            'quarter_id': self.section.quarter_id,
+            'professor_id': self.section.professors[0].id,
+            'course_id': self.section.course_id,
             'display_grad_year': True,
             'display_majors': False,
             'evaluation': {
@@ -40,7 +44,7 @@ class EvaluationsTestCase(TestCase):
         self.assertEqual(201, rv.status_code)
 
         evaluation = Evaluation.query.filter(
-            Evaluation.professor_id == 1,
+            Evaluation.professor_id == self.section.professors[0].id,
             Evaluation.student_id == 0
         ).one_or_none()
 
@@ -51,9 +55,9 @@ class EvaluationsTestCase(TestCase):
 
     def test_post_evaluation_duplicate(self):
         data = {
-            'quarter_id': 1,
-            'professor_id': 1,
-            'course_id': 1,
+            'quarter_id': self.section.quarter_id,
+            'professor_id': self.section.professors[0].id,
+            'course_id': self.section.course_id,
             'display_grad_year': True,
             'display_majors': False,
             'evaluation': {
@@ -83,7 +87,7 @@ class EvaluationsTestCase(TestCase):
 
         data = {
             'quarter_id': -1,
-            'professor_id': 1,
+            'professor_id': self.section.professors[0].id,
             'course_id': -1,
             'display_grad_year': True,
             'display_majors': False,

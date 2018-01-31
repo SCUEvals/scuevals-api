@@ -1,3 +1,4 @@
+from tests.fixtures.factories import MajorFactory
 from scuevals_api.models import Student, Role, db, Major
 from tests import TestCase
 
@@ -17,14 +18,14 @@ class StudentTestCase(TestCase):
             student.roles_list = [-1]
 
     def test_majors_list(self):
-        db.session.add(Major(id=1, university_id=1, name='Major1'))
+        MajorFactory(id=1000)
         student = Student.query.get(0)
-        student.majors_list = [1]
-        self.assertEqual(student.majors_list, [1])
+        student.majors_list = [1000]
+        self.assertEqual(student.majors_list, [1000])
         student.majors_list = []
         self.assertEqual(student.majors_list, [])
 
     def test_majors_list_invalid_major(self):
         student = Student.query.get(0)
         with self.assertRaisesRegex(ValueError, 'major does not exist'):
-            student.majors_list = [1]
+            student.majors_list = [-1]

@@ -1,6 +1,7 @@
 import json
 from flask_jwt_extended import create_access_token
 
+from tests.fixtures.factories import MajorFactory
 from scuevals_api.models import db, Major, Student, Role
 from tests import TestCase
 
@@ -15,8 +16,8 @@ class StudentsTestCase(TestCase):
             'majors': [1, 2]
         }
 
-        db.session.add(Major(id=1, university_id=1, name='Major1'))
-        db.session.add(Major(id=2, university_id=1, name='Major2'))
+        MajorFactory()
+        MajorFactory()
 
         student = Student(
             id=1,
