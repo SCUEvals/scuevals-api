@@ -1,11 +1,12 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
+from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
 from scuevals_api.models import Vote
 from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Section, Evaluation, db, Professor
+from scuevals_api.models import Role, Section, Evaluation, db, Professor, Student
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -33,9 +34,20 @@ class EvaluationsResource(Resource):
     @role_required(Role.Student)
     def get(self):
         ident = get_jwt_identity()
-        evals = Evaluation.query.filter_by(student_id=ident['id'])
+        evals = Evaluation.query.options(
+            subqueryload(Evaluation.professor),
+            subqueryload(Evaluation.section).subqueryload(Section.course)
+        ).filter_by(student_id=ident['id'])
 
-        return [ev.to_dict() for ev in evals.all()]
+        return [
+            {
+                **ev.to_dict(),
+                'quarter_id': ev.section.quarter_id,
+                'professor': ev.professor.to_dict(),
+                'course': ev.section.course.to_dict()
+            }
+            for ev in evals.all()
+        ]
 
     args = {
         'quarter_id': fields.Int(required=True),

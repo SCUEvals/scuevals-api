@@ -2,20 +2,17 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "array",
   "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "integer"
-      },
-      "version": {
-        "type": "integer"
-      },
-      "data": {
-        "type": "string"
-      },
-      "votes_score": {
-        "type": "integer"
+    "allOf": [
+      {"$ref": "evaluation.json"},
+      {
+        "type": "object",
+        "required": ["quarter_id", "professor", "course"],
+        "properties": {
+          "quarter_id": {"type": "integer"},
+          "professor": {"$ref": "professor.json"},
+          "course": {"$ref": "course.json"}
+        }
       }
-    }
+    ]
   }
 }

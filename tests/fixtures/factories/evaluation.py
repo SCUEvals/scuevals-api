@@ -12,7 +12,7 @@ class EvaluationFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = models.db.session
 
     version = 1
-    data = '{"test": 1}'
+    data = {"test": 1}
     display_grad_year = True
     display_majors = True
 

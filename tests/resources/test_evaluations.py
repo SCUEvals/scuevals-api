@@ -1,6 +1,6 @@
 import json
 
-from tests.fixtures.factories import SectionFactory, EvaluationFactory, QuarterFactory
+from tests.fixtures.factories import SectionFactory, EvaluationFactory
 from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote, Student
 from tests import TestCase, assert_valid_schema
 

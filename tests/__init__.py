@@ -4,7 +4,7 @@ import os
 import yaml
 from functools import wraps
 from flask_jwt_extended import create_access_token
-from jsonschema import validate
+from jsonschema import validate, RefResolver
 from vcr import VCR
 
 from tests.fixtures.factories import StudentFactory, MajorFactory
@@ -110,7 +110,10 @@ def assert_valid_schema(data, schema_file):
 
     j = json.loads(data)
     schema = _load_json_schema(schema_file)
-    return validate(j, schema)
+
+    resolver = RefResolver('file://' + fixtures_path + '/schemas/', schema)
+
+    return validate(j, schema, resolver=resolver)
 
 
 def _load_json_schema(filename):
