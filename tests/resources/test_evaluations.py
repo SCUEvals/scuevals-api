@@ -12,6 +12,7 @@ class EvaluationsTestCase(TestCase):
         self.section = SectionFactory()
         EvaluationFactory(student=self.student)
         EvaluationFactory(student=self.student)
+        db.session.flush()
 
     def test_get(self):
         rv = self.client.get('/evaluations', headers=self.head_auth)

@@ -4,6 +4,10 @@ import factory
 from scuevals_api import models
 
 
+def schools():
+    yield from models.School.query.all()
+
+
 class DepartmentFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.Department
@@ -11,7 +15,4 @@ class DepartmentFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     abbreviation = factory.Iterator(['COEN', 'MATH', 'POLI', 'MECH'])
     name = 'Sample Department'
-
-    @factory.lazy_attribute
-    def school(self):
-        return random.choice(models.School.query.all())
+    school = factory.iterator(schools)
