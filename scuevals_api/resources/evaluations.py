@@ -110,6 +110,23 @@ class EvaluationResource(Resource):
 
         return evaluation.to_dict()
 
+    @jwt_required
+    @role_required(Role.Student)
+    def delete(self, e_id):
+        ident = get_jwt_identity()
+        ev = Evaluation.query.get(e_id)
+
+        if ev is None:
+            raise NotFound('evaluation with the specified id not found')
+
+        if ev.student_id != ident['id']:
+            raise Forbidden('you are only allowed to delete your own evaluations')
+
+        db.session.delete(ev)
+        db.session.commit()
+
+        return '', 204
+
 
 class EvaluationVoteResource(Resource):
 

@@ -10,8 +10,10 @@ class EvaluationsTestCase(TestCase):
         super().setUp()
 
         self.section = SectionFactory()
+        self.eval = EvaluationFactory(student=self.student)
+        self.eval2 = EvaluationFactory()
         EvaluationFactory(student=self.student)
-        EvaluationFactory(student=self.student)
+
         db.session.flush()
 
     def test_get(self):
@@ -20,6 +22,21 @@ class EvaluationsTestCase(TestCase):
         evals = json.loads(rv.data)
         self.assertEqual(2, len(evals))
         assert_valid_schema(rv.data, 'evaluations.json')
+
+    def test_delete(self):
+        rv = self.client.delete('/evaluations/{}'.format(self.eval.id), headers=self.head_auth)
+        self.assertEqual(204, rv.status_code)
+
+        ev = Evaluation.query.get(self.eval.id)
+        self.assertIsNone(ev)
+
+    def test_delete_other_student(self):
+        rv = self.client.delete('/evaluations/{}'.format(self.eval2.id), headers=self.head_auth)
+        self.assertEqual(403, rv.status_code)
+
+    def test_delete_invalid_eval(self):
+        rv = self.client.delete('/evaluations/999', headers=self.head_auth)
+        self.assertEqual(404, rv.status_code)
 
     def test_post_evaluation(self):
         data = {
