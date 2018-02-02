@@ -9,7 +9,7 @@ from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, User, db, Role, APIKey
+from scuevals_api.models import Student, User, db, Role, APIKey, Professor
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -126,6 +126,14 @@ def claims_verification_loader(user_claims):
     if 'university_id' not in identity or 'roles' not in identity:
         return False
     return True
+
+
+@jwtm.user_loader_callback_loader
+def user_loader(identity):
+    if Role.API_Key in identity['roles']:
+        return 1
+
+    return User.query.with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
 
 
 def refresh_key_cache(data_store):

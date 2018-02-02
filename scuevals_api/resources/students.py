@@ -29,8 +29,6 @@ class StudentsResource(Resource):
             raise Unauthorized('you do not have the rights to modify another student')
 
         student = Student.query.get(s_id)
-        if student is None:
-            raise UnprocessableEntity('user does not exist')
 
         student.graduation_year = args['graduation_year']
         student.gender = args['gender']

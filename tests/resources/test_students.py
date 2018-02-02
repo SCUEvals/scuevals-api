@@ -1,8 +1,8 @@
 import json
 from flask_jwt_extended import create_access_token
 
-from tests.fixtures.factories import MajorFactory
-from scuevals_api.models import db, Major, Student, Role
+from tests.fixtures.factories import MajorFactory, StudentFactory
+from scuevals_api.models import db, Role
 from tests import TestCase
 
 
@@ -19,19 +19,10 @@ class StudentsTestCase(TestCase):
         MajorFactory()
         MajorFactory()
 
-        student = Student(
-            id=1,
-            email='mmyers@scu.edu',
-            first_name='Mike',
-            last_name='Myers',
-            roles=[Role.query.get(Role.Incomplete)],
-            university_id=1
-        )
+        self.student = StudentFactory(roles=[Role.query.get(Role.Incomplete)])
+        db.session.flush()
 
-        ident = student.to_dict()
-
-        db.session.add(student)
-
+        ident = self.student.to_dict()
         self.jwt = create_access_token(identity=ident)
 
     def test_patch(self):
@@ -40,13 +31,12 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.client.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/{}'.format(self.student.id), headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 200)
 
-        student = Student.query.get(1)
-        self.assertEqual(student.graduation_year, self.patch_data['graduation_year'])
-        self.assertEqual(student.gender, self.patch_data['gender'])
-        self.assertEqual(student.majors_list, self.patch_data['majors'])
+        self.assertEqual(self.student.graduation_year, self.patch_data['graduation_year'])
+        self.assertEqual(self.student.gender, self.patch_data['gender'])
+        self.assertEqual(self.student.majors_list, self.patch_data['majors'])
 
     def test_patch_wrong_user(self):
         headers = {
@@ -57,20 +47,6 @@ class StudentsTestCase(TestCase):
         rv = self.client.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 401)
 
-    def test_patch_non_existing_user(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
-        }
-
-        db.session.delete(Student.query.get(1))
-        db.session.flush()
-
-        rv = self.client.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
-        self.assertEqual(rv.status_code, 422)
-        resp = json.loads(rv.data)
-        self.assertEqual('user does not exist', resp['message'])
-
     def test_patch_invalid_majors(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
@@ -79,7 +55,9 @@ class StudentsTestCase(TestCase):
 
         self.patch_data['majors'] = [-1]
 
-        rv = self.client.patch('/students/1', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch(
+            '/students/{}'.format(self.student.id), headers=headers, data=json.dumps(self.patch_data)
+        )
         self.assertEqual(rv.status_code, 422)
         resp = json.loads(rv.data)
         self.assertEqual('invalid major(s) specified', resp['message'])
