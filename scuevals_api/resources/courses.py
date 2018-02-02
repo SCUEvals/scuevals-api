@@ -1,9 +1,9 @@
 import json
 import logging
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, validate
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
@@ -78,15 +78,22 @@ class CourseResource(Resource):
 
     @jwt_required
     @role_required(Role.Student)
-    def get(self, c_id):
-        course = Course.query.options(
+    @use_args({'embed': fields.Str(validate=validate.OneOf(['professors']))})
+    def get(self, args, c_id):
+        q = Course.query.options(
             subqueryload(Course.sections).subqueryload(Section.evaluations)
-        ).get(c_id)
+        ).filter(
+            Course.id == c_id,
+            Course.department.has(Department.school.has(School.university_id == current_user.university_id))
+        )
+
+        if 'embed' in args:
+            q.options(subqueryload(Course.sections).subqueryload(Section.professors))
+
+        course = q.one_or_none()
 
         if course is None:
             raise NotFound('course with the specified id not found')
-
-        validate_university_id(course.department.school.university_id)
 
         user = get_jwt_identity()
         student = Student.query.get(user['id'])
@@ -106,5 +113,8 @@ class CourseResource(Resource):
             }
             for section in course.sections for ev in section.evaluations
         ]
+
+        if 'embed' in args:
+            data['professors'] = [professor.to_dict() for professor in course.sections.professors]
 
         return data

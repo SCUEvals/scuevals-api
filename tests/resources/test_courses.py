@@ -7,7 +7,7 @@ from scuevals_api.models import (
     db, Quarter, Department, Course, Section, Evaluation,
     Professor, Student, University, Vote
 )
-from tests import TestCase, use_data
+from tests import TestCase, use_data, assert_valid_schema
 
 
 class CoursesTestCase(TestCase):
@@ -127,65 +127,7 @@ class CourseTestCase(TestCase):
         rv = self.client.get('/courses/1', headers=self.head_auth)
         self.assertEqual(200, rv.status_code)
 
-        expected = {
-            'id': 1,
-            'number': '1',
-            'title': 'Math Course',
-            'department_id': 1,
-            'evaluations': [
-                {
-                    'id': 1,
-                    'quarter_id': 1,
-                    'version': 1,
-                    'votes_score': 0,
-                    'user_vote': None,
-                    'data': {'q1': 'a1'},
-                    'professor': {
-                        'id': 1,
-                        'first_name': 'Ben',
-                        'last_name': 'Stiller'
-                    },
-                    'author': {
-                        'self': True,
-                        'graduation_year': 2020,
-                        'majors': None
-                    }
-                },
-                {
-                    'id': 2,
-                    'quarter_id': 1,
-                    'version': 1,
-                    'votes_score': 1,
-                    'user_vote': 'u',
-                    'data': {'q1': 'a1'},
-                    'professor': {
-                        'id': 1,
-                        'first_name': 'Ben',
-                        'last_name': 'Stiller'
-                    },
-                    'author': {
-                        'self': False,
-                        'majors': None,
-                        'graduation_year': None
-                    }
-                }
-            ]
-        }
-
-        self.assertEqual(expected, json.loads(rv.data))
-
-    def test_get_wrong_university(self):
-        db.session.add(University(id=2, abbreviation='UCB', name='UC Berkeley'))
-        student = Student.query.get(0)
-        student.university_id = 2
-
-        student = Student.query.get(0)
-        ident = student.to_dict()
-
-        jwt = create_access_token(identity=ident)
-
-        rv = self.client.get('/courses/1', headers={'Authorization': 'Bearer ' + jwt})
-        self.assertEqual(401, rv.status_code)
+        assert_valid_schema(rv.data, 'course_with_evals.json')
 
     def test_get_non_existing(self):
         rv = self.client.get('/courses/0', headers=self.head_auth)
