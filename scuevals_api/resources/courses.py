@@ -122,6 +122,8 @@ class CourseResource(Resource):
         ]
 
         if 'embed' in args:
-            data['professors'] = [professor.to_dict() for professor in course.sections.professors]
+            data['professors'] = [professor.to_dict()
+                                  for section in course.sections
+                                  for professor in section.professors]
 
         return data

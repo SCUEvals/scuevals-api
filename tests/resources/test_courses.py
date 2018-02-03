@@ -104,22 +104,39 @@ class CourseTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        course = CourseFactory()
+        self.course = CourseFactory()
         prof = ProfessorFactory()
+        prof2 = ProfessorFactory()
+        prof3 = ProfessorFactory()
         student = StudentFactory()
-        section = SectionFactory(course=course, professors=[prof])
+        section = SectionFactory(course=self.course, professors=[prof, prof2, prof3])
         EvaluationFactory(student=self.student, professor=prof, section=section)
         evaluation = EvaluationFactory(student=student, professor=prof, section=section)
         VoteFactory(student=self.student, evaluation=evaluation, value=Vote.UPVOTE)
 
+        db.session.flush()
+
     def test_get(self):
-        rv = self.client.get('/courses/1', headers=self.head_auth)
+        rv = self.client.get('/courses/{}'.format(self.course.id), headers=self.head_auth)
         self.assertEqual(200, rv.status_code)
 
         data = json.loads(rv.data)
         self.assertEqual(2, len(data['evaluations']))
 
         assert_valid_schema(rv.data, 'course_with_evals.json')
+
+    def test_get_embed_professors(self):
+        rv = self.client.get('/courses/{}'.format(self.course.id),
+                             headers=self.head_auth,
+                             query_string=urlencode({'embed': 'professors'}))
+
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data['evaluations']))
+        self.assertEqual(3, len(data['professors']))
+
+        assert_valid_schema(rv.data, 'course_with_evals_professors.json')
 
     def test_get_non_existing(self):
         rv = self.client.get('/courses/0', headers=self.head_auth)
