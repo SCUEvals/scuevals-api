@@ -1,12 +1,10 @@
 import json
 from urllib.parse import urlencode
 
-from flask_jwt_extended import create_access_token
-
-from scuevals_api.models import (
-    db, Quarter, Department, Course, Section, Evaluation,
-    Professor, Student, University, Vote
+from tests.fixtures.factories import (
+    StudentFactory, ProfessorFactory, SectionFactory, CourseFactory, EvaluationFactory, VoteFactory
 )
+from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Vote
 from tests import TestCase, use_data, assert_valid_schema
 
 
@@ -106,26 +104,20 @@ class CourseTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                               period='[2017-01-01, 2017-02-01]', university_id=1))
-        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
-        db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-        db.session.add(Section(id=1, quarter_id=1, course_id=1))
-        db.session.add(Professor(id=1, first_name='Ben', last_name='Stiller', university_id=1))
-        db.session.add(Student(id=1, email='sdoe@scu.edu', first_name='Sandra', last_name='Doe', university_id=1))
-        db.session.add(Evaluation(
-            id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
-            display_grad_year=True, display_majors=False
-        ))
-        db.session.add(Evaluation(
-            id=2, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
-            display_grad_year=True, display_majors=False
-        ))
-        db.session.add(Vote(student_id=0, evaluation_id=2, value=Vote.UPVOTE))
+        course = CourseFactory()
+        prof = ProfessorFactory()
+        student = StudentFactory()
+        section = SectionFactory(course=course, professors=[prof])
+        EvaluationFactory(student=self.student, professor=prof, section=section)
+        evaluation = EvaluationFactory(student=student, professor=prof, section=section)
+        VoteFactory(student=self.student, evaluation=evaluation, value=Vote.UPVOTE)
 
     def test_get(self):
         rv = self.client.get('/courses/1', headers=self.head_auth)
         self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data['evaluations']))
 
         assert_valid_schema(rv.data, 'course_with_evals.json')
 

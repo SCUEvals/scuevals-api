@@ -1,6 +1,7 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields
+from sqlalchemy import and_
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
@@ -21,11 +22,20 @@ class ProfessorsResource(Resource):
             Professor.university_id == ident['university_id']
         )
 
+        section_filters = []
+
         if 'course_id' in args:
-            professors = professors.filter(Professor.sections.any(Section.course_id == args['course_id']))
+            section_filters.append(Section.course_id == args['course_id'])
 
         if 'quarter_id' in args:
-            professors = professors.filter(Professor.sections.any(Section.quarter_id == args['quarter_id']))
+            section_filters.append(Section.quarter_id == args['quarter_id'])
+
+        if section_filters:
+            expr = True
+            for fil in section_filters:
+                expr = and_(expr, fil)
+
+            professors = professors.filter(Professor.sections.any(expr))
 
         return [professor.to_dict() for professor in professors.all()]
 

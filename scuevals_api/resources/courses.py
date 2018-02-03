@@ -4,7 +4,7 @@ import logging
 from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
-from sqlalchemy import text
+from sqlalchemy import text, and_
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
@@ -39,13 +39,20 @@ class CoursesResource(Resource):
             Course.department.has(Department.school.has(School.university_id == ident['university_id']))
         )
 
+        course_filters = []
+
         if 'professor_id' in args:
-            courses = courses.filter(
-                Course.sections.any(Section.professors.any(Professor.id == args['professor_id']))
-            )
+            course_filters.append(Section.professors.any(Professor.id == args['professor_id']))
 
         if 'quarter_id' in args:
-            courses = courses.filter(Course.sections.any(Section.quarter_id == args['quarter_id']))
+            course_filters.append(Section.quarter_id == args['quarter_id'])
+
+        if course_filters:
+            expr = True
+            for fil in course_filters:
+                expr = and_(expr, fil)
+
+            courses = courses.filter(Course.sections.any(expr))
 
         return [course.to_dict() for course in courses.all()]
 

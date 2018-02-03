@@ -6,9 +6,11 @@ from flask_jwt_extended import create_access_token
 from jose import jwt
 from json import JSONDecodeError
 
+from werkzeug.exceptions import Unauthorized
+
 from tests.fixtures.factories import StudentFactory
 from tests import TestCase, use_data, vcr
-from scuevals_api.auth import cache
+from scuevals_api.auth import cache, validate_university_id
 from scuevals_api.models import db, APIKey, Student, Role
 
 
@@ -41,6 +43,9 @@ class AuthTestCase(TestCase):
         new_data = jwt.get_unverified_claims(resp['jwt'])
 
         self.assertGreater(new_data['exp'], old_jwt['exp'])
+
+    def test_validate_university_id(self):
+        self.assertRaises(Unauthorized, validate_university_id, 2)
 
     def test_validation(self):
         # make sure the new token will have a new expiration time

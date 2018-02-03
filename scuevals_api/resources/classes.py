@@ -13,7 +13,7 @@ class ClassResource(Resource):
     @role_required(Role.Student)
     def get(self, q_id, p_id, c_id):
         ident = get_jwt_identity()
-        query = db.session.query(Section).options(
+        query = Section.query.options(
             subqueryload(Section.professors)
         ).filter(
             Section.quarter.has(Quarter.university_id == ident['university_id']),
