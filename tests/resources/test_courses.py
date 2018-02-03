@@ -120,10 +120,10 @@ class CourseTestCase(TestCase):
         rv = self.client.get('/courses/{}'.format(self.course.id), headers=self.head_auth)
         self.assertEqual(200, rv.status_code)
 
+        assert_valid_schema(rv.data, 'course_with_evals.json')
+
         data = json.loads(rv.data)
         self.assertEqual(2, len(data['evaluations']))
-
-        assert_valid_schema(rv.data, 'course_with_evals.json')
 
     def test_get_embed_professors(self):
         rv = self.client.get('/courses/{}'.format(self.course.id),
@@ -132,11 +132,11 @@ class CourseTestCase(TestCase):
 
         self.assertEqual(200, rv.status_code)
 
+        assert_valid_schema(rv.data, 'course_with_evals_professors.json')
+
         data = json.loads(rv.data)
         self.assertEqual(2, len(data['evaluations']))
         self.assertEqual(3, len(data['professors']))
-
-        assert_valid_schema(rv.data, 'course_with_evals_professors.json')
 
     def test_get_non_existing(self):
         rv = self.client.get('/courses/0', headers=self.head_auth)

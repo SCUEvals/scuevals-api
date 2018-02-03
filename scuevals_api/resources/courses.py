@@ -102,18 +102,15 @@ class CourseResource(Resource):
         if course is None:
             raise NotFound('course with the specified id not found')
 
-        user = get_jwt_identity()
-        student = Student.query.get(user['id'])
-
         data = course.to_dict()
         data['evaluations'] = [
             {
                 **ev.to_dict(),
-                'user_vote': ev.user_vote(student),
+                'user_vote': ev.user_vote(current_user),
                 'quarter_id': ev.section.quarter_id,
                 'professor': ev.professor.to_dict(),
                 'author': {
-                    'self': student.id == ev.student.id,
+                    'self': current_user.id == ev.student.id,
                     'majors': ev.student.majors_list if ev.display_majors else None,
                     'graduation_year': ev.student.graduation_year if ev.display_grad_year else None
                 }

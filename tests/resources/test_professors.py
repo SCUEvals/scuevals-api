@@ -1,9 +1,11 @@
 import json
 from urllib.parse import urlencode
 
-from tests.fixtures.factories import SectionFactory, ProfessorFactory, QuarterFactory, CourseFactory
-from scuevals_api.models import db, Quarter, Department, Course, Section, Evaluation, Professor
-from tests import TestCase
+from tests.fixtures.factories import (
+    SectionFactory, ProfessorFactory, QuarterFactory, CourseFactory, StudentFactory, EvaluationFactory, VoteFactory
+)
+from scuevals_api.models import db
+from tests import TestCase, assert_valid_schema
 
 
 class ProfessorsTestCase(TestCase):
@@ -42,49 +44,38 @@ class ProfessorTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                               period='[2017-01-01, 2017-02-01]', university_id=1))
-        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
-        db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-        db.session.add(Section(id=1, quarter_id=1, course_id=1))
-        db.session.add(Professor(id=1, first_name='Mary', last_name='Doe', university_id=1))
-        db.session.add(Evaluation(
-            student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
-            display_grad_year=True, display_majors=False
-        ))
+        self.course = CourseFactory()
+        self.prof = ProfessorFactory()
+        prof2 = ProfessorFactory()
+        prof3 = ProfessorFactory()
+        student = StudentFactory()
+        section = SectionFactory(course=self.course, professors=[self.prof, prof2, prof3])
+        EvaluationFactory(student=self.student, professor=self.prof, section=section)
+        evaluation = EvaluationFactory(student=student, professor=self.prof, section=section)
+        VoteFactory(student=self.student, evaluation=evaluation)
+
+        db.session.flush()
 
     def test_get(self):
-        rv = self.client.get('/professors/1', headers=self.head_auth)
+        rv = self.client.get('/professors/{}'.format(self.prof.id),
+                             headers=self.head_auth,
+                             query_string=urlencode({'embed': 'courses'}))
+
         self.assertEqual(200, rv.status_code)
 
-        expected = {
-            'id': 1,
-            'first_name': 'Mary',
-            'last_name': 'Doe',
-            'evaluations': [
-                {
-                    'id': 1,
-                    'quarter_id': 1,
-                    'version': 1,
-                    'data': {'q1': 'a1'},
-                    'user_vote': None,
-                    'votes_score': 0,
-                    'course': {
-                        'id': 1,
-                        'number': '1',
-                        'title': 'Math Course',
-                        'department_id': 1,
-                    },
-                    'author': {
-                        'self': True,
-                        'graduation_year': 2020,
-                        'majors': None
-                    }
-                }
-            ]
-        }
+        assert_valid_schema(rv.data, 'professor_with_evals_courses.json')
 
-        self.assertEqual(expected, json.loads(rv.data))
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data['evaluations']))
+
+    def test_get_embed_courses(self):
+        rv = self.client.get('/professors/{}'.format(self.prof.id), headers=self.head_auth)
+        self.assertEqual(200, rv.status_code)
+
+        assert_valid_schema(rv.data, 'professor_with_evals.json')
+
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data['evaluations']))
 
     def test_get_non_existing(self):
         rv = self.client.get('/professors/0', headers=self.head_auth)

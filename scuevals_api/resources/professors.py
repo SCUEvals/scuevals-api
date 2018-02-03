@@ -1,6 +1,6 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
-from marshmallow import fields
+from marshmallow import fields, validate
 from sqlalchemy import and_
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
@@ -44,33 +44,40 @@ class ProfessorResource(Resource):
 
     @jwt_required
     @role_required(Role.Student)
-    def get(self, p_id):
-        professor = Professor.query.options(
+    @use_args({'embed': fields.Str(validate=validate.OneOf(['courses']))})
+    def get(self, args, p_id):
+        q = Professor.query.options(
             subqueryload(Professor.evaluations).subqueryload(Evaluation.votes)
-        ).get(p_id)
+        ).filter(
+            Professor.id == p_id,
+            Professor.university_id == current_user.university_id
+        )
+
+        if 'embed' in args:
+            q.options(subqueryload(Professor.sections).subqueryload(Section.course))
+
+        professor = q.one_or_none()
 
         if professor is None:
             raise NotFound('professor with the specified id not found')
-
-        validate_university_id(professor.university_id)
-
-        user = get_jwt_identity()
-        student = Student.query.get(user['id'])
 
         data = professor.to_dict()
         data['evaluations'] = [
             {
                 **ev.to_dict(),
-                'user_vote': ev.user_vote(student),
+                'user_vote': ev.user_vote(current_user),
                 'quarter_id': ev.section.quarter_id,
                 'course': ev.section.course.to_dict(),
                 'author': {
-                    'self': student.id == ev.student.id,
+                    'self': current_user.id == ev.student.id,
                     'majors': ev.student.majors_list if ev.display_majors else None,
                     'graduation_year': ev.student.graduation_year if ev.display_grad_year else None
                 }
             }
             for ev in professor.evaluations
         ]
+
+        if 'embed' in args:
+            data['courses'] = [section.course.to_dict() for section in professor.sections]
 
         return data
