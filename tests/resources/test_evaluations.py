@@ -1,6 +1,6 @@
 import json
 
-from tests.fixtures.factories import SectionFactory, EvaluationFactory
+from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory
 from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote, Student
 from tests import TestCase, assert_valid_schema
 
@@ -37,6 +37,14 @@ class EvaluationsTestCase(TestCase):
     def test_delete_invalid_eval(self):
         rv = self.client.delete('/evaluations/999', headers=self.head_auth)
         self.assertEqual(404, rv.status_code)
+
+    def test_delete_with_vote(self):
+        VoteFactory(evaluation=self.eval, student=self.student)
+        rv = self.client.delete('/evaluations/{}'.format(self.eval.id), headers=self.head_auth)
+        self.assertEqual(204, rv.status_code)
+
+        ev = Evaluation.query.get(self.eval.id)
+        self.assertIsNone(ev)
 
     def test_post_evaluation(self):
         data = {

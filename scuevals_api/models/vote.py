@@ -11,8 +11,8 @@ class Vote(db.Model):
 
     value = db.Column(db.Integer, nullable=False)
 
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), primary_key=True)
-    evaluation_id = db.Column(db.Integer, db.ForeignKey('evaluations.id'), primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id', ondelete='cascade'), primary_key=True)
+    evaluation_id = db.Column(db.Integer, db.ForeignKey('evaluations.id', ondelete='cascade'), primary_key=True)
 
     student = db.relationship('Student', back_populates='votes')
     evaluation = db.relationship('Evaluation', back_populates='votes')

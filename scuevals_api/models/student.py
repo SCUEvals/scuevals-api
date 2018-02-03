@@ -14,7 +14,7 @@ class Student(User):
     evaluations = db.relationship('Evaluation', back_populates='student')
 
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
-    votes = db.relationship('Vote', back_populates='student')
+    votes = db.relationship('Vote', back_populates='student', passive_deletes=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 's',
