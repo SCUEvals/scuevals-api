@@ -130,7 +130,7 @@ def claims_verification_loader(user_claims):
 
 @jwtm.user_loader_callback_loader
 def user_loader(identity):
-    if Role.API_Key in identity['roles']:
+    if Role.API_Key in identity['roles'] or Role.Incomplete in identity['roles']:
         return 1
 
     return User.query.with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()

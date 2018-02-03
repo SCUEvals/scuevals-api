@@ -1,11 +1,28 @@
 import json
 
+from flask_jwt_extended import create_access_token
+
+from scuevals_api.models import db, Role
+from tests.fixtures.factories import StudentFactory
 from tests import TestCase
 
 
 class MajorsTestCase(TestCase):
-    def test_majors(self):
+    def test_get_as_student(self):
         rv = self.client.get('/majors', headers=self.head_auth)
+
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual(1, len(data))
+
+    def test_majors_as_incomplete(self):
+        incomplete = StudentFactory(roles=[Role.query.get(Role.Incomplete)])
+        db.session.flush()
+        jwt = create_access_token(identity=incomplete.to_dict())
+        head_auth = {'Authorization': 'Bearer ' + jwt}
+
+        rv = self.client.get('/majors', headers=head_auth)
 
         self.assertEqual(200, rv.status_code)
 
