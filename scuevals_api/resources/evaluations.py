@@ -55,7 +55,7 @@ class EvaluationsResource(Resource):
         'course_id': fields.Int(required=True),
         'display_grad_year': fields.Bool(required=True),
         'display_majors': fields.Bool(required=True),
-        'evaluation': fields.Nested(EvaluationSchemaV1)
+        'evaluation': fields.Nested(EvaluationSchemaV1, required=True)
     }
 
     @jwt_required
