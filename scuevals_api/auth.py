@@ -88,7 +88,7 @@ def auth(args):
 
     token = create_access_token(identity=ident)
 
-    # db.session.commit()
+    db.session.commit()
 
     return jsonify({'status': status, 'jwt': token})
 
