@@ -13,7 +13,7 @@ class Student(User):
 
     evaluations = db.relationship('Evaluation', back_populates='student', passive_deletes=True)
 
-    majors = db.relationship('Major', secondary=student_major, back_populates='students')
+    majors = db.relationship('Major', secondary=student_major, back_populates='students', passive_deletes=True)
     votes = db.relationship('Vote', back_populates='student', passive_deletes=True)
 
     __mapper_args__ = {

@@ -6,7 +6,7 @@ section_professor = db.Table('section_professor', db.metadata,
                              db.UniqueConstraint('section_id', 'professor_id'))
 
 student_major = db.Table('student_major', db.metadata,
-                         db.Column('student_id', db.Integer, db.ForeignKey('students.id')),
+                         db.Column('student_id', db.Integer, db.ForeignKey('students.id', ondelete='cascade')),
                          db.Column('major_id', db.Integer, db.ForeignKey('majors.id')),
                          db.UniqueConstraint('student_id', 'major_id'))
 
