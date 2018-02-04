@@ -11,6 +11,6 @@ student_major = db.Table('student_major', db.metadata,
                          db.UniqueConstraint('student_id', 'major_id'))
 
 user_role = db.Table('user_role', db.metadata,
-                     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+                     db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade')),
                      db.Column('role_id', db.Integer, db.ForeignKey('roles.id')),
                      db.UniqueConstraint('user_id', 'role_id'))

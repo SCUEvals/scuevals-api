@@ -7,7 +7,7 @@ from .user import User
 class Student(User):
     __tablename__ = 'students'
 
-    id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'), primary_key=True)
     graduation_year = db.Column(db.Integer)
     gender = db.Column(db.String(1))
 

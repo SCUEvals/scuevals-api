@@ -16,7 +16,7 @@ class User(db.Model):
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 
     university = db.relationship('University', back_populates='users')
-    roles = db.relationship('Role', secondary=user_role, back_populates='users')
+    roles = db.relationship('Role', secondary=user_role, back_populates='users', passive_deletes=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'u',
