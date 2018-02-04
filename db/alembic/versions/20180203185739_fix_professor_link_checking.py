@@ -1,4 +1,24 @@
-create or replace function professor_user_link_check()
+"""Fix professor link checking
+
+Revision ID: 475a581f697a
+Revises: d6947fa132f3
+Create Date: 2018-02-03 18:57:39.936014
+
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision = '475a581f697a'
+down_revision = 'd6947fa132f3'
+branch_labels = None
+depends_on = None
+
+
+def upgrade():
+    conn = op.get_bind()
+    conn.execute(sa.text("""create or replace function professor_user_link_check()
   returns trigger as $trig$
 begin
   if tg_op = 'DELETE' and old.user_id is not null then
@@ -24,9 +44,8 @@ begin
   return new;
 end;
 $trig$ language plpgsql;
+    """))
 
-create constraint trigger professor_user_link_trig after insert or update of user_id or delete
-  on professors
-  deferrable initially deferred
-for each row
-execute procedure professor_user_link_check();
+
+def downgrade():
+    pass
