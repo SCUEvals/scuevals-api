@@ -11,7 +11,7 @@ class Student(User):
     graduation_year = db.Column(db.Integer)
     gender = db.Column(db.String(1))
 
-    evaluations = db.relationship('Evaluation', back_populates='student')
+    evaluations = db.relationship('Evaluation', back_populates='student', passive_deletes=True)
 
     majors = db.relationship('Major', secondary=student_major, back_populates='students')
     votes = db.relationship('Vote', back_populates='student', passive_deletes=True)

@@ -13,7 +13,7 @@ class Evaluation(db.Model):
     display_grad_year = db.Column(db.Boolean, nullable=False, server_default='t')
     display_majors = db.Column(db.Boolean, nullable=False, server_default='t')
 
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id', ondelete='cascade'), nullable=False)
     professor_id = db.Column(db.Integer, db.ForeignKey('professors.id'), nullable=False)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
 
