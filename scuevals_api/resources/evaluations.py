@@ -18,7 +18,7 @@ class EvaluationSchemaV1(Schema):
     grading_speed = fields.Int(required=True, validate=validate.Range(1, 4))
     resourcefulness = fields.Int(required=True, validate=validate.Range(1, 4))
 
-    difficulty = fields.Int(required=True, validate=validate.Range(1, 4))
+    easiness = fields.Int(required=True, validate=validate.Range(1, 4))
     workload = fields.Int(required=True, validate=validate.Range(1, 4))
 
     recommended = fields.Int(required=True, validate=validate.Range(1, 4))
