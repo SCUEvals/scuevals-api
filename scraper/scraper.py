@@ -1,3 +1,5 @@
+import json
+import os
 import requests
 import argparse
 import re
@@ -35,11 +37,11 @@ def scrape_departments(args):
 
     deps = {'departments': resp.json()['results']}
 
-    post(args.api + '/departments', deps)
+    post(args.api, '/departments', deps)
 
 
 def scrape_courses(args):
-    deps = get(args.api + '/departments')
+    deps = get(args.api, '/departments')
 
     for dep in deps:
         params = {'dept': dep['abbr'], 'school': dep['school']}
@@ -48,7 +50,7 @@ def scrape_courses(args):
             raise Exception('Non-OK status code: ' + str(resp.status_code))
 
         courses = {'courses': resp.json()['results']}
-        post(args.api + '/courses', courses)
+        post(args.api, '/courses', courses)
 
 
 def scrape_majors(args):
@@ -83,36 +85,56 @@ def scrape_majors(args):
         return
 
     majors = {'majors': all_majors}
-    post(args.api + '/majors', majors)
+    post(args.api, '/majors', majors)
 
 
-def get(api):
-    resp = requests.get(api, params={'university_id': 1})
+def get(api, path):
+    jwt = authenticate(api)
+    resp = requests.get(api + path, params={'university_id': 1}, headers={'Authorization': 'Bearer ' + jwt})
     if not resp.status_code == 200:
         raise Exception('Non-OK status code: ' + str(resp.status_code))
 
-    json = resp.json()
+    data = resp.json()
 
-    if 'error' in json:
-        raise Exception('Error: ' + json['error'])
+    if 'error' in data:
+        raise Exception('Error: ' + data['error'])
 
-    return json
+    return data
 
 
-def post(api, data):
+def authenticate(api):
+    api_key = os.environ['API_KEY']
+    resp = requests.post(api + '/auth/api',
+                         headers={'Content-Type': 'application/json'},
+                         json={'api_key': api_key})
+    data = resp.json()
+
+    if 'jwt' not in data:
+        print(data)
+        raise Exception('Error: failed to authenticate')
+
+    return data['jwt']
+
+
+def post(api, path, data):
     data['university_id'] = 1
 
-    resp = requests.post(api, json=data)
+    jwt = authenticate(api)
+
+    resp = requests.post(api + path, json=data, headers={'Authorization': 'Bearer ' + jwt})
+
     if not resp.status_code == 200:
+        data = resp.json()
+        print(data)
         raise Exception('Non-OK status code: ' + str(resp.status_code))
 
-    json = resp.json()
+    data = resp.json()
 
-    if 'error' in json:
-        raise Exception('Error: ' + json['error'])
+    if 'error' in data:
+        raise Exception('Error: ' + data['error'])
 
-    if 'updated_count' in json:
-        print('Updated {} records.'.format(json['updated_count']))
+    if 'updated_count' in data:
+        print('Updated {} records.'.format(data['updated_count']))
     else:
         print('Success')
 
