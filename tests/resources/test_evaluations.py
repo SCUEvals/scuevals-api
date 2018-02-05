@@ -23,6 +23,30 @@ class EvaluationsTestCase(TestCase):
         self.assertEqual(2, len(evals))
         assert_valid_schema(rv.data, 'evaluations.json')
 
+
+class EvaluationTestCase(TestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.section = SectionFactory()
+        self.eval = EvaluationFactory(student=self.student)
+        self.eval2 = EvaluationFactory()
+        EvaluationFactory(student=self.student, votes=[VoteFactory(student_id=0)])
+
+        db.session.flush()
+
+    def test_get(self):
+        rv = self.client.get('/evaluations/{}'.format(self.eval.id), headers=self.head_auth)
+        self.assertEqual(200, rv.status_code)
+
+        assert_valid_schema(rv.data, 'evaluation.json')
+
+    def test_get_non_existing(self):
+        rv = self.client.get('/evaluations/0', headers=self.head_auth)
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not found', data['message'])
+
     def test_delete(self):
         rv = self.client.delete('/evaluations/{}'.format(self.eval.id), headers=self.head_auth)
         self.assertEqual(204, rv.status_code)
@@ -137,83 +161,47 @@ class EvaluationsTestCase(TestCase):
         self.assertEqual('invalid quarter/course/professor combination', resp['message'])
 
 
-class EvaluationTestCase(TestCase):
-    def setUp(self):
-        super().setUp()
-
-        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                               period='[2017-01-01, 2017-02-01]', university_id=1))
-        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
-        db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-        db.session.add(Section(id=1, quarter_id=1, course_id=1))
-        db.session.add(Professor(id=1, first_name='Mary', last_name='Doe', university_id=1))
-        db.session.add(Evaluation(
-            id=1, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'},
-            display_grad_year=True, display_majors=False
-        ))
-        db.session.add(Vote(student_id=0, evaluation_id=1, value=Vote.UPVOTE))
-
-    def test_get(self):
-        rv = self.client.get('/evaluations/1', headers=self.head_auth)
-        self.assertEqual(200, rv.status_code)
-
-        expected = {
-            'id': 1,
-            'version': 1,
-            'votes_score': 1,
-            'data': {
-                'q1': 'a1'
-            }
-        }
-
-        self.assertEqual(expected, json.loads(rv.data))
-
-    def test_get_non_existing(self):
-        rv = self.client.get('/evaluations/0', headers=self.head_auth)
-        self.assertEqual(404, rv.status_code)
-        data = json.loads(rv.data)
-        self.assertIn('not found', data['message'])
-
-
 class TestEvaluationVoteTestCase(TestCase):
     def setUp(self):
         super().setUp()
-        qs = Quarter.query.all()
-        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                               period='[2017-01-01, 2017-02-01]', university_id=1))
-        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
-        db.session.add(Course(id=1, title='Math Course', number='1', department_id=1))
-        db.session.add(Section(id=1, quarter_id=1, course_id=1))
-        db.session.add(Professor(id=1, first_name='Mary', last_name='Doe', university_id=1))
-        db.session.add(Student(id=1, email='sdoe@scu.edu', first_name='Sandra', last_name='Doe', university_id=1))
-        db.session.add(Evaluation(id=1, student_id=1, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
-        db.session.add(Evaluation(id=2, student_id=0, professor_id=1, section_id=1, version=1, data={'q1': 'a1'}))
+        self.section = SectionFactory()
+        self.eval = EvaluationFactory(student=self.student)
+        self.eval2 = EvaluationFactory()
+        EvaluationFactory(student=self.student)
+
+        db.session.flush()
 
     def test_put_upvote(self):
-        rv = self.client.put('/evaluations/1/vote', headers=self.head_auth, data=json.dumps({'value': 'u'}))
+        rv = self.client.put('/evaluations/{}/vote'.format(self.eval2.id),
+                             headers=self.head_auth,
+                             data=json.dumps({'value': 'u'}))
+
         self.assertEqual(201, rv.status_code)
 
-        votes = Evaluation.query.get(1).votes
-        self.assertEqual(1, len(votes))
-        self.assertEqual(Vote.UPVOTE, votes[0].value)
+        self.assertEqual(1, len(self.eval2.votes))
+        self.assertEqual(Vote.UPVOTE, self.eval2.votes[0].value)
 
     def test_put_downvote(self):
-        rv = self.client.put('/evaluations/1/vote', headers=self.head_auth, data=json.dumps({'value': 'd'}))
+        rv = self.client.put('/evaluations/{}/vote'.format(self.eval2.id),
+                             headers=self.head_auth,
+                             data=json.dumps({'value': 'd'}))
+
         self.assertEqual(201, rv.status_code)
 
-        votes = Evaluation.query.get(1).votes
-        self.assertEqual(1, len(votes))
-        self.assertEqual(Vote.DOWNVOTE, votes[0].value)
+        self.assertEqual(1, len(self.eval2.votes))
+        self.assertEqual(Vote.DOWNVOTE, self.eval2.votes[0].value)
 
     def test_put_upvote_existing_downvote(self):
-        db.session.add(Vote(value=Vote.DOWNVOTE, student_id=0, evaluation_id=1))
+        self.eval2.votes.append(VoteFactory(value=Vote.DOWNVOTE, student_id=self.student.id))
 
-        rv = self.client.put('/evaluations/1/vote', headers=self.head_auth, data=json.dumps({'value': 'u'}))
+        rv = self.client.put('/evaluations/{}/vote'.format(self.eval2.id),
+                             headers=self.head_auth,
+                             data=json.dumps({'value': 'u'}))
+
         self.assertEqual(204, rv.status_code)
 
-        votes = Evaluation.query.get(1).votes
-        self.assertEqual(1, len(votes))
-        self.assertEqual(Vote.UPVOTE, votes[0].value)
+        self.assertEqual(1, len(self.eval2.votes))
+        self.assertEqual(Vote.UPVOTE, self.eval2.votes[0].value)
 
     def test_put_vote_non_existing_eval(self):
         rv = self.client.put('/evaluations/0/vote', headers=self.head_auth, data=json.dumps({'value': 'u'}))
@@ -222,19 +210,21 @@ class TestEvaluationVoteTestCase(TestCase):
         self.assertIn('evaluation with the specified id not found', data['message'])
 
     def test_put_vote_own_evaluation(self):
-        rv = self.client.put('/evaluations/2/vote', headers=self.head_auth, data=json.dumps({'value': 'u'}))
+        rv = self.client.put('/evaluations/{}/vote'.format(self.eval.id),
+                             headers=self.head_auth,
+                             data=json.dumps({'value': 'u'}))
+
         self.assertEqual(403, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('not allowed to vote on your own evaluations', data['message'])
 
     def test_del_vote(self):
-        db.session.add(Vote(value=Vote.UPVOTE, student_id=0, evaluation_id=1))
+        VoteFactory(student=self.student, evaluation=self.eval2)
 
-        rv = self.client.delete('/evaluations/1/vote', headers=self.head_auth)
+        rv = self.client.delete('/evaluations/{}/vote'.format(self.eval2.id), headers=self.head_auth)
         self.assertEqual(204, rv.status_code)
 
-        votes = Evaluation.query.get(1).votes
-        self.assertEqual(0, len(votes))
+        self.assertEqual(0, len(self.eval2.votes))
 
     def test_del_vote_non_existing_eval(self):
         rv = self.client.delete('/evaluations/0/vote', headers=self.head_auth)
@@ -243,7 +233,7 @@ class TestEvaluationVoteTestCase(TestCase):
         self.assertIn('evaluation with the specified id not found', data['message'])
 
     def test_del_non_existing_vote(self):
-        rv = self.client.delete('/evaluations/1/vote', headers=self.head_auth)
+        rv = self.client.delete('/evaluations/{}/vote'.format(self.eval2.id), headers=self.head_auth)
         self.assertEqual(404, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('vote not found', data['message'])

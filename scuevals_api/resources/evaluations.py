@@ -1,4 +1,4 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
 from sqlalchemy.orm import subqueryload
@@ -6,7 +6,7 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Confli
 
 from scuevals_api.models import Vote
 from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Section, Evaluation, db, Professor, Student
+from scuevals_api.models import Role, Section, Evaluation, db, Professor, Quarter
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -170,17 +170,17 @@ class EvaluationVoteResource(Resource):
     @jwt_required
     @role_required(Role.Student)
     def delete(self, e_id):
-        student_id = get_jwt_identity()['id']
+        evaluation = Evaluation.query.filter(
+            Evaluation.id == e_id,
+            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
+        ).one_or_none()
 
-        evaluation = Evaluation.query.get(e_id)
         if evaluation is None:
             raise NotFound('evaluation with the specified id not found')
 
-        validate_university_id(evaluation.section.course.department.school.university_id)
-
         vote = Vote.query.filter(
             Vote.evaluation == evaluation,
-            Vote.student_id == student_id
+            Vote.student_id == current_user.id
         ).one_or_none()
 
         if vote is None:
