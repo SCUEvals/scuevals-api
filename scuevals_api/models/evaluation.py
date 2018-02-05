@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
 
 from scuevals_api.models.vote import Vote
@@ -8,6 +9,7 @@ class Evaluation(db.Model):
     __tablename__ = 'evaluations'
 
     id = db.Column(db.Integer, primary_key=True)
+    post_time = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     data = db.Column(JSONB, nullable=False)
     display_grad_year = db.Column(db.Boolean, nullable=False, server_default='t')

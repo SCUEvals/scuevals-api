@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from . import db
 
 
@@ -10,6 +12,7 @@ class Vote(db.Model):
     __tablename__ = 'votes'
 
     value = db.Column(db.Integer, nullable=False)
+    time = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     student_id = db.Column(db.Integer, db.ForeignKey('students.id', ondelete='cascade'), primary_key=True)
     evaluation_id = db.Column(db.Integer, db.ForeignKey('evaluations.id', ondelete='cascade'), primary_key=True)

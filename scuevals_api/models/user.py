@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from . import db
 from .role import Role
 from .assoc import user_role
@@ -12,6 +14,7 @@ class User(db.Model):
     last_name = db.Column(db.Text)
     picture = db.Column(db.Text)
     type = db.Column(db.String(1), nullable=False, server_default='u')
+    signup_time = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 

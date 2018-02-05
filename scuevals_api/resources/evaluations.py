@@ -1,6 +1,7 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
+from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
@@ -163,6 +164,7 @@ class EvaluationVoteResource(Resource):
             return '', 201
         elif vote.value != value:
             vote.value = value
+            vote.time = func.now()
             db.session.commit()
 
         return '', 204
