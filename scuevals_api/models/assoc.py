@@ -1,7 +1,7 @@
 from . import db
 
 section_professor = db.Table('section_professor', db.metadata,
-                             db.Column('section_id', db.Integer, db.ForeignKey('sections.id')),
+                             db.Column('section_id', db.Integer, db.ForeignKey('sections.id', ondelete='cascade')),
                              db.Column('professor_id', db.Integer, db.ForeignKey('professors.id')),
                              db.UniqueConstraint('section_id', 'professor_id'))
 
