@@ -23,7 +23,7 @@ class EvaluationSchemaV1(Schema):
     workload = fields.Int(required=True, validate=validate.Range(1, 4))
 
     recommended = fields.Int(required=True, validate=validate.Range(1, 4))
-    comment = fields.Str(required=True, validate=validate.Length(min=1, max=750))
+    comment = fields.Str(required=True, validate=validate.Length(min=1, max=1000))
 
     class Meta:
         strict = True
