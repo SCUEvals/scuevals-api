@@ -1,7 +1,8 @@
 import json
+from urllib.parse import urlencode
 
 from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory
-from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Evaluation, Vote, Student
+from scuevals_api.models import db, Evaluation, Vote
 from tests import TestCase, assert_valid_schema
 
 
@@ -9,12 +10,9 @@ class EvaluationsTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        self.section = SectionFactory()
-        self.eval = EvaluationFactory(student=self.student)
-        self.eval2 = EvaluationFactory()
         EvaluationFactory(student=self.student)
-
-        db.session.flush()
+        EvaluationFactory(student=self.student)
+        EvaluationFactory()
 
     def test_get(self):
         rv = self.client.get('/evaluations', headers=self.head_auth)
@@ -22,6 +20,26 @@ class EvaluationsTestCase(TestCase):
         evals = json.loads(rv.data)
         self.assertEqual(2, len(evals))
         assert_valid_schema(rv.data, 'evaluations.json')
+
+
+class EvaluationsRecentTestCase(TestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.recent_evals = [EvaluationFactory(), EvaluationFactory()]
+        EvaluationFactory()
+
+        db.session.flush()
+
+    def test_get(self):
+        rv = self.client.get('/evaluations/recent', headers=self.head_auth, query_string=urlencode({'count': 2}))
+        self.assertEqual(200, rv.status_code)
+        assert_valid_schema(rv.data, 'evaluations.json')
+
+        evals = json.loads(rv.data)
+        self.assertEqual(2, len(evals))
+        self.assertEqual(self.recent_evals[0].id, evals[0]['id'])
+        self.assertEqual(self.recent_evals[1].id, evals[1]['id'])
 
 
 class EvaluationTestCase(TestCase):

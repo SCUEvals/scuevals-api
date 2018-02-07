@@ -98,6 +98,33 @@ class EvaluationsResource(Resource):
         return {'result': 'success'}, 201
 
 
+class EvaluationsRecentResource(Resource):
+
+    @jwt_required
+    @role_required(Role.Student)
+    @use_args({'count': fields.Int(validate=validate.Range(min=1, max=25))})
+    def get(self, args):
+        evals = Evaluation.query.options(
+            subqueryload(Evaluation.professor),
+            subqueryload(Evaluation.section).subqueryload(Section.course)
+        ).filter(
+            Evaluation.professor.has(Professor.university_id == current_user.university_id)
+        ).order_by(Evaluation.post_time.desc())
+
+        if 'count' in args:
+            evals = evals.limit(args['count'])
+
+        return [
+            {
+                **ev.to_dict(),
+                'quarter_id': ev.section.quarter_id,
+                'professor': ev.professor.to_dict(),
+                'course': ev.section.course.to_dict()
+            }
+            for ev in evals.all()
+        ]
+
+
 class EvaluationResource(Resource):
 
     @jwt_required

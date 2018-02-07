@@ -32,6 +32,7 @@ class Evaluation(db.Model):
         return {
             'id': self.id,
             'version': self.version,
+            'post_time': self.post_time.isoformat(),
             'data': self.data,
             'votes_score': self.votes_value()
         }
