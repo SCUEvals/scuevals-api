@@ -74,16 +74,15 @@ class EvaluationsResource(Resource):
 
         ev = db.session.query(Evaluation.query.filter(
             Evaluation.section.has(quarter_id=args['quarter_id'], course_id=args['course_id']),
-            Evaluation.professor_id == args['professor_id']
+            Evaluation.professor_id == args['professor_id'],
+            Evaluation.student_id == current_user.id
         ).exists()).scalar()
 
         if ev:
             raise Conflict('evaluation for this combination already exists')
 
-        ident = get_jwt_identity()
-
         evaluation = Evaluation(
-            student_id=ident['id'],
+            student_id=current_user.id,
             professor_id=args['professor_id'],
             section_id=section[0],
             display_grad_year=args['display_grad_year'],

@@ -48,7 +48,7 @@ class EvaluationTestCase(TestCase):
 
         self.section = SectionFactory()
         self.eval = EvaluationFactory(student=self.student)
-        self.eval2 = EvaluationFactory()
+        self.eval2 = EvaluationFactory(section=self.section, professor=self.section.professors[0])
         EvaluationFactory(student=self.student, votes=[VoteFactory(student_id=0)])
 
         db.session.flush()
