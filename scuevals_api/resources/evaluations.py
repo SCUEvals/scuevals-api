@@ -101,7 +101,7 @@ class EvaluationsRecentResource(Resource):
 
     @jwt_required
     @role_required(Role.Student)
-    @use_args({'count': fields.Int(default=10, validate=validate.Range(min=1, max=25))})
+    @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
             subqueryload(Evaluation.professor),

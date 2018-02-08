@@ -41,6 +41,14 @@ class EvaluationsRecentTestCase(TestCase):
         self.assertEqual(self.recent_evals[0].id, evals[0]['id'])
         self.assertEqual(self.recent_evals[1].id, evals[1]['id'])
 
+    def test_get_no_count(self):
+        rv = self.client.get('/evaluations/recent', headers=self.head_auth)
+        self.assertEqual(200, rv.status_code)
+        assert_valid_schema(rv.data, 'evaluations.json')
+
+        evals = json.loads(rv.data)
+        self.assertEqual(3, len(evals))
+
 
 class EvaluationTestCase(TestCase):
     def setUp(self):
