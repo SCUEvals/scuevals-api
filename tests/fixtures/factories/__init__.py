@@ -2,6 +2,7 @@ from .course import CourseFactory
 from .department import DepartmentFactory
 from .evaluation import EvaluationFactory
 from .major import MajorFactory
+from .official_user_type import OfficialUserTypeFactory
 from .school import SchoolFactory
 from .section import SectionFactory
 from .student import StudentFactory

@@ -34,5 +34,6 @@ from .school import School
 from .section import Section
 from .student import Student
 from .university import University
+from .official_user_type import OfficialUserType
 from .user import User
 from .vote import Vote
