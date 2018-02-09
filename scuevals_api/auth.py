@@ -9,7 +9,7 @@ from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, User, db, Role, APIKey, Professor
+from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -61,15 +61,22 @@ def auth(args):
         # new user
         status = 'new'
 
-        # assume new user is a student for now
-        user = Student(
-            email=data['email'],
-            first_name=data['given_name'],
-            last_name=data['family_name'],
-            picture=data['picture'] if 'picture' in data else None,
-            roles=[Role.query.get(Role.Incomplete)],
-            university_id=1
-        )
+        # check the official type of the user
+        official = OfficialUserType.query.get(data['email'])
+
+        if official is None or official.type != 'student':
+            # create a user
+            # but for now, return message
+            return jsonify({'status': 'non-student'})
+        else:
+            user = Student(
+                email=data['email'],
+                first_name=data['given_name'],
+                last_name=data['family_name'],
+                picture=data['picture'] if 'picture' in data else None,
+                roles=[Role.query.get(Role.Incomplete)],
+                university_id=1
+            )
 
         db.session.add(user)
         db.session.flush()

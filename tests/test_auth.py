@@ -8,10 +8,30 @@ from json import JSONDecodeError
 
 from werkzeug.exceptions import Unauthorized
 
-from tests.fixtures.factories import StudentFactory
+from tests.fixtures.factories import StudentFactory, OfficialUserTypeFactory
 from tests import TestCase, use_data, vcr
 from scuevals_api.auth import cache, validate_university_id
-from scuevals_api.models import db, APIKey, Student, Role
+from scuevals_api.models import db, APIKey, Role
+
+
+id_token_data = {
+    'azp': '471296732031-0hqhs9au11ro6mt87cpv1gog7kbdruer.apps.googleusercontent.com',
+    'aud': '471296732031-0hqhs9au11ro6mt87cpv1gog7kbdruer.apps.googleusercontent.com',
+    'sub': '116863427253343930740',
+    'hd': 'scu.edu',
+    'email': 'astudent@scu.edu',
+    'email_verified': True,
+    'at_hash': '3DOWjzVDZxgIs7MNGr4dyw',
+    'iss': 'accounts.google.com',
+    'jti': 'b3d9967b4b4a3f95af24509dc93b1ce024cf111a',
+    'iat': 1507796167,
+    'exp': 1507799767,
+    'name': 'A Student',
+    'picture': 'https://lh3.googleusercontent.com/-ByXCWfs-xjA/AAAA/AAAAAAAAAAA/rabkS1ia12c/s96-c/photo.jpg',
+    'given_name': 'A',
+    'family_name': 'Student',
+    'locale': 'en'
+}
 
 
 class AuthTestCase(TestCase):
@@ -24,6 +44,8 @@ class AuthTestCase(TestCase):
     @use_data('auth.yaml')
     @vcr.use_cassette
     def test_auth(self, data):
+        StudentFactory(email='fblomqvist@scu.edu')
+
         # make sure the new token will have a new expiration time
         time.sleep(1)
 
@@ -43,6 +65,29 @@ class AuthTestCase(TestCase):
         new_data = jwt.get_unverified_claims(resp['jwt'])
 
         self.assertGreater(new_data['exp'], old_jwt['exp'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value=id_token_data)
+    @vcr.use_cassette
+    def test_student(self, data, decode_func):
+        OfficialUserTypeFactory(email='astudent@scu.edu', type='student')
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+
+        data = json.loads(rv.data)
+        self.assertIn('status', data)
+        self.assertEqual('new', data['status'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value=id_token_data)
+    @vcr.use_cassette
+    def test_non_student(self, data, decode_func):
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+
+        data = json.loads(rv.data)
+        self.assertIn('status', data)
+        self.assertEqual('non-student', data['status'])
 
     def test_validate_university_id(self):
         self.assertRaises(Unauthorized, validate_university_id, 2)
