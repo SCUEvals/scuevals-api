@@ -9,8 +9,7 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
-from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Course, Section, Student, db, Department, School, Professor
+from scuevals_api.models import Role, Course, Section, db, Department, School, Professor
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args, get_pg_error_msg
 

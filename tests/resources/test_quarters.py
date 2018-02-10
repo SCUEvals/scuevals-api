@@ -18,36 +18,48 @@ class QuartersTestCase(TestCase):
         q2 = QuarterFactory()
 
         c1 = CourseFactory(id=1000)
-        c2 = CourseFactory()
+        CourseFactory()
 
         s1 = SectionFactory(quarter=q1, course=c1)
-        SectionFactory(quarter=q2, course=c2)
+        s2 = SectionFactory(quarter=q2, course=c1)
 
         ProfessorFactory(id=1000, sections=[s1])
+        ProfessorFactory(sections=[s2])
 
     def test_get(self):
         rv = self.client.get('/quarters', headers=self.head_auth)
 
         self.assertEqual(200, rv.status_code)
+        assert_valid_schema(rv.data, self.schema_get)
 
         data = json.loads(rv.data)
         self.assertEqual(2, len(data))
-        assert_valid_schema(rv.data, self.schema_get)
 
     def test_get_course_id(self):
         rv = self.client.get('/quarters', headers=self.head_auth, query_string=urlencode({'course_id': 1000}))
 
         self.assertEqual(200, rv.status_code)
+        assert_valid_schema(rv.data, self.schema_get)
 
         data = json.loads(rv.data)
-        self.assertEqual(1, len(data))
-        assert_valid_schema(rv.data, self.schema_get)
+        self.assertEqual(2, len(data))
 
     def test_get_professor_id(self):
         rv = self.client.get('/quarters', headers=self.head_auth, query_string=urlencode({'professor_id': 1000}))
 
         self.assertEqual(200, rv.status_code)
+        assert_valid_schema(rv.data, self.schema_get)
 
         data = json.loads(rv.data)
         self.assertEqual(1, len(data))
+
+    def test_get_course_id_professor_id(self):
+        rv = self.client.get('/quarters',
+                             headers=self.head_auth,
+                             query_string=urlencode({'professor_id': 1000, 'course_id': 1000}))
+
+        self.assertEqual(200, rv.status_code)
         assert_valid_schema(rv.data, self.schema_get)
+
+        data = json.loads(rv.data)
+        self.assertEqual(1, len(data))
