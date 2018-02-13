@@ -15,6 +15,7 @@ class User(db.Model):
     picture = db.Column(db.Text)
     type = db.Column(db.String(1), nullable=False, server_default='u')
     signup_time = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+    suspended_until = db.Column(db.DateTime(timezone=True))
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
 

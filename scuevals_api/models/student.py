@@ -10,6 +10,7 @@ class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'), primary_key=True)
     graduation_year = db.Column(db.Integer)
     gender = db.Column(db.String(1))
+    read_access_exp = db.Column(db.DateTime(timezone=True), nullable=False)
 
     evaluations = db.relationship('Evaluation', back_populates='student', passive_deletes=True)
 
