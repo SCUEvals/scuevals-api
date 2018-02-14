@@ -1,10 +1,10 @@
 import json
 import os
-import datetime
 import requests
+from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify, current_app as app
 from flask_caching import Cache
-from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
@@ -75,6 +75,7 @@ def auth(args):
                 last_name=data['family_name'],
                 picture=data['picture'] if 'picture' in data else None,
                 roles=[Role.query.get(Role.Incomplete)],
+                read_access_exp=datetime.now(timezone.utc) + timedelta(days=180),
                 university_id=1
             )
 
@@ -122,7 +123,7 @@ def auth_api(args):
         'roles': [20]
     }
 
-    token = create_access_token(identity=ident, expires_delta=datetime.timedelta(hours=24))
+    token = create_access_token(identity=ident, expires_delta=timedelta(hours=24))
 
     return jsonify({'jwt': token})
 
