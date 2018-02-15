@@ -104,6 +104,22 @@ def auth(args):
 @auth_bp.route('/auth/validate')
 @jwt_required
 def validate():
+    now = datetime.now(timezone.utc)
+
+    # check if user should be unsuspended
+    if current_user.suspended_until is not None and current_user.suspended_until < now:
+        if Role.Suspended in current_user.roles_list:
+            susp_role = Role.query.get(Role.Suspended)
+            current_user.roles.remove(susp_role)
+            current_user.suspended_until = None
+            db.session.commit()
+
+    # check if the user has lost its reading privilege (only applies to students)
+    if current_user.type == 's' and current_user.read_access_exp < now and Role.StudentRead in current_user.roles_list:
+        read_role = Role.query.get(Role.StudentRead)
+        current_user.roles.remove(read_role)
+        db.session.commit()
+
     new_token = create_access_token(identity=current_user.to_dict())
     return jsonify({'jwt': new_token})
 

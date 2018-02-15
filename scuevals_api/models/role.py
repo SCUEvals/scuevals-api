@@ -2,12 +2,12 @@ from . import db, user_role
 
 
 class Role(db.Model):
-    Suspended = -1
     Incomplete = 0
     StudentRead = 1
     StudentWrite = 2
     Administrator = 10
     API_Key = 20
+    Suspended = 100
 
     __tablename__ = 'roles'
 
