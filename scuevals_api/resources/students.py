@@ -21,7 +21,7 @@ class StudentsResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Student, Role.Incomplete)
+    @role_required(Role.StudentWrite, Role.Incomplete)
     @use_args(args, locations=('json',))
     def patch(self, args, s_id):
         user = get_jwt_identity()
@@ -41,7 +41,7 @@ class StudentsResource(Resource):
         inc = Role.query.get(Role.Incomplete)
         if inc in student.roles:
             student.roles.remove(inc)
-            student.roles.append(Role.query.get(Role.Student))
+            student.roles.append(Role.query.get(Role.StudentRead))
 
         db.session.commit()
 

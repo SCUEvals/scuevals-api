@@ -32,7 +32,7 @@ class EvaluationSchemaV1(Schema):
 class EvaluationsResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     def get(self):
         ident = get_jwt_identity()
         evals = Evaluation.query.options(
@@ -60,7 +60,7 @@ class EvaluationsResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     @use_args(args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
@@ -100,7 +100,7 @@ class EvaluationsResource(Resource):
 class EvaluationsRecentResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
@@ -124,7 +124,7 @@ class EvaluationsRecentResource(Resource):
 class EvaluationResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentRead)
     def get(self, e_id):
         evaluation = Evaluation.query.get(e_id)
         if evaluation is None:
@@ -135,7 +135,7 @@ class EvaluationResource(Resource):
         return evaluation.to_dict()
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     def delete(self, e_id):
         ident = get_jwt_identity()
         ev = Evaluation.query.get(e_id)
@@ -160,7 +160,7 @@ class EvaluationVoteResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentRead)
     @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
     def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
@@ -193,7 +193,7 @@ class EvaluationVoteResource(Resource):
         return '', 204
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentRead)
     def delete(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,

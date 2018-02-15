@@ -37,7 +37,7 @@ class TestCase(unittest.TestCase):
 
         cls.student = StudentFactory(
             id=0,
-            roles=[Role.query.get(Role.Student)],
+            roles=[Role.query.get(Role.StudentRead)],
             majors=[MajorFactory()],
         )
 

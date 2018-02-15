@@ -5,8 +5,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Professor, Section, Evaluation, Student
+from scuevals_api.models import Role, Professor, Section, Evaluation
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -14,7 +13,7 @@ from scuevals_api.utils import use_args
 class ProfessorsResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     @use_args({'course_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -43,7 +42,7 @@ class ProfessorsResource(Resource):
 class ProfessorResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentRead)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['courses']))})
     def get(self, args, p_id):
         q = Professor.query.options(

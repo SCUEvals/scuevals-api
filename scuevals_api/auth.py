@@ -139,7 +139,17 @@ def user_loader(identity):
     if Role.API_Key in identity['roles'] or Role.Incomplete in identity['roles']:
         return 1
 
-    return User.query.with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
+    user = User.query.with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
+
+    # fail if the user is still suspended
+    if user.suspended_until is not None and user.suspended_until > datetime.now(user.suspended_until.tzinfo):
+        return None
+
+    # fail if the JWT doesn't reflect that the user lost reading access
+    if Role.StudentRead in identity['roles'] and user.read_access_exp < datetime.now(user.read_access_exp.tzinfo):
+        return None
+
+    return user
 
 
 def refresh_key_cache(data_store):

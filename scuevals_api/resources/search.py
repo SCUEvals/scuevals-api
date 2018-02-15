@@ -12,7 +12,7 @@ class SearchResource(Resource):
     args = {'q': fields.String(required=True), 'limit': fields.Integer()}
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     @use_args(args)
     def get(self, args):
         jwt_data = get_jwt_identity()
