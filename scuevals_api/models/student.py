@@ -44,16 +44,10 @@ class Student(User):
 
     def to_dict(self):
         student = {
-            'id': self.id,
-            'university_id': self.university_id,
-            'email': self.email,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
+            **super().to_dict(),
             'gender': self.gender,
-            'picture': self.picture,
             'graduation_year': self.graduation_year,
-            'majors': self.majors_list,
-            'roles': self.roles_list
+            'majors': self.majors_list
         }
 
         return {k: v for k, v in student.items() if v is not None}
