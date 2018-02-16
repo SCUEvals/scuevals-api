@@ -6,6 +6,10 @@ from .assoc import user_role
 
 
 class User(db.Model):
+    Student = 's'
+    Professor = 'p'
+    Normal = 'u'
+
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -47,3 +51,9 @@ class User(db.Model):
                           _set_roles,
                           None,
                           'Property roles_list is a simple wrapper for roles relation')
+
+    def delete_role_by_id(self, role_id):
+        return db.session.query(user_role).filter(
+            user_role.c.user_id == self.id,
+            user_role.c.role_id == role_id
+        ).delete()

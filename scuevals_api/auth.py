@@ -7,9 +7,10 @@ from flask_caching import Cache
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
+from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType
+from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType, user_role
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -107,17 +108,21 @@ def validate():
     now = datetime.now(timezone.utc)
 
     # check if user should be unsuspended
-    if current_user.suspended_until is not None and current_user.suspended_until < now:
-        if Role.Suspended in current_user.roles_list:
-            susp_role = Role.query.get(Role.Suspended)
-            current_user.roles.remove(susp_role)
-            current_user.suspended_until = None
-            db.session.commit()
+    if (current_user.suspended_until is not None and
+            current_user.suspended_until < now and
+            Role.Suspended in current_user.roles_list):
+
+        current_user.delete_role_by_id(Role.Suspended)
+
+        current_user.suspended_until = None
+        db.session.commit()
 
     # check if the user has lost its reading privilege (only applies to students)
-    if current_user.type == 's' and current_user.read_access_exp < now and Role.StudentRead in current_user.roles_list:
-        read_role = Role.query.get(Role.StudentRead)
-        current_user.roles.remove(read_role)
+    if (current_user.type == User.Student and
+            current_user.read_access_exp < now and
+            Role.StudentRead in current_user.roles_list):
+
+        current_user.delete_role_by_id(Role.StudentRead)
         db.session.commit()
 
     new_token = create_access_token(identity=current_user.to_dict())
@@ -155,7 +160,9 @@ def user_loader(identity):
     if Role.API_Key in identity['roles'] or Role.Incomplete in identity['roles']:
         return 1
 
-    user = User.query.with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
+    user = User.query.options(
+        subqueryload(User.roles)
+    ).with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
 
     # fail if the user is still suspended
     if user.suspended_until is not None and user.suspended_until > datetime.now(user.suspended_until.tzinfo):
