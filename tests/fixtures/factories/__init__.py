@@ -6,6 +6,7 @@ from .official_user_type import OfficialUserTypeFactory
 from .school import SchoolFactory
 from .section import SectionFactory
 from .student import StudentFactory
+from .user import UserFactory
 from .professor import ProfessorFactory
 from .quarter import QuarterFactory
 from .vote import VoteFactory
