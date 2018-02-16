@@ -10,7 +10,7 @@ from marshmallow import fields
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType, user_role
+from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -105,11 +105,9 @@ def auth(args):
 @auth_bp.route('/auth/validate')
 @jwt_required
 def validate():
-    now = datetime.now(timezone.utc)
-
     # check if user should be unsuspended
     if (current_user.suspended_until is not None and
-            current_user.suspended_until < now and
+            current_user.suspended_until < datetime.now(current_user.suspended_until.tzinfo) and
             Role.Suspended in current_user.roles_list):
 
         current_user.delete_role_by_id(Role.Suspended)
@@ -119,7 +117,7 @@ def validate():
 
     # check if the user has lost its reading privilege (only applies to students)
     if (current_user.type == User.Student and
-            current_user.read_access_exp < now and
+            current_user.read_access_exp < datetime.now(current_user.read_access_exp.tzinfo) and
             Role.StudentRead in current_user.roles_list):
 
         current_user.delete_role_by_id(Role.StudentRead)
@@ -193,10 +191,3 @@ def get_certs():
         raise HTTPException('failed to get Google JWKs')
 
     return resp.json()
-
-
-def validate_university_id(u_id):
-    ident = get_jwt_identity()
-
-    if u_id != ident['university_id']:
-        raise Unauthorized('not allowed to access resource from another university')

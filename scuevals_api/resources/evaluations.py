@@ -5,9 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
-from scuevals_api.models import Vote
-from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Section, Evaluation, db, Professor, Quarter
+from scuevals_api.models import Role, Section, Evaluation, db, Professor, Quarter, Vote
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -126,11 +124,13 @@ class EvaluationResource(Resource):
     @jwt_required
     @role_required(Role.StudentRead)
     def get(self, e_id):
-        evaluation = Evaluation.query.get(e_id)
+        evaluation = Evaluation.query.filter(
+            Evaluation.id == e_id,
+            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id)),
+        ).one_or_none()
+
         if evaluation is None:
             raise NotFound('evaluation with the specified id not found')
-
-        validate_university_id(evaluation.section.course.department.school.university_id)
 
         return evaluation.to_dict()
 
@@ -166,11 +166,13 @@ class EvaluationVoteResource(Resource):
         student_id = get_jwt_identity()['id']
         value = self.values[args['value']]
 
-        evaluation = Evaluation.query.get(e_id)
+        evaluation = Evaluation.query.filter(
+            Evaluation.id == e_id,
+            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
+        ).one_or_none()
+
         if evaluation is None:
             raise NotFound('evaluation with the specified id not found')
-
-        validate_university_id(evaluation.section.course.department.school.university_id)
 
         # do not allow voting on your own evaluations
         if evaluation.student_id == student_id:
