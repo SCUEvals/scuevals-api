@@ -1,4 +1,5 @@
-from sqlalchemy import func, and_
+from datetime import datetime
+from sqlalchemy import func
 
 from . import db
 from .role import Role
@@ -64,3 +65,12 @@ class User(db.Model):
         }
 
         return {k: v for k, v in user.items() if v is not None}
+
+    def has_reading_access(self):
+        return self.read_access_until >= datetime.now(self.read_access_until.tzinfo)
+
+    def suspended(self):
+        return self.suspended_until is not None and self.suspended_until > datetime.now(self.suspended_until.tzinfo)
+
+    def suspension_expired(self):
+        return self.suspended_until is not None and self.suspended_until <= datetime.now(self.suspended_until.tzinfo)

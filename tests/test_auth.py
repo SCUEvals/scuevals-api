@@ -212,7 +212,7 @@ class AuthValidationTestCase(TestCase):
 
     def test_read_access_expired(self):
         student = StudentFactory(roles=[Role.query.get(Role.StudentRead)],
-                                 read_access_exp=(datetime.now() - timedelta(days=1)))
+                                 read_access_until=(datetime.now() - timedelta(days=1)))
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())
 

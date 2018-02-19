@@ -79,7 +79,7 @@ def auth(args):
                 last_name=data['family_name'],
                 picture=data['picture'] if 'picture' in data else None,
                 roles=[Role.query.get(Role.Incomplete)],
-                read_access_exp=datetime.now(timezone.utc) + timedelta(days=180),
+                read_access_until=datetime.now(timezone.utc) + timedelta(days=180),
                 university_id=1
             )
 
@@ -89,19 +89,18 @@ def auth(args):
         # existing user
         status = 'ok'
 
-        # check if user should be unsuspended
-        if (user.suspended_until is not None and
-                user.suspended_until < datetime.now(user.suspended_until.tzinfo) and
-                Role.Suspended in user.roles_list):
+        # check if user is suspended
+        if user.suspended():
+            return jsonify({'status': 'suspended', 'until': user.suspended_until.isoformat()})
 
-            user.roles = [role for role in user.roles if not role.id == Role.Suspended]
+        # check if they should be unsuspended
+        if user.suspension_expired():
             user.suspended_until = None
 
         # check if the user has lost its reading privilege (only applies to students)
         if (user.type == User.Student and
-                user.read_access_exp < datetime.now(user.read_access_exp.tzinfo) and
+                user.read_access_until < datetime.now(user.read_access_until.tzinfo) and
                 Role.StudentRead in user.roles_list):
-
             user.roles = [role for role in user.roles if not role.id == Role.StudentRead]
 
         # update the image of the existing user
@@ -162,11 +161,11 @@ def user_loader(identity):
     ).with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
 
     # fail if the user is still suspended
-    if user.suspended_until is not None and user.suspended_until > datetime.now(user.suspended_until.tzinfo):
+    if user.suspended():
         return None
 
     # fail if the JWT doesn't reflect that the user lost reading access
-    if Role.StudentRead in identity['roles'] and user.read_access_exp < datetime.now(user.read_access_exp.tzinfo):
+    if Role.StudentRead in identity['roles'] and not user.has_reading_access():
         return None
 
     return user

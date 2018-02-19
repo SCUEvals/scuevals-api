@@ -85,8 +85,7 @@ def seed_db(target):
         Role(id=1, name='StudentRead'),
         Role(id=2, name='StudentWrite'),
         Role(id=10, name='Administrator'),
-        Role(id=20, name='API Key'),
-        Role(id=100, name='Suspended')
+        Role(id=20, name='API Key')
     ])
 
     db.session.commit()

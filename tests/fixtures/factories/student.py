@@ -12,7 +12,7 @@ class StudentFactory(UserFactory):
 
     graduation_year = 2020
     gender = factory.Iterator(['m', 'f', 'o'])
-    read_access_exp = datetime.now() + timedelta(days=180)
+    read_access_until = datetime.now() + timedelta(days=180)
 
     @factory.lazy_attribute
     def roles(self):
