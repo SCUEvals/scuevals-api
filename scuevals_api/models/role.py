@@ -7,7 +7,6 @@ class Role(db.Model):
     StudentWrite = 2
     Administrator = 10
     API_Key = 20
-    Suspended = 100
 
     __tablename__ = 'roles'
 

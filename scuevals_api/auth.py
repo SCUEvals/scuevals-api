@@ -4,7 +4,8 @@ import requests
 from datetime import datetime, timedelta, timezone
 from flask import Blueprint, jsonify, current_app as app
 from flask_caching import Cache
-from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required, current_user
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, current_user
+from flask_jwt_extended.view_decorators import jwt_required
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from sqlalchemy.orm import subqueryload
@@ -56,7 +57,9 @@ def auth(args):
     if data['hd'] != 'scu.edu':
         raise UnprocessableEntity('invalid id_token')
 
-    user = User.query.filter_by(email=data['email']).one_or_none()
+    user = User.query.options(
+        subqueryload(User.roles)
+    ).with_polymorphic(Student).filter_by(email=data['email']).one_or_none()
 
     if user is None:
         # new user
@@ -83,6 +86,24 @@ def auth(args):
         db.session.add(user)
         db.session.flush()
     else:
+        # existing user
+        status = 'ok'
+
+        # check if user should be unsuspended
+        if (user.suspended_until is not None and
+                user.suspended_until < datetime.now(user.suspended_until.tzinfo) and
+                Role.Suspended in user.roles_list):
+
+            user.roles = [role for role in user.roles if not role.id == Role.Suspended]
+            user.suspended_until = None
+
+        # check if the user has lost its reading privilege (only applies to students)
+        if (user.type == User.Student and
+                user.read_access_exp < datetime.now(user.read_access_exp.tzinfo) and
+                Role.StudentRead in user.roles_list):
+
+            user.roles = [role for role in user.roles if not role.id == Role.StudentRead]
+
         # update the image of the existing user
         if 'picture' in data:
             user.picture = data['picture']
@@ -90,12 +111,8 @@ def auth(args):
         # check if user is complete
         if Role.Incomplete in user.roles_list:
             status = 'incomplete'
-        else:
-            status = 'ok'
 
-    ident = user.to_dict()
-
-    token = create_access_token(identity=ident)
+    token = create_access_token(identity=user.to_dict())
 
     db.session.commit()
 
@@ -105,24 +122,6 @@ def auth(args):
 @auth_bp.route('/auth/validate')
 @jwt_required
 def validate():
-    # check if user should be unsuspended
-    if (current_user.suspended_until is not None and
-            current_user.suspended_until < datetime.now(current_user.suspended_until.tzinfo) and
-            Role.Suspended in current_user.roles_list):
-
-        current_user.delete_role_by_id(Role.Suspended)
-
-        current_user.suspended_until = None
-        db.session.commit()
-
-    # check if the user has lost its reading privilege (only applies to students)
-    if (current_user.type == User.Student and
-            current_user.read_access_exp < datetime.now(current_user.read_access_exp.tzinfo) and
-            Role.StudentRead in current_user.roles_list):
-
-        current_user.delete_role_by_id(Role.StudentRead)
-        db.session.commit()
-
     new_token = create_access_token(identity=current_user.to_dict())
     return jsonify({'jwt': new_token})
 

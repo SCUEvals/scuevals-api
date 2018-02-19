@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, and_
 
 from . import db
 from .role import Role
@@ -64,9 +64,3 @@ class User(db.Model):
         }
 
         return {k: v for k, v in user.items() if v is not None}
-
-    def delete_role_by_id(self, role_id):
-        return db.session.query(user_role).filter(
-            user_role.c.user_id == self.id,
-            user_role.c.role_id == role_id
-        ).delete()

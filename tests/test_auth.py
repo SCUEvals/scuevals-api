@@ -200,21 +200,15 @@ class AuthValidationTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual('User claims verification failed', data['msg'])
 
-    def test_suspension_expired(self):
-        user = UserFactory(roles=[Role.query.get(Role.Suspended)], suspended_until=(datetime.now() - timedelta(days=1)))
+    def test_suspended(self):
+        user = UserFactory()
         db.session.flush()
         user_jwt = create_access_token(identity=user.to_dict())
+        user.suspended_until = datetime.now() + timedelta(days=1)
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + user_jwt})
 
-        self.assertEqual(rv.status_code, 200)
-
-        resp = json.loads(rv.data)
-        self.assertIn('jwt', resp)
-
-        new_data = jwt.get_unverified_claims(resp['jwt'])
-
-        self.assertNotIn(Role.Suspended, new_data['sub']['roles'])
+        self.assertEqual(rv.status_code, 401)
 
     def test_read_access_expired(self):
         student = StudentFactory(roles=[Role.query.get(Role.StudentRead)],
@@ -224,14 +218,7 @@ class AuthValidationTestCase(TestCase):
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
 
-        self.assertEqual(rv.status_code, 200)
-
-        resp = json.loads(rv.data)
-        self.assertIn('jwt', resp)
-
-        new_data = jwt.get_unverified_claims(resp['jwt'])
-
-        self.assertNotIn(Role.StudentRead, new_data['sub']['roles'])
+        self.assertEqual(rv.status_code, 401)
 
 
 class AuthAPITestCase(TestCase):
