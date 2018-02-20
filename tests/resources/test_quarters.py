@@ -16,6 +16,7 @@ class QuartersTestCase(TestCase):
 
         q1 = QuarterFactory()
         q2 = QuarterFactory()
+        QuarterFactory(current=True)
 
         c1 = CourseFactory(id=1000)
         CourseFactory()
