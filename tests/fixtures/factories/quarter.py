@@ -14,9 +14,9 @@ class QuarterFactory(factory.alchemy.SQLAlchemyModelFactory):
     period = factory.Sequence(
         lambda n: '[20{:02d}-{:02d}-01, 20{:02d}-{:02d}-01)'.format(
             18 + int(floor(n / 4)),
-            (n % 11) + 1,
+            (n % 4) + 1,
             18 + int(floor(n / 4)),
-            (n % 11) + 2
+            (n % 4) + 2
         )
     )
     university_id = 1
