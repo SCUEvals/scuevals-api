@@ -91,7 +91,7 @@ def auth(args):
 
         # check if user is suspended
         if user.suspended():
-            return jsonify({'status': 'suspended', 'until': user.suspended_until.isoformat()})
+            return jsonify({'status': 'suspended', 'until': user.suspended_until.isoformat()}), 401
 
         # check if they should be unsuspended
         if user.suspension_expired():

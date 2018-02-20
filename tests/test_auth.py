@@ -146,6 +146,48 @@ class AuthTestCase(TestCase):
         self.assertEqual(200, rv.status_code)
 
     @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_id_token_existing_user_suspended(self, data, decode_func):
+        StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() + timedelta(days=1)))
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+        self.assertEqual(401, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('suspended', data['status'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_id_token_existing_user_suspension_expired(self, data, decode_func):
+        StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() - timedelta(days=1)))
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('ok', data['status'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_id_token_existing_user_read_access_expired(self, data, decode_func):
+        student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))
+        student.roles_list = [Role.StudentRead, Role.StudentWrite]
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('ok', data['status'])
+
+        self.assertNotIn(Role.StudentRead, student.roles_list)
+
+    @use_data('auth.yaml')
     @vcr.use_cassette
     def test_google_openid_error(self, data):
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
