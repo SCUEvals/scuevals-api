@@ -3,7 +3,8 @@ from . import db, user_role
 
 class Role(db.Model):
     Incomplete = 0
-    Student = 1
+    StudentRead = 1
+    StudentWrite = 2
     Administrator = 10
     API_Key = 20
 

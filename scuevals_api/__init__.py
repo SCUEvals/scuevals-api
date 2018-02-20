@@ -36,7 +36,7 @@ def register_extensions(app):
     jwtm.init_app(app)
     cache.init_app(app)
 
-    if 'ENV' in app.config and app.config['ENV'] == 'production':
+    if 'ENV' in app.config and app.config['ENV'] in ('production', 'staging'):
         from scuevals_api.errors import rollbar
         rollbar.init_app(app)
 

@@ -7,7 +7,7 @@ class StudentTestCase(TestCase):
 
     def test_roles_list(self):
         student = Student.query.get(0)
-        student.roles_list = [Role.Student]
+        student.roles_list = [Role.StudentRead]
         self.assertEqual(student.roles_list, [1])
         student.roles_list = []
         self.assertEqual(student.roles_list, [])

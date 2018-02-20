@@ -10,7 +10,7 @@ from scuevals_api.roles import role_required
 class ClassResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student)
+    @role_required(Role.StudentWrite)
     def get(self, q_id, p_id, c_id):
         ident = get_jwt_identity()
         query = Section.query.options(

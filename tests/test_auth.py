@@ -1,16 +1,15 @@
 import json
 import time
 from unittest import mock
+from datetime import datetime, timedelta
 
 from flask_jwt_extended import create_access_token
 from jose import jwt
 from json import JSONDecodeError
 
-from werkzeug.exceptions import Unauthorized
-
-from tests.fixtures.factories import StudentFactory, OfficialUserTypeFactory
+from tests.fixtures.factories import StudentFactory, OfficialUserTypeFactory, UserFactory
 from tests import TestCase, use_data, vcr
-from scuevals_api.auth import cache, validate_university_id
+from scuevals_api.auth import cache
 from scuevals_api.models import db, APIKey, Role
 
 
@@ -37,8 +36,6 @@ id_token_data = {
 class AuthTestCase(TestCase):
     def setUp(self):
         super().setUp()
-
-        db.session.add(APIKey(key='API_KEY', university_id=1))
         cache.clear()
 
     @use_data('auth.yaml')
@@ -88,67 +85,6 @@ class AuthTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertIn('status', data)
         self.assertEqual('non-student', data['status'])
-
-    def test_validate_university_id(self):
-        self.assertRaises(Unauthorized, validate_university_id, 2)
-
-    def test_validation(self):
-        # make sure the new token will have a new expiration time
-        time.sleep(1)
-
-        data = jwt.get_unverified_claims(self.jwt)
-
-        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
-
-        self.assertEqual(rv.status_code, 200)
-
-        try:
-            resp = json.loads(rv.data)
-        except JSONDecodeError:
-            self.fail('invalid response')
-
-        self.assertIn('jwt', resp)
-
-        new_data = jwt.get_unverified_claims(resp['jwt'])
-
-        self.assertGreater(new_data['exp'], data['exp'])
-
-    def test_auth_api(self):
-        rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},
-                              data=json.dumps({'api_key': 'API_KEY'}))
-
-        self.assertEqual(rv.status_code, 200)
-
-        try:
-            resp = json.loads(rv.data)
-        except JSONDecodeError:
-            self.fail('invalid response')
-
-        self.assertIn('jwt', resp)
-
-        claims = jwt.get_unverified_claims(resp['jwt'])
-        self.assertIn('roles', claims['sub'])
-        self.assertEqual([20], claims['sub']['roles'])
-
-    def test_api_unauthorized(self):
-        rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},
-                              data=json.dumps({'api_key': 'INVALID_KEY'}))
-
-        self.assertEqual(rv.status_code, 401)
-
-    def test_invalid_jwt(self):
-        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer foobar'})
-        self.assertEqual(rv.status_code, 422)
-
-    def test_invalid_jwt_claims(self):
-        invalid_ident = {'university_id': 1}
-
-        self.jwt = create_access_token(identity=invalid_ident)
-
-        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
-        self.assertEqual(400, rv.status_code)
-        data = json.loads(rv.data)
-        self.assertEqual('User claims verification failed', data['msg'])
 
     @use_data('auth.yaml')
     @vcr.use_cassette('test_auth')
@@ -210,6 +146,48 @@ class AuthTestCase(TestCase):
         self.assertEqual(200, rv.status_code)
 
     @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_id_token_existing_user_suspended(self, data, decode_func):
+        StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() + timedelta(days=1)))
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+        self.assertEqual(401, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('suspended', data['status'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_id_token_existing_user_suspension_expired(self, data, decode_func):
+        StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() - timedelta(days=1)))
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('ok', data['status'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_id_token_existing_user_read_access_expired(self, data, decode_func):
+        student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))
+        student.roles_list = [Role.StudentRead, Role.StudentWrite]
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('ok', data['status'])
+
+        self.assertNotIn(Role.StudentRead, student.roles_list)
+
+    @use_data('auth.yaml')
     @vcr.use_cassette
     def test_google_openid_error(self, data):
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
@@ -226,3 +204,91 @@ class AuthTestCase(TestCase):
         self.assertEqual(500, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('failed to get certificates from Google', data['message'])
+
+
+class AuthValidationTestCase(TestCase):
+    def test_validation(self):
+        # make sure the new token will have a new expiration time
+        time.sleep(1)
+
+        data = jwt.get_unverified_claims(self.jwt)
+
+        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
+
+        self.assertEqual(rv.status_code, 200)
+
+        try:
+            resp = json.loads(rv.data)
+        except JSONDecodeError:
+            self.fail('invalid response')
+
+        self.assertIn('jwt', resp)
+
+        new_data = jwt.get_unverified_claims(resp['jwt'])
+
+        self.assertGreater(new_data['exp'], data['exp'])
+
+    def test_invalid_jwt(self):
+        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer foobar'})
+        self.assertEqual(rv.status_code, 422)
+
+    def test_invalid_jwt_claims(self):
+        invalid_ident = {'university_id': 1}
+
+        self.jwt = create_access_token(identity=invalid_ident)
+
+        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
+        self.assertEqual(400, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual('User claims verification failed', data['msg'])
+
+    def test_suspended(self):
+        user = UserFactory()
+        db.session.flush()
+        user_jwt = create_access_token(identity=user.to_dict())
+        user.suspended_until = datetime.now() + timedelta(days=1)
+
+        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + user_jwt})
+
+        self.assertEqual(rv.status_code, 401)
+
+    def test_read_access_expired(self):
+        student = StudentFactory(roles=[Role.query.get(Role.StudentRead)],
+                                 read_access_until=(datetime.now() - timedelta(days=1)))
+        db.session.flush()
+        student_jwt = create_access_token(identity=student.to_dict())
+
+        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
+
+        self.assertEqual(rv.status_code, 401)
+
+
+class AuthAPITestCase(TestCase):
+    def setUp(self):
+        super().setUp()
+
+        db.session.add(APIKey(key='API_KEY', university_id=1))
+        cache.clear()
+
+    def test_auth_api(self):
+        rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'api_key': 'API_KEY'}))
+
+        self.assertEqual(rv.status_code, 200)
+
+        try:
+            resp = json.loads(rv.data)
+        except JSONDecodeError:
+            self.fail('invalid response')
+
+        self.assertIn('jwt', resp)
+
+        claims = jwt.get_unverified_claims(resp['jwt'])
+        self.assertIn('roles', claims['sub'])
+        self.assertEqual([20], claims['sub']['roles'])
+
+    def test_api_unauthorized(self):
+        rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'api_key': 'INVALID_KEY'}))
+
+        self.assertEqual(rv.status_code, 401)

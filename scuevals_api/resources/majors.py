@@ -14,7 +14,7 @@ from scuevals_api.utils import use_args
 class MajorsResource(Resource):
 
     @jwt_required
-    @role_required(Role.Student, Role.Incomplete)
+    @role_required(Role.StudentWrite, Role.Incomplete)
     def get(self):
         majors = Major.query.all()
 

@@ -5,7 +5,6 @@ from flask.cli import FlaskGroup
 from sqlalchemy import text
 
 from scuevals_api import create_app
-from scuevals_api.models import University, School, Role
 
 
 def init_db(app, db):

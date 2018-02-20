@@ -16,7 +16,7 @@ delete_db ${TMP_DB} &>/dev/null
 
 echo Fetching $MAIN_DB from Heroku...
 
-heroku pg:pull DATABASE_URL ${TMP_DB}
+heroku pg:pull DATABASE_URL ${TMP_DB} -r production
 
 read -p "Please confirm the replacement of the existing $MAIN_DB db? (y/n) " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
