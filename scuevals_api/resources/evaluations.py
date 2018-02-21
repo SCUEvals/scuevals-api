@@ -1,3 +1,5 @@
+from datetime import timedelta, datetime, timezone
+
 from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
@@ -7,7 +9,7 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Confli
 
 from scuevals_api.models import Role, Section, Evaluation, db, Professor, Quarter, Vote
 from scuevals_api.roles import role_required
-from scuevals_api.utils import use_args
+from scuevals_api.utils import use_args, datetime_from_date
 
 
 class EvaluationSchemaV1(Schema):
@@ -64,7 +66,8 @@ class EvaluationsResource(Resource):
         section = db.session.query(Section.id).filter(
             Section.quarter_id == args['quarter_id'],
             Section.course_id == args['course_id'],
-            Section.professors.any(Professor.id == args['professor_id'])
+            Section.professors.any(Professor.id == args['professor_id']),
+            Section.quarter.has(Quarter.university_id == current_user.university_id)
         ).one_or_none()
 
         if section is None:
@@ -90,6 +93,17 @@ class EvaluationsResource(Resource):
         )
 
         db.session.add(evaluation)
+
+        # extend their read access until the end of the current quarter
+        cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+        current_user.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
+                                                            tzinfo=timezone.utc)
+
+        # add the read access role in case they don't have it
+        sr = Role.query.get(Role.StudentRead)
+        if sr not in current_user.roles_list:
+            current_user.roles.append(sr)
+
         db.session.commit()
 
         return {'result': 'success'}, 201

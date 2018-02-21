@@ -1,8 +1,11 @@
 import json
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 
-from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory
-from scuevals_api.models import db, Evaluation, Vote
+from flask_jwt_extended import create_access_token
+
+from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory
+from scuevals_api.models import db, Evaluation, Vote, Role
 from tests import TestCase, assert_valid_schema
 
 
@@ -10,6 +13,8 @@ class EvaluationsTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
+        QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
+        self.section = SectionFactory()
         EvaluationFactory(student=self.student)
         EvaluationFactory(student=self.student)
         EvaluationFactory()
@@ -20,6 +25,102 @@ class EvaluationsTestCase(TestCase):
         evals = json.loads(rv.data)
         self.assertEqual(2, len(evals))
         assert_valid_schema(rv.data, 'evaluations.json')
+
+    def test_post_evaluation(self):
+        student = StudentFactory(roles=[Role.query.get(Role.StudentWrite)])
+        db.session.flush()
+        jwt = create_access_token(identity=student.to_dict())
+        headers = {'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json'}
+
+        data = {
+            'quarter_id': self.section.quarter_id,
+            'professor_id': self.section.professors[0].id,
+            'course_id': self.section.course_id,
+            'display_grad_year': True,
+            'display_majors': False,
+            'evaluation': {
+                'attitude': 1,
+                'availability': 1,
+                'clarity': 1,
+                'easiness': 1,
+                'grading_speed': 1,
+                'recommended': 1,
+                'resourcefulness': 1,
+                'workload': 1,
+                'comment': 'Test'
+            }
+        }
+
+        rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
+        self.assertEqual(201, rv.status_code)
+
+        evaluation = Evaluation.query.filter(
+            Evaluation.professor_id == self.section.professors[0].id,
+            Evaluation.student_id == student.id
+        ).one_or_none()
+
+        if evaluation is None:
+            self.fail('evaluation was not inserted')
+
+        self.assertEqual(data['evaluation'], evaluation.data)
+
+        self.assertIn(Role.StudentRead, self.student.roles_list)
+        self.assertEqual(datetime(2018, 2, 2, 0, 0, tzinfo=timezone.utc), student.read_access_until)
+
+    def test_post_evaluation_duplicate(self):
+        data = {
+            'quarter_id': self.section.quarter_id,
+            'professor_id': self.section.professors[0].id,
+            'course_id': self.section.course_id,
+            'display_grad_year': True,
+            'display_majors': False,
+            'evaluation': {
+                'attitude': 1,
+                'availability': 1,
+                'clarity': 1,
+                'easiness': 1,
+                'grading_speed': 1,
+                'recommended': 1,
+                'resourcefulness': 1,
+                'workload': 1,
+                'comment': 'Test'
+            }
+        }
+
+        EvaluationFactory(
+            section=self.section,
+            professor=self.section.professors[0],
+            student=self.student
+        )
+
+        rv = self.client.post('/evaluations', headers=self.head_auth_json, data=json.dumps(data))
+        self.assertEqual(409, rv.status_code)
+
+    def test_post_evaluation_invalid_section(self):
+        data = {
+            'quarter_id': -1,
+            'professor_id': self.section.professors[0].id,
+            'course_id': -1,
+            'display_grad_year': True,
+            'display_majors': False,
+            'evaluation': {
+                'attitude': 1,
+                'availability': 1,
+                'clarity': 1,
+                'easiness': 1,
+                'grading_speed': 1,
+                'recommended': 1,
+                'resourcefulness': 1,
+                'workload': 1,
+                'comment': 'Test'
+            }
+        }
+
+        rv = self.client.post('/evaluations', headers=self.head_auth_json, data=json.dumps(data))
+        self.assertEqual(422, rv.status_code)
+
+        resp = json.loads(rv.data)
+        self.assertEqual('invalid quarter/course/professor combination', resp['message'])
 
 
 class EvaluationsRecentTestCase(TestCase):
@@ -95,96 +196,6 @@ class EvaluationTestCase(TestCase):
 
         ev = Evaluation.query.get(self.eval.id)
         self.assertIsNone(ev)
-
-    def test_post_evaluation(self):
-        data = {
-            'quarter_id': self.section.quarter_id,
-            'professor_id': self.section.professors[0].id,
-            'course_id': self.section.course_id,
-            'display_grad_year': True,
-            'display_majors': False,
-            'evaluation': {
-                'attitude': 1,
-                'availability': 1,
-                'clarity': 1,
-                'easiness': 1,
-                'grading_speed': 1,
-                'recommended': 1,
-                'resourcefulness': 1,
-                'workload': 1,
-                'comment': 'Test'
-            }
-        }
-
-        rv = self.client.post('/evaluations', headers=self.head_auth, data=json.dumps(data))
-        self.assertEqual(201, rv.status_code)
-
-        evaluation = Evaluation.query.filter(
-            Evaluation.professor_id == self.section.professors[0].id,
-            Evaluation.student_id == 0
-        ).one_or_none()
-
-        if evaluation is None:
-            self.fail('evaluation was not inserted')
-
-        self.assertEqual(data['evaluation'], evaluation.data)
-
-    def test_post_evaluation_duplicate(self):
-        data = {
-            'quarter_id': self.section.quarter_id,
-            'professor_id': self.section.professors[0].id,
-            'course_id': self.section.course_id,
-            'display_grad_year': True,
-            'display_majors': False,
-            'evaluation': {
-                'attitude': 1,
-                'availability': 1,
-                'clarity': 1,
-                'easiness': 1,
-                'grading_speed': 1,
-                'recommended': 1,
-                'resourcefulness': 1,
-                'workload': 1,
-                'comment': 'Test'
-            }
-        }
-
-        rv = self.client.post('/evaluations', headers=self.head_auth, data=json.dumps(data))
-        self.assertEqual(201, rv.status_code)
-
-        rv = self.client.post('/evaluations', headers=self.head_auth, data=json.dumps(data))
-        self.assertEqual(409, rv.status_code)
-
-    def test_post_evaluation_invalid_section(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
-        }
-
-        data = {
-            'quarter_id': -1,
-            'professor_id': self.section.professors[0].id,
-            'course_id': -1,
-            'display_grad_year': True,
-            'display_majors': False,
-            'evaluation': {
-                'attitude': 1,
-                'availability': 1,
-                'clarity': 1,
-                'easiness': 1,
-                'grading_speed': 1,
-                'recommended': 1,
-                'resourcefulness': 1,
-                'workload': 1,
-                'comment': 'Test'
-            }
-        }
-
-        rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
-        self.assertEqual(422, rv.status_code)
-
-        resp = json.loads(rv.data)
-        self.assertEqual('invalid quarter/course/professor combination', resp['message'])
 
 
 class TestEvaluationVoteTestCase(TestCase):

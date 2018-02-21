@@ -1,6 +1,7 @@
 import factory
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 
+from utils import datetime_from_date
 from .user import UserFactory
 from scuevals_api import models
 
@@ -12,7 +13,7 @@ class StudentFactory(UserFactory):
 
     graduation_year = 2020
     gender = factory.Iterator(['m', 'f', 'o'])
-    read_access_until = datetime.now() + timedelta(days=180)
+    read_access_until = datetime_from_date(datetime.now() + timedelta(days=180), tzinfo=timezone.utc)
 
     @factory.lazy_attribute
     def roles(self):

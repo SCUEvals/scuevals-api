@@ -1,6 +1,6 @@
 import json
 from flask_jwt_extended import create_access_token
-from datetime import date
+from datetime import datetime, timezone
 
 from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory
 from scuevals_api.models import db, Role
@@ -46,7 +46,7 @@ class StudentsTestCase(TestCase):
 
         self.assertIn(Role.StudentWrite, self.student.roles_list)
         self.assertIn(Role.StudentRead, self.student.roles_list)
-        self.assertEqual(date(2018, 2, 2), self.student.read_access_until)
+        self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), self.student.read_access_until)
 
     def test_patch_wrong_user(self):
         headers = {
