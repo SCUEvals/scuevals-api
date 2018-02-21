@@ -1,9 +1,9 @@
 import factory
 from datetime import timedelta, datetime, timezone
 
-from utils import datetime_from_date
 from .user import UserFactory
 from scuevals_api import models
+from scuevals_api.utils import datetime_from_date
 
 
 class StudentFactory(UserFactory):
