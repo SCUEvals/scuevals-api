@@ -79,7 +79,7 @@ def auth(args):
                 last_name=data['family_name'],
                 picture=data['picture'] if 'picture' in data else None,
                 roles=[Role.query.get(Role.Incomplete)],
-                read_access_until=datetime.now(timezone.utc) + timedelta(days=180),
+                read_access_until=datetime.now(timezone.utc),
                 university_id=1
             )
 

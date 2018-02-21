@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, validate
 from werkzeug.exceptions import Unauthorized, UnprocessableEntity
 
-from scuevals_api.models import Role, Student, db
+from scuevals_api.models import Role, Student, db, Quarter
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 
@@ -41,7 +41,14 @@ class StudentsResource(Resource):
         inc = Role.query.get(Role.Incomplete)
         if inc in student.roles:
             student.roles.remove(inc)
+
+            # grant them both reading and writing roles
             student.roles.append(Role.query.get(Role.StudentRead))
+            student.roles.append(Role.query.get(Role.StudentWrite))
+
+            # set the reading role to expire when the current quarter expires
+            cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+            student.read_access_until = cur_quarter_period.upper + timedelta(days=1)
 
         db.session.commit()
 

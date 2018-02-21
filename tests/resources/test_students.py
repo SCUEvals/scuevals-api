@@ -1,7 +1,8 @@
 import json
 from flask_jwt_extended import create_access_token
+from datetime import date
 
-from tests.fixtures.factories import MajorFactory, StudentFactory
+from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory
 from scuevals_api.models import db, Role
 from tests import TestCase
 
@@ -31,12 +32,21 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.client.patch('/students/{}'.format(self.student.id), headers=headers, data=json.dumps(self.patch_data))
+        QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
+
+        rv = self.client.patch('/students/{}'.format(self.student.id),
+                               headers=headers,
+                               data=json.dumps(self.patch_data))
+
         self.assertEqual(rv.status_code, 200)
 
         self.assertEqual(self.student.graduation_year, self.patch_data['graduation_year'])
         self.assertEqual(self.student.gender, self.patch_data['gender'])
         self.assertEqual(self.student.majors_list, self.patch_data['majors'])
+
+        self.assertIn(Role.StudentWrite, self.student.roles_list)
+        self.assertIn(Role.StudentRead, self.student.roles_list)
+        self.assertEqual(date(2018, 2, 2), self.student.read_access_until)
 
     def test_patch_wrong_user(self):
         headers = {
