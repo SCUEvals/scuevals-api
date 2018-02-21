@@ -79,7 +79,6 @@ def auth(args):
                 last_name=data['family_name'],
                 picture=data['picture'] if 'picture' in data else None,
                 roles=[Role.query.get(Role.Incomplete)],
-                read_access_until=datetime.now(timezone.utc),
                 university_id=1
             )
 
@@ -102,6 +101,7 @@ def auth(args):
                 user.read_access_until < datetime.now(user.read_access_until.tzinfo) and
                 Role.StudentRead in user.roles_list):
             user.roles = [role for role in user.roles if not role.id == Role.StudentRead]
+            user.read_access_until = None
 
         # update the image of the existing user
         if 'picture' in data:
