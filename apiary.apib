@@ -1,5 +1,68 @@
 FORMAT: 1A
 
-# scuevals
+# SCU Evals
 
-SCU Evals API powers the SCU Evals front-end by managing all the data and actions.
+The SCU Evals API powers the SCU Evals front-end by managing all the data and actions.
+
+## Quarters [/quarters?course_id={course_id}&professor_id={professor_id}]
+
+### List All Quarters [GET]
+
++ Parameters
+    + course_id (optional, number) - Limit the list to quarters during which the specified course was taught
+    + professor_id (optional, number) - Limit the list to quarters during which the specified professor taught
+
++ Response 200 (application/json)
+
+    + Schema
+            
+            {
+              "$schema":"http://json-schema.org/draft-04/schema#",
+              "type":"array",
+              "items":{
+                "type":"object",
+                "properties":{
+                  "id":{
+                    "type":"integer"
+                  },
+                  "year":{
+                    "type":"integer"
+                  },
+                  "name":{
+                    "type":"string"
+                  },
+                  "current":{
+                    "type":"boolean"
+                  }
+                },
+                "required":[
+                  "id",
+                  "year",
+                  "name",
+                  "current"
+                ]
+              }
+            }
+
+    + Body
+    
+            [
+              {
+                "id":3800,
+                "year":2016,
+                "name":"Fall",
+                "current":false
+              },
+              {
+                "id":3820,
+                "year":2017,
+                "name":"Winter",
+                "current":false
+              },
+              {
+                "id":3900,
+                "year":2017,
+                "name":"Spring",
+                "current":false
+              }
+            ]
