@@ -1,4 +1,3 @@
-import random
 import factory
 
 from scuevals_api import models

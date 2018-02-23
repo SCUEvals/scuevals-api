@@ -34,4 +34,3 @@ def get_pg_error_msg(e):
 
 def datetime_from_date(date, tzinfo=None):
     return datetime.combine(date, time(tzinfo=tzinfo))
-

@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token
 
 from scuevals_api.models import db, Role
 from tests.fixtures.factories import StudentFactory
-from tests import TestCase
+from tests import TestCase, no_logging
 
 
 class MajorsTestCase(TestCase):
@@ -50,5 +50,7 @@ class MajorsTestCase(TestCase):
 
         data = {'majors': ['Major1', 'Major1']}
 
-        rv = self.client.post('/majors', headers=headers, data=json.dumps(data))
+        with no_logging():
+            rv = self.client.post('/majors', headers=headers, data=json.dumps(data))
+
         self.assertEqual(422, rv.status_code)

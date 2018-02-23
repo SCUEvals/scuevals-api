@@ -51,6 +51,3 @@ class Student(User):
         }
 
         return {k: v for k, v in student.items() if v is not None}
-
-
-

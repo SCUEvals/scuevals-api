@@ -1,6 +1,9 @@
 import json
+import logging
 import unittest
 import os
+from contextlib import contextmanager
+
 import yaml
 from functools import wraps
 from flask_jwt_extended import create_access_token
@@ -102,6 +105,14 @@ def use_data(file):
             return f(*args)
         return wrapper
     return use_data_decorator
+
+
+@contextmanager
+def no_logging():
+    log_state = logging.getLogger().getEffectiveLevel()
+    logging.disable(logging.CRITICAL)
+    yield
+    logging.disable(log_state)
 
 
 # source: https://medium.com/grammofy/testing-your-python-api-app-with-json-schema-52677fe73351

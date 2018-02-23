@@ -1,12 +1,12 @@
-from .course import CourseFactory
-from .department import DepartmentFactory
-from .evaluation import EvaluationFactory
-from .major import MajorFactory
-from .official_user_type import OfficialUserTypeFactory
-from .school import SchoolFactory
-from .section import SectionFactory
-from .student import StudentFactory
-from .user import UserFactory
-from .professor import ProfessorFactory
-from .quarter import QuarterFactory
-from .vote import VoteFactory
+from .course import CourseFactory  # noqa
+from .department import DepartmentFactory  # noqa
+from .evaluation import EvaluationFactory  # noqa
+from .major import MajorFactory  # noqa
+from .official_user_type import OfficialUserTypeFactory  # noqa
+from .school import SchoolFactory  # noqa
+from .section import SectionFactory  # noqa
+from .student import StudentFactory  # noqa
+from .user import UserFactory  # noqa
+from .professor import ProfessorFactory  # noqa
+from .quarter import QuarterFactory  # noqa
+from .vote import VoteFactory  # noqa

@@ -21,4 +21,3 @@ class StudentFactory(UserFactory):
             models.Role.query.get(models.Role.StudentWrite),
             models.Role.query.get(models.Role.StudentRead)
         ]
-

@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, current_app as app
 from flask_caching import Cache
 from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, current_user

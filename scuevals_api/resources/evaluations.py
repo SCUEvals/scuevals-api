@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime, timezone
+from datetime import timedelta, timezone
 
 from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
 from flask_restful import Resource
