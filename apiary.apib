@@ -4,65 +4,514 @@ FORMAT: 1A
 
 The SCU Evals API powers the SCU Evals front-end by managing all the data and actions.
 
-## Quarters [/quarters?course_id={course_id}&professor_id={professor_id}]
+## Meta [/]
+
+### Get API Status [GET]
+
++ Response 200 (application/json)
+
+    + Attributes
+        + status: ok (string, required)
+            
+
+## Authentication [/auth]
+
+### Authenticate New/Old User [POST]
+
++ Request (application/json)
+
+    + Attributes
+        + id_token (string, required)
+
++ Response 200 (application/json)
+
+    + Attributes
+        + status: ok, new, incomplete (enum[string], required, fixed)
+        + jwt (string, required)
+
++ Response 500 (application/json)
+
+    + Attributes
+        + message: `failed to get certificates from Google: <reason>` (string, required)
+
++ Response 401 (application/json)
+
+    + Attributes
+        + message: `token is expired` (string, required)
+        
++ Response 422 (application/json)
+
+    + Attributes
+        + message (enum[string], required, fixed-type)
+            + `invalid id_token`
+            + `invalid id_token: <reason>`
+            + `invalid id_token format: <reason>`
+
++ Response 403 (application/json)
+
+    + Attributes
+        + status: non-student (string, required, fixed)
+
+### Validate User [GET /auth/validate]
+
++ Response 200 (application/json)
+
+    + Attributes
+        + jwt (string, required) - New JWT
+
+### Authenticate API Key [POST /auth/api]
+
++ Request (application/json)
+
+    + Attributes
+        + api_key (string, required)
+
++ Response 200 (application/json)
+
+    + Attributes
+        + jwt (string, required)
+
+## Classes [/classes/{quarter_id}/{professor_id}/{course_id}]
+
+### Get Class Details [GET]
+
++ Parameters
+    + quarter_id (number) - The ID of the quarter that the class was taught 
+    + professor_id (number) - The ID of the professor that taught the class
+    + course_id (number) - The ID of the course that was taught
+
++ Response 200 (application/json)
+
+    + Attributes
+        + course (Course, required)
+        + quarter (Quarter, required)
+        + professor (Professor, required)
+        + user_posted: false (boolean, required)
+            Whether the current user has posted an 
+            evaluation or not for this combination
+            
+
++ Response 404 (application/json)
+
+    + Attributes
+        + message: class does not exist (string, required, fixed)
+            
+
+## Courses [/courses]
+
+### List All Courses [GET /courses{?quarter_id,professor_id}]
+
++ Parameters
+    + quarter_id (optional, number) - Limit the list to courses that were taught during the specified quarter
+    + professor_id (optional, number) - Limit the list to courses that were taught by the specified professor
+
++ Response 200 (application/json)
+
+    + Attributes (array[Course], fixed-type)
+
+### Post Courses [POST]
+
++ Request (application/json)
+
+    + Attributes
+        + courses (array, fixed-type)
+            + (object, required)
+                + term: 3900 (string, required)
+                + subject: ANTH (string, required)
+                + catalog_nbr: 1 (number, required)
+                + class_descr: Intro to Bio Anth (string, required)
+                + instr_1: Doe, John (string, required)
+                + instr_2 (string, required)
+                + instr_3 (string, required)
+
++ Response 200 (application/json)
+
+    + Attributes
+        + result: success (string, fixed)
+        + updated_count: 248 (number, required)
+
++ Response 422 (application/json)
+
+    + Attributes
+        + message (enum[string], required, fixed)
+            + Members
+                + `The request was well-formed but was unable to be followed due to semantic errors.`
+                + missing department COEN
+
+### Get Course Details [GET /courses/{id}{?embed}]
+
++ Parameters
+    + id (number) - The course for which to get details
+    + embed (enum[string], optional)
+        Which other data to embed. 
+        Specifying `professors` gives you a list of professors that has taught the course.
+        
+        + Members
+            + `professors`
+        
+    
++ Response 200 (application/json)
+    
+    Example response with the professors embedded.
+    
+    + Attributes (Course, required)
+        + evaluations (array, required, fixed-type)
+            + (Evaluation, required)
+                + user_vote: true (boolean, required)
+                + quarter_id: 3900 (number, required)
+                + professor (Professor, required)
+                + author (required)
+                    + self: false (boolean, required)
+                    + majors: 1, 3 (array[number], required)
+                    + graduation_year: 2020 (number, required) 
+        + professors (array[Professor], optional)
+
++ Response 404 (application/json)
+            
+    + Attributes
+        + message: course with the specified id not found (string, required, fixed)
+            
+
+## Departments [/departments]
+
+### List All Departments [GET]
+
++ Response 200 (application/json)
+    
+    + Attributes (array[Department], required, fixed-type)
+
+### Post Departments [POST]
+
++ Request (application/json)
+
+    + Attributes
+        + departments (array, required, fixed-type)
+            + (object)
+                + value: ACTG (string, required)
+                + label: `Accounting (ACTG)` (string, required)
+                + school: BUS (string, required)
+
++ Response 200 (application/json)
+
+    + Attributes
+        + result: success (string, required, fixed)
+        + updated_count: 74 (number, required)
+
++ Response 422 (application/json)
+
+    + Attributes
+        + message: `The request was well-formed but was unable to be followed due to semantic errors.` (string, required, fixed)
+
+
+## Evaluations [/evaluations]
+
+### List All Your Own Evaluations [GET]
+
++ Response 200 (application/json)
+    
+    + Attributes (array, required, fixed-type)
+        + (Evaluation)
+            + quarter_id: 3900 (number, required)
+            + professor (Professor, required)
+            + course (Course, required)
+
+### List Recent Evaluations [GET /evaluations/recent{?count}]
+
++ Parameters
+    + count (number, optional) - How many recent evaluations to return.
+        + Default: 10
+
++ Response 200 (application/json)
+
+    + Attributes (array, required)
+        + (Evaluation, required)
+            + quarter_id: 3900 (number, required)
+            + professor (Professor, required)
+            + course (Course, required)
+
+### Get Evaluation Details [GET /evaluations/{id}]
+
++ Parameters
+    + id: 1 (number, required)
+
++ Response 200 (application/json)
+    
+    + Attributes (Evaluation, required)
+    
++ Response 404 (application/json)
+
+    + Attributes
+        + message: `evaluation with the specified id not found` (string, required, fixed)
+
+
+### Submit Evaluation [POST]
+
++ Request (application/json)
+
+    + Attributes
+        + quarter_id: 3900 (number, required)
+        + professor_id: 1 (number, required)
+        + course_id: 1 (number, required)
+        + display_grad_year: false (boolean, required)
+        + display_majors: true (boolean, required)
+        + evaluation (EvaluationDataV1, required)
+
++ Response 201 (application/json)
+
+    + Attributes
+        + result: success (string, required, fixed)
+        
++ Response 422 (application/json)
+
+    + Attributes
+        + message: `invalid quarter/course/professor combination` (string, required, fixed)
+
++ Response 409
+
+    + Attributes
+        + message: `evaluation for this combination already exists` (string, required, fixed)
+
+### Delete Evaluation [DELETE /evaluations/{id}]
+
++ Parameters
+    + id: 1 (number, required)
+
++ Response 204 (application/json)
+
++ Response 404 (application/json)
+
+    + Attributes
+        + message: `evaluation with the specified id not found` (string, required, fixed)
+
++ Response 403 (application/json)
+
+    + Attributes
+        + message: `you are only allowed to delete your own evaluations` (string, required, fixed)
+
+
+## Evaluation Votes [/evaluations/{id}/vote]
+
++ Parameters
+    + id: 1 (number, required)
+
+### Add/Overwrite Vote [PUT]
+
++ Response 204 (application/json)
+
++ Response 404 (application/json)
+
+    + Attributes
+        + message: `evaluation with the specified id not found` (string, required, fixed)
+
++ Response 403 (application/json)
+
+    + Attributes
+        + message: `not allowed to vote on your own evaluations` (string, required, fixed)
+
+### Delete Vote [DELETE /evaluations/{eval_id}/vote/{vote_id}]
+
++ Parameters
+    + eval_id: 1 (number, required)
+    + vote_id: 1 (number, required)
+    
++ Response 204 (application/json)
+
++ Response 404 (application/json)
+
+    + Attributes
+        + message (enum[string], required, fixed)
+            + `evaluation with the specified id not found`
+            + `vote not found`
+
+
+## Majors [/majors]
+
+### List All Majors [GET]
+
++ Response 200 (application/json)
+
+    + Attributes (array[Major], required, fixed-type)
+
+### Post Majors [POST]
+
++ Request (application/json)
+
+    + Attributes
+        + majors (array[string], required, fixed-type)
+    
++ Response 200 (application/json)
+
+    + Attributes
+        + result: success (string, required, fixed)
+
++ Response 422 (application/json)
+
+    + Attributes
+        + message: `failed to insert majors: <db error>` (string, required)
+
+
+## Professors [/professors]
+
+### List All Professors [GET /professors{?course_id,quarter_id}]
+
++ Parameters
+    + course_id: 1 (number, optional) - Limit the list to professors that taught the specified course.
+    + quarter_id: 3900 (number, optional) - Limit the list to professors who taught during the specified quarter.
+
++ Response 200 (application/json)
+
+    + Attributes (array[Professor], required, fixed-type)
+
+### Get Professor Details [GET /professors/{id}{?embed}]
+
++ Parameters
+    + id: 1 (number) - The professor for which to get details.
+    + embed (enum[string], optional)
+        Which other data to embed. 
+        Specifying `courses` gives you a list of courses that this professor has taught.
+        
+        + Members
+            + `courses`
+            
++ Response 200 (application/json)
+    
+    Example response with the courses embedded.
+    
+    + Attributes (Professor, required)
+        + evaluations (array, required, fixed-type)
+            + (Evaluation, required)
+                + user_vote: true (boolean, required)
+                + quarter_id: 3900 (number, required)
+                + course (Course, required)
+                + author (required)
+                    + self: false (boolean, required)
+                    + majors: 1, 3 (array[number], required)
+                    + graduation_year: 2020 (number, required) 
+        + courses (array[Course], optional)
+
++ Response 404 (application/json)
+            
+    + Attributes
+        + message: professor with the specified id not found (string, required, fixed)
+
+
+## Quarters [/quarters{?course_id,professor_id}]
 
 ### List All Quarters [GET]
 
 + Parameters
-    + course_id (optional, number) - Limit the list to quarters during which the specified course was taught
-    + professor_id (optional, number) - Limit the list to quarters during which the specified professor taught
+    + course_id: 1 (number, optional) - Limit the list to quarters during which the specified course was taught.
+    + professor_id: 1 (number, optional) - Limit the list to quarters during which the specified professor taught.
 
 + Response 200 (application/json)
 
-    + Schema
-            
-            {
-              "$schema":"http://json-schema.org/draft-04/schema#",
-              "type":"array",
-              "items":{
-                "type":"object",
-                "properties":{
-                  "id":{
-                    "type":"integer"
-                  },
-                  "year":{
-                    "type":"integer"
-                  },
-                  "name":{
-                    "type":"string"
-                  },
-                  "current":{
-                    "type":"boolean"
-                  }
-                },
-                "required":[
-                  "id",
-                  "year",
-                  "name",
-                  "current"
-                ]
-              }
-            }
+    + Attributes (array[Quarter], required, fixed-type)
 
-    + Body
-    
-            [
-              {
-                "id":3800,
-                "year":2016,
-                "name":"Fall",
-                "current":false
-              },
-              {
-                "id":3820,
-                "year":2017,
-                "name":"Winter",
-                "current":false
-              },
-              {
-                "id":3900,
-                "year":2017,
-                "name":"Spring",
-                "current":false
-              }
-            ]
+
+## Search [/search{?q,limit}]
+
++ Parameters
+    + q: Mat (string, required) - The search query.
+    + limit (number, optional) - Limit the number of results. Max is 50.
+        + Default: 50
+
+### Search For Classes And Professors [GET]
+
++ Response 200 (application/json)
+
+    + Attributes
+        + courses (array[Course], required, fixed-type)
+        + professors (array[Professor], required, fixed-type)
+
+
+## Students [/students/{id}]
+
++ Parameters
+    + id: 1 (number, required)
+
+### Update Info [PUT]
+
++ Request (application/json)
+
+    + Attributes
+        + graduation_year: 2020 (number, required)
+        + gender: m, f, o (enum[string], required, fixed)
+        + majors: 1, 4 (array[number], required) - Between 1 and 3 major IDs.
+
++ Response 200 (application/json)
+
+    + Attributes
+        + result: success (string, required, fixed)
+        + jwt (string, required)
+        
++ Response 403 (application/json)
+
+    + Attributes
+        + message: `you do not have the rights to modify another student` (string, required, fixed)
+
++ Response 422 (application/json)
+
+    + Attributes
+        + message: `invalid major(s) specified` (string, required, fixed)
+
+
+# Data Structures
+
+## Course (object)
++ id: 1 (number, required)
++ number: 42 (number, required)
++ title: What is Life (string, required)
++ department_id: 3 (number, required)
+
+## Department (object)
++ id: 1 (number, required)
++ abbr: COEN (string, required)
++ name: Computer Science & Engineering (string, required)
++ school: EGR (string, required)
+
+## Evaluation (object)
++ id: 1 (number, required)
++ version: 1 (number, required)
++ post_time: `2018-02-06T22:24:11.098122-08:00` (string, required) - Post time in ISO 8601
++ data (EvaluationDataV1, required)
++ votes_score: `-3` (number, required)
+
+## EvaluationDataV1 (object)
++ attitude: 1 (number, required)
++ availability: 1 (number, required)
++ clarity: 1 (number, required)
++ grading_speed: 1 (number, required)
++ resourcefulness: 1 (number, required)
++ easiness: 1 (number, required)
++ workload: 1 (number, required)
++ recommended: 1 (number, required)
++ comment: Love the lectures (string, required)
+
+## Major (object)
++ id: 1 (number, required)
++ name: Mathematics (string, required)
+
+## Professor (object)
++ id: 1 (number, required)
++ first_name: John (string, required)
++ last_name: Doe (string, required)
+
+## Quarter (object)
++ id: 1 (number, required)
++ year: 2018 (number, required)
++ name: Spring (string, required)
++ current: true (boolean, required)
+
+## Student (User)
++ gender: m, f, o (enum[string], required)
++ graduation_year: 2020 (number, required)
++ majors (array[number], required) - An array of majors ids
+
+## User (object)
++ id: 1 (number, required)
++ university_id: 1 (number, required)
++ email: jdoe@scu.edu (string, required)
++ first_name: John (string, required)
++ last_name: Doe (string, required)
++ picture: https://foo.bar/d3hj2d2lk8 (string, required) - The URL to the user's picture
++ roles (array[number], required) - An array of roles ids
