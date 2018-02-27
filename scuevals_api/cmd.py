@@ -25,7 +25,7 @@ def create_cli_app(pointless_arg):
     """
     A wrapper for create_app that ignores the ScriptInfo object that Click passes.
     """
-    return create_app()
+    return create_app(os.environ.get('FLASK_ENV', default='development'))
 
 
 @click.group(cls=FlaskGroup, create_app=create_cli_app)
