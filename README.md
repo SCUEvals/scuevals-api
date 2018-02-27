@@ -17,4 +17,4 @@
 Run `python setup.py test`.
 
 ## Documentation
-The API documentation is available [on the wiki](../../wiki).
+The API documentation is available [on Apiary](https://scuevals.docs.apiary.io/).
