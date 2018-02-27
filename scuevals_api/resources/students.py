@@ -2,7 +2,7 @@ from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, validate
-from werkzeug.exceptions import Unauthorized, UnprocessableEntity
+from werkzeug.exceptions import UnprocessableEntity, Forbidden
 
 from scuevals_api.models import Role, Student, db
 from scuevals_api.roles import role_required
@@ -26,7 +26,7 @@ class StudentsResource(Resource):
     def patch(self, args, s_id):
         user = get_jwt_identity()
         if user['id'] != s_id:
-            raise Unauthorized('you do not have the rights to modify another student')
+            raise Forbidden('you do not have the rights to modify another student')
 
         student = Student.query.get(s_id)
 

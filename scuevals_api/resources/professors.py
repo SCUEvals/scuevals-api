@@ -5,8 +5,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Professor, Section, Evaluation, Student
+from scuevals_api.models import Role, Professor, Section, Evaluation
 from scuevals_api.roles import role_required
 from scuevals_api.utils import use_args
 

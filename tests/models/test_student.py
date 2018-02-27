@@ -1,5 +1,5 @@
 from tests.fixtures.factories import MajorFactory
-from scuevals_api.models import Student, Role, db, Major
+from scuevals_api.models import Student, Role
 from tests import TestCase
 
 

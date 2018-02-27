@@ -67,7 +67,7 @@ def auth(args):
         if official is None or official.type != 'student':
             # create a user
             # but for now, return message
-            return jsonify({'status': 'non-student'})
+            return jsonify({'status': 'non-student'}), 403
         else:
             user = Student(
                 email=data['email'],

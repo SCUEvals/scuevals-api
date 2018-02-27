@@ -18,13 +18,7 @@ class MajorsResource(Resource):
     def get(self):
         majors = Major.query.all()
 
-        return [
-            {
-                'id': major.id,
-                'name': major.name
-            }
-            for major in majors
-        ]
+        return [major.to_dict() for major in majors]
 
     @jwt_required
     @role_required(Role.API_Key)

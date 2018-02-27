@@ -31,7 +31,10 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.client.patch('/students/{}'.format(self.student.id), headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/{}'.format(self.student.id),
+                               headers=headers,
+                               data=json.dumps(self.patch_data))
+
         self.assertEqual(rv.status_code, 200)
 
         self.assertEqual(self.student.graduation_year, self.patch_data['graduation_year'])
@@ -45,7 +48,7 @@ class StudentsTestCase(TestCase):
         }
 
         rv = self.client.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
-        self.assertEqual(rv.status_code, 401)
+        self.assertEqual(rv.status_code, 403)
 
     def test_patch_invalid_majors(self):
         headers = {

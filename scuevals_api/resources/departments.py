@@ -33,15 +33,7 @@ class DepartmentsResource(Resource):
             School.university_id == jwt_data['university_id']
         ).all()
 
-        return [
-            {
-                'id': department.id,
-                'abbr': department.abbreviation,
-                'name': department.name,
-                'school': department.school.abbreviation
-            }
-            for department in departments
-        ]
+        return [department.to_dict() for department in departments]
 
     @jwt_required
     @role_required(Role.API_Key)

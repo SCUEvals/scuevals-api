@@ -10,3 +10,9 @@ class Major(db.Model):
 
     university = db.relationship('University', back_populates='majors')
     students = db.relationship('Student', secondary=student_major, back_populates='majors')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
