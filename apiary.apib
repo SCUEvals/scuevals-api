@@ -76,9 +76,9 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### Get Class Details [GET]
 
 + Parameters
-    + quarter_id (number) - The ID of the quarter that the class was taught 
-    + professor_id (number) - The ID of the professor that taught the class
-    + course_id (number) - The ID of the course that was taught
+    + quarter_id: 3900 (number) - The ID of the quarter that the class was taught 
+    + professor_id: 1 (number) - The ID of the professor that taught the class
+    + course_id: 1 (number) - The ID of the course that was taught
 
 + Response 200 (application/json)
 
@@ -136,12 +136,12 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
         + message (enum[string], required, fixed)
             + Members
                 + `The request was well-formed but was unable to be followed due to semantic errors.`
-                + missing department COEN
+                + missing department to COEN
 
 ### Get Course Details [GET /courses/{id}{?embed}]
 
 + Parameters
-    + id (number) - The course for which to get details
+    + id: 1 (number) - The course for which to get details
     + embed (enum[string], optional)
         Which other data to embed. 
         Specifying `professors` gives you a list of professors that has taught the course.
