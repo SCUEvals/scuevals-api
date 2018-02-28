@@ -59,6 +59,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
           name: Push to Heroku
           command: |
             git push heroku master:master
