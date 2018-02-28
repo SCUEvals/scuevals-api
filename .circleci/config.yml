@@ -50,12 +50,34 @@ jobs:
           path: test-reports
           destination: test-reports
 
-  deploy:
+  deploy-staging:
     machine:
         enabled: true
     working_directory: ~/repo
     environment:
-      HEROKU_APP: "scuevals-api"
+      HEROKU_APP: "$HEROKU_APP_STAGING"
+    steps:
+      - checkout
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
+          name: Restore Database From Production
+          command: |
+            heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+            heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+      - run:
+          name: Push to Heroku
+          command: |
+            heroku git:remote -a $HEROKU_APP_STAGING
+            git push heroku develop:master
+
+  deploy-production:
+    machine:
+        enabled: true
+    working_directory: ~/repo
+    environment:
+      HEROKU_APP: "$HEROKU_APP_PRODUCTION"
     steps:
       - checkout
       - run:
@@ -64,6 +86,7 @@ jobs:
       - run:
           name: Push to Heroku
           command: |
+            heroku git:remote -a $HEROKU_APP_PRODUCTION
             git push heroku master:master
 
 workflows:
@@ -71,9 +94,15 @@ workflows:
   build-and-deploy:
     jobs:
       - build
-      - deploy:
+      - deploy-staging:
+          filters:
+            branches:
+              only: develop
           requires:
             - build
+      - deploy-production:
           filters:
             branches:
               only: master
+          requires:
+            - build
