@@ -1,5 +1,6 @@
 import json
 import time
+import os
 from unittest import mock
 from datetime import datetime, timedelta
 
@@ -36,6 +37,7 @@ id_token_data = {
 class AuthTestCase(TestCase):
     def setUp(self):
         super().setUp()
+        os.environ['GOOGLE_CLIENT_ID'] = ''
         cache.clear()
 
     @use_data('auth.yaml')

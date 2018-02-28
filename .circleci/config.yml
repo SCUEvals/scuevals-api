@@ -1,0 +1,108 @@
+version: 2
+jobs:
+  build:
+    docker:
+
+      - image: circleci/python:3.6.4
+        environment:
+          FLASK_ENV: test
+          JWT_SECRET_KEY: lHmxPAbKYd4wCQctLEuJK7K5CTlQb8sP
+          TEST_DATABASE_URL: postgresql://root@localhost/circle_test?sslmode=disable
+
+      - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: ""
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "setup.py" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -e .
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "setup.py" }}
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python setup.py test
+            (coverage run --source=scuevals_api setup.py test && coveralls)
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+
+  deploy-staging:
+    machine:
+        enabled: true
+    working_directory: ~/repo
+    environment:
+      HEROKU_APP: "$HEROKU_APP_STAGING"
+    steps:
+      - checkout
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
+          name: Restore Database From Production
+          command: |
+            heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+            heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+      - run:
+          name: Push to Heroku
+          command: |
+            heroku git:remote -a $HEROKU_APP_STAGING
+            git push heroku develop:master
+
+  deploy-production:
+    machine:
+        enabled: true
+    working_directory: ~/repo
+    environment:
+      HEROKU_APP: "$HEROKU_APP_PRODUCTION"
+    steps:
+      - checkout
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
+          name: Push to Heroku
+          command: |
+            heroku git:remote -a $HEROKU_APP_PRODUCTION
+            git push heroku master:master
+
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy-staging:
+          filters:
+            branches:
+              only: develop
+          requires:
+            - build
+      - deploy-production:
+          filters:
+            branches:
+              only: master
+          requires:
+            - build

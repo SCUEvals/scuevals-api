@@ -13,3 +13,11 @@ class Department(db.Model):
     school = db.relationship('School', back_populates='departments')
 
     __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id'),)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'abbr': self.abbreviation,
+            'name': self.name,
+            'school': self.school.abbreviation
+        }

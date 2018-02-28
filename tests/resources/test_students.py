@@ -55,7 +55,7 @@ class StudentsTestCase(TestCase):
         }
 
         rv = self.client.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
-        self.assertEqual(rv.status_code, 401)
+        self.assertEqual(rv.status_code, 403)
 
     def test_patch_invalid_majors(self):
         headers = {
