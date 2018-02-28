@@ -1,11 +1,8 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
 version: 2
 jobs:
   build:
-    docker
+    docker:
+
       - image: circleci/python:3.6.4
         environment:
           TEST_DATABASE_URL: postgresql://root@localhost/circle_test?sslmode=disable
