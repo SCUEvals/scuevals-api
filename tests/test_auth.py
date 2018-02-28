@@ -1,7 +1,7 @@
 import json
 import time
+import os
 from unittest import mock
-
 from flask_jwt_extended import create_access_token
 from jose import jwt
 from json import JSONDecodeError
@@ -37,6 +37,8 @@ id_token_data = {
 class AuthTestCase(TestCase):
     def setUp(self):
         super().setUp()
+
+        os.environ['GOOGLE_CLIENT_ID'] = ''
 
         db.session.add(APIKey(key='API_KEY', university_id=1))
         cache.clear()

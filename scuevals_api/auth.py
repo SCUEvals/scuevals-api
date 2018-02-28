@@ -38,6 +38,7 @@ def auth(args):
 
     if app.debug:
         decode_options['verify_exp'] = False
+        decode_options['verify_aud'] = False
 
     try:
         data = jwt.decode(
