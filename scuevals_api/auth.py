@@ -172,6 +172,11 @@ def user_loader(identity):
     return user
 
 
+@jwtm.user_loader_error_loader
+def user_loader_error(identity):
+    return jsonify({'message': 'invalid or expired user info'}), 401
+
+
 def refresh_key_cache(data_store):
     jwks = get_certs()
     for key in jwks['keys']:

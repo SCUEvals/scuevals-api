@@ -264,6 +264,10 @@ class AuthValidationTestCase(TestCase):
 
         self.assertEqual(rv.status_code, 401)
 
+        data = json.loads(rv.data)
+        self.assertIn('message', data)
+        self.assertEqual('invalid or expired user info', data['message'])
+
 
 class AuthAPITestCase(TestCase):
     def setUp(self):
