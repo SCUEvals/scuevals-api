@@ -17,4 +17,4 @@ class CmdsTestCase(unittest.TestCase):
 
     def test_initdb(self):
         result = self.cli_run('initdb')
-        self.assertEqual(0, result.exit_code, msg=result.exception)
+        self.assertEqual(0, result.exit_code, msg=str(result))
