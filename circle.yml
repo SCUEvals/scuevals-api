@@ -5,10 +5,16 @@
 version: 2
 jobs:
   build:
-    docker:
-
+    docker
       - image: circleci/python:3.6.4
+        environment:
+          TEST_DATABASE_URL: postgresql://root@localhost/circle_test?sslmode=disable
+
       - image: circleci/postgres:9.6
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: ""
 
     working_directory: ~/repo
 
