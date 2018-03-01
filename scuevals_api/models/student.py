@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from . import db
 from .assoc import student_major
 from .major import Major
@@ -51,3 +53,7 @@ class Student(User):
         }
 
         return {k: v for k, v in student.items() if v is not None}
+
+    def has_reading_access(self):
+        return (self.read_access_until is not None and
+                self.read_access_until >= datetime.now(self.read_access_until.tzinfo))

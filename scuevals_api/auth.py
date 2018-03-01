@@ -98,9 +98,7 @@ def auth(args):
             user.suspended_until = None
 
         # check if the user has lost its reading privilege (only applies to students)
-        if (user.type == User.Student and
-                user.read_access_until < datetime.now(user.read_access_until.tzinfo) and
-                Role.StudentRead in user.roles_list):
+        if user.type == User.Student and not user.has_reading_access() and Role.StudentRead in user.roles_list:
             user.roles = [role for role in user.roles if not role.id == Role.StudentRead]
             user.read_access_until = None
 

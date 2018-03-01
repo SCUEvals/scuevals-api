@@ -268,6 +268,20 @@ class AuthValidationTestCase(TestCase):
         self.assertIn('message', data)
         self.assertEqual('invalid or expired user info', data['message'])
 
+    def test_read_access_none(self):
+        student = StudentFactory(roles=[Role.query.get(Role.StudentRead)],
+                                 read_access_until=None)
+        db.session.flush()
+        student_jwt = create_access_token(identity=student.to_dict())
+
+        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
+
+        self.assertEqual(rv.status_code, 401)
+
+        data = json.loads(rv.data)
+        self.assertIn('message', data)
+        self.assertEqual('invalid or expired user info', data['message'])
+
 
 class AuthAPITestCase(TestCase):
     def setUp(self):
