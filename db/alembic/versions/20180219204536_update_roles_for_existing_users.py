@@ -23,8 +23,8 @@ def upgrade():
     op.alter_column('students', 'read_access_until', nullable=True)
 
     session = Session(bind=op.get_bind())
-    sread = session.query(Role).get(Role.StudentRead)
-    swrite = session.query(Role).get(Role.StudentWrite)
+    sread = session.query(Role).get(Role.Read)
+    swrite = session.query(Role).get(Role.Write)
 
     # select the period of the current quarter
     cur_quarter_period = session.query(Quarter.period).filter_by(current=True).one()[0]

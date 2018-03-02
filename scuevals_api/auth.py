@@ -98,8 +98,8 @@ def auth(args):
             user.suspended_until = None
 
         # check if the user has lost its reading privilege (only applies to students)
-        if user.type == User.Student and not user.has_reading_access() and Role.StudentRead in user.roles_list:
-            user.roles = [role for role in user.roles if not role.id == Role.StudentRead]
+        if user.type == User.Student and not user.has_reading_access() and Role.Read in user.roles_list:
+            user.roles = [role for role in user.roles if not role.id == Role.Read]
             user.read_access_until = None
 
         # update the image of the existing user
@@ -163,7 +163,7 @@ def user_loader(identity):
         return None
 
     # fail if the JWT doesn't reflect that the user lost reading access
-    if Role.StudentRead in identity['roles'] and not user.has_reading_access():
+    if Role.Read in identity['roles'] and not user.has_reading_access():
         return None
 
     return user

@@ -9,7 +9,7 @@ class UserTestCase(TestCase):
         self.user = UserFactory()
 
     def test_roles_list(self):
-        self.user.roles_list = [Role.StudentRead]
+        self.user.roles_list = [Role.Read]
         self.assertEqual(self.user.roles_list, [1])
         self.user.roles_list = []
         self.assertEqual(self.user.roles_list, [])

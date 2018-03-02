@@ -30,7 +30,7 @@ class CourseSchema(Schema):
 class CoursesResource(Resource):
 
     @jwt_required
-    @role_required(Role.StudentWrite)
+    @role_required(Role.Write)
     @use_args({'professor_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -83,7 +83,7 @@ class CoursesResource(Resource):
 class CourseResource(Resource):
 
     @jwt_required
-    @role_required(Role.StudentRead)
+    @role_required(Role.Read)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['professors']))})
     def get(self, args, c_id):
         q = Course.query.options(

@@ -21,7 +21,7 @@ class StudentsResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.StudentWrite, Role.Incomplete)
+    @role_required(Role.Write, Role.Incomplete)
     @use_args(args, locations=('json',))
     def patch(self, args, s_id):
         user = get_jwt_identity()
@@ -44,8 +44,8 @@ class StudentsResource(Resource):
 
             # grant them both reading and writing roles
             # TEMP: only grant them writing role
-            # student.roles.append(Role.query.get(Role.StudentRead))
-            student.roles.append(Role.query.get(Role.StudentWrite))
+            # student.roles.append(Role.query.get(Role.Read))
+            student.roles.append(Role.query.get(Role.Write))
 
             # set the reading role to expire when the current quarter expires
             # cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]

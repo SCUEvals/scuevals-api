@@ -25,7 +25,7 @@ class DepartmentSchema(Schema):
 class DepartmentsResource(Resource):
 
     @jwt_required
-    @role_required(Role.StudentWrite, Role.API_Key)
+    @role_required(Role.Write, Role.API_Key)
     def get(self):
         jwt_data = get_jwt_identity()
 

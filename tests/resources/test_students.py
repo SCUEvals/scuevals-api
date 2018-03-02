@@ -44,8 +44,8 @@ class StudentsTestCase(TestCase):
         self.assertEqual(self.student.gender, self.patch_data['gender'])
         self.assertEqual(self.student.majors_list, self.patch_data['majors'])
 
-        self.assertIn(Role.StudentWrite, self.student.roles_list)
-        # self.assertIn(Role.StudentRead, self.student.roles_list)
+        self.assertIn(Role.Write, self.student.roles_list)
+        # self.assertIn(Role.Read, self.student.roles_list)
         # self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), self.student.read_access_until)
 
     def test_patch_wrong_user(self):

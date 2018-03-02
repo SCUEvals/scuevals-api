@@ -32,7 +32,7 @@ class EvaluationSchemaV1(Schema):
 class EvaluationsResource(Resource):
 
     @jwt_required
-    @role_required(Role.StudentWrite)
+    @role_required(Role.Write)
     def get(self):
         ident = get_jwt_identity()
         evals = Evaluation.query.options(
@@ -60,7 +60,7 @@ class EvaluationsResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.StudentWrite)
+    @role_required(Role.Write)
     @use_args(args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
@@ -100,7 +100,7 @@ class EvaluationsResource(Resource):
                                                             tzinfo=timezone.utc)
 
         # add the read access role in case they don't have it
-        sr = Role.query.get(Role.StudentRead)
+        sr = Role.query.get(Role.Read)
         if sr not in current_user.roles_list:
             current_user.roles.append(sr)
 
@@ -115,7 +115,7 @@ class EvaluationsResource(Resource):
 class EvaluationsRecentResource(Resource):
 
     @jwt_required
-    @role_required(Role.StudentWrite)
+    @role_required(Role.Write)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
@@ -139,7 +139,7 @@ class EvaluationsRecentResource(Resource):
 class EvaluationResource(Resource):
 
     @jwt_required
-    @role_required(Role.StudentRead)
+    @role_required(Role.Read)
     def get(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,
@@ -152,7 +152,7 @@ class EvaluationResource(Resource):
         return evaluation.to_dict()
 
     @jwt_required
-    @role_required(Role.StudentWrite)
+    @role_required(Role.Write)
     def delete(self, e_id):
         ident = get_jwt_identity()
         ev = Evaluation.query.get(e_id)
@@ -176,7 +176,7 @@ class EvaluationVoteResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.StudentRead)
+    @role_required(Role.Read)
     @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
     def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
@@ -211,7 +211,7 @@ class EvaluationVoteResource(Resource):
         return '', 204
 
     @jwt_required
-    @role_required(Role.StudentRead)
+    @role_required(Role.Read)
     def delete(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,

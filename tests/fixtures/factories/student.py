@@ -18,6 +18,6 @@ class StudentFactory(UserFactory):
     @factory.lazy_attribute
     def roles(self):
         return [
-            models.Role.query.get(models.Role.StudentWrite),
-            models.Role.query.get(models.Role.StudentRead)
+            models.Role.query.get(models.Role.Write),
+            models.Role.query.get(models.Role.Read)
         ]

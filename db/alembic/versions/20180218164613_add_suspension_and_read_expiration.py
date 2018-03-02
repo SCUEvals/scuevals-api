@@ -31,9 +31,9 @@ def upgrade():
 
     session = Session(bind=op.get_bind())
     sread = session.query(Role).get(1)
-    sread.name = 'StudentRead'
+    sread.name = 'Read'
 
-    swrite = Role(id=Role.StudentWrite, name='StudentWrite')
+    swrite = Role(id=Role.Write, name='Write')
     session.add(swrite)
 
     session.commit()

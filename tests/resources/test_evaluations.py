@@ -27,7 +27,7 @@ class EvaluationsTestCase(TestCase):
         assert_valid_schema(rv.data, 'evaluations.json')
 
     def test_post_evaluation(self):
-        student = StudentFactory(roles=[Role.query.get(Role.StudentWrite)])
+        student = StudentFactory(roles=[Role.query.get(Role.Write)])
         db.session.flush()
         jwt = create_access_token(identity=student.to_dict())
         headers = {'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json'}
@@ -68,7 +68,7 @@ class EvaluationsTestCase(TestCase):
 
         self.assertEqual(data['evaluation'], evaluation.data)
 
-        self.assertIn(Role.StudentRead, self.student.roles_list)
+        self.assertIn(Role.Read, self.student.roles_list)
         self.assertEqual(datetime(2018, 2, 2, 0, 0, tzinfo=timezone.utc), student.read_access_until)
 
     def test_post_evaluation_duplicate(self):

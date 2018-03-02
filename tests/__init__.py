@@ -85,8 +85,8 @@ def seed_db(target):
 
     db.session.add_all([
         Role(id=0, name='Incomplete'),
-        Role(id=1, name='StudentRead'),
-        Role(id=2, name='StudentWrite'),
+        Role(id=1, name='Read'),
+        Role(id=2, name='Write'),
         Role(id=10, name='Administrator'),
         Role(id=20, name='API Key')
     ])
