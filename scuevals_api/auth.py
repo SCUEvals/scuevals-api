@@ -1,10 +1,10 @@
 import json
 import os
 import requests
-from datetime import datetime, timedelta
+from datetime import timedelta
 from flask import Blueprint, jsonify, current_app as app
 from flask_caching import Cache
-from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, current_user
+from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity
 from flask_jwt_extended.view_decorators import jwt_required
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
@@ -120,7 +120,8 @@ def auth(args):
 @auth_bp.route('/auth/validate')
 @jwt_required
 def validate():
-    new_token = create_access_token(identity=current_user.to_dict())
+    ident = get_jwt_identity()
+    new_token = create_access_token(identity=ident)
     return jsonify({'jwt': new_token})
 
 
@@ -155,9 +156,7 @@ def user_loader(identity):
     if Role.API_Key in identity['roles'] or Role.Incomplete in identity['roles']:
         return 1
 
-    user = User.query.options(
-        subqueryload(User.roles)
-    ).with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
+    user = load_user(identity['id'])
 
     # fail if the user is still suspended
     if user.suspended():
@@ -168,6 +167,12 @@ def user_loader(identity):
         return None
 
     return user
+
+
+def load_user(user_id):
+    return User.query.options(
+        subqueryload(User.roles)
+    ).with_polymorphic(Student).filter(User.id == user_id).one_or_none()
 
 
 @jwtm.user_loader_error_loader

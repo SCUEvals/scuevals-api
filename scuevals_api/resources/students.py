@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta, timezone
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+from datetime import datetime
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, current_user
 from flask_restful import Resource
 from marshmallow import fields, validate
 from werkzeug.exceptions import UnprocessableEntity, Forbidden
 
-from scuevals_api.models import Role, Student, db, Quarter
+from scuevals_api.models import Role, Student, db
 from scuevals_api.roles import role_required
-from scuevals_api.utils import use_args, datetime_from_date
+from scuevals_api.utils import use_args
 
 
 def year_in_range(year):

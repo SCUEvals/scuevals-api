@@ -1,6 +1,6 @@
 from datetime import timedelta, timezone
 
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
+from flask_jwt_extended import jwt_required, get_jwt_identity, current_user, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
 from sqlalchemy import func
@@ -106,7 +106,10 @@ class EvaluationsResource(Resource):
 
         db.session.commit()
 
-        return {'result': 'success'}, 201
+        return {
+                   'result': 'success',
+                   'jwt': create_access_token(identity=current_user.to_dict())
+               }, 201
 
 
 class EvaluationsRecentResource(Resource):
@@ -167,7 +170,6 @@ class EvaluationResource(Resource):
 
 
 class EvaluationVoteResource(Resource):
-
     values = {
         'u': Vote.UPVOTE,
         'd': Vote.DOWNVOTE
