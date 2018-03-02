@@ -54,6 +54,10 @@ class EvaluationsTestCase(TestCase):
         rv = self.client.post('/evaluations', headers=headers, data=json.dumps(data))
         self.assertEqual(201, rv.status_code)
 
+        resp = json.loads(rv.data)
+        self.assertIn('jwt', resp)
+        self.assertNotEqual('', resp['jwt'])
+
         evaluation = Evaluation.query.filter(
             Evaluation.professor_id == self.section.professors[0].id,
             Evaluation.student_id == student.id
