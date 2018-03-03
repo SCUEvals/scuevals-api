@@ -5,7 +5,9 @@ from scuevals_api import create_app, db
 from scuevals_api.cmd import init_db
 from scuevals_api.models import Role
 from tests import seed_db
-from tests.fixtures.factories import StudentFactory
+from tests.fixtures import factories
+
+stash = {}
 
 
 @hooks.before_all
@@ -19,16 +21,14 @@ def before_all(trans):
     init_db(app, db)
     seed_db(db)
 
-    student = StudentFactory(
-        id=0,
-        roles=[Role.query.get(Role.Student)]
+    stash['student'] = factories.StudentFactory(
+        id=1,
+        roles=[Role.query.get(Role.Read), Role.query.get(Role.Write)]
     )
-
-    ident = student.to_dict()
 
     db.session.commit()
 
-    jwt = create_access_token(identity=ident)
+    jwt = create_access_token(identity=stash['student'].to_dict())
 
     for t in trans:
         t['request']['headers']['Authorization'] = 'Bearer ' + jwt
@@ -43,3 +43,21 @@ def before_each(trans):
 def after_each(trans):
     db.session.rollback()
     db.session.remove()
+
+
+@hooks.before('Courses > Post Courses')
+@hooks.before('Departments > Post Departments')
+@hooks.before('Majors > Post Majors')
+def before_api_key(trans):
+    user = factories.UserFactory(id=100, roles=[Role.query.get(Role.API_Key)])
+
+    db.session.commit()
+
+    jwt = create_access_token(identity=user.to_dict())
+
+    trans['request']['headers']['Authorization'] = 'Bearer ' + jwt
+
+
+@hooks.before('Evaluations > Get Evaluation Details')
+def evaluation(trans):
+    factories.EvaluationFactory(id=1, student=stash['student'])
