@@ -9,8 +9,8 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
-from scuevals_api.models import Role, Course, Section, db, Department, School, Professor
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Course, Section, db, Department, School, Professor
+from scuevals_api.permissions import permission_required
 from scuevals_api.utils import use_args, get_pg_error_msg
 
 
@@ -30,7 +30,7 @@ class CourseSchema(Schema):
 class CoursesResource(Resource):
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     @use_args({'professor_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -56,7 +56,7 @@ class CoursesResource(Resource):
         return [course.to_dict() for course in courses.all()]
 
     @jwt_required
-    @role_required(Role.API_Key)
+    @permission_required(Permission.API_Key)
     @use_args({'courses': fields.List(fields.Nested(CourseSchema), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()
@@ -83,7 +83,7 @@ class CoursesResource(Resource):
 class CourseResource(Resource):
 
     @jwt_required
-    @role_required(Role.Read)
+    @permission_required(Permission.Read)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['professors']))})
     def get(self, args, c_id):
         q = Course.query.options(

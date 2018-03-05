@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from flask_jwt_extended import create_access_token
 
 from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory
-from scuevals_api.models import db, Evaluation, Vote, Role
+from scuevals_api.models import db, Evaluation, Vote, Permission
 from tests import TestCase, assert_valid_schema
 
 
@@ -27,7 +27,7 @@ class EvaluationsTestCase(TestCase):
         assert_valid_schema(rv.data, 'evaluations.json')
 
     def test_post_evaluation(self):
-        student = StudentFactory(roles=[Role.query.get(Role.Write)])
+        student = StudentFactory(permissions=[Permission.query.get(Permission.Write)])
         db.session.flush()
         jwt = create_access_token(identity=student.to_dict())
         headers = {'Authorization': 'Bearer ' + jwt, 'Content-Type': 'application/json'}
@@ -68,7 +68,7 @@ class EvaluationsTestCase(TestCase):
 
         self.assertEqual(data['evaluation'], evaluation.data)
 
-        self.assertIn(Role.Read, self.student.roles_list)
+        self.assertIn(Permission.Read, self.student.permissions_list)
         self.assertEqual(datetime(2018, 2, 2, 0, 0, tzinfo=timezone.utc), student.read_access_until)
 
     def test_post_evaluation_duplicate(self):

@@ -7,8 +7,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
-from scuevals_api.models import Role, Section, Evaluation, db, Professor, Quarter, Vote
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote
+from scuevals_api.permissions import permission_required
 from scuevals_api.utils import use_args, datetime_from_date
 
 
@@ -32,7 +32,7 @@ class EvaluationSchemaV1(Schema):
 class EvaluationsResource(Resource):
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     def get(self):
         ident = get_jwt_identity()
         evals = Evaluation.query.options(
@@ -60,7 +60,7 @@ class EvaluationsResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     @use_args(args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
@@ -99,10 +99,10 @@ class EvaluationsResource(Resource):
         current_user.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
                                                             tzinfo=timezone.utc)
 
-        # add the read access role in case they don't have it
-        sr = Role.query.get(Role.Read)
-        if sr not in current_user.roles_list:
-            current_user.roles.append(sr)
+        # add the read access permission in case they don't have it
+        sr = Permission.query.get(Permission.Read)
+        if sr not in current_user.permissions_list:
+            current_user.permissions.append(sr)
 
         db.session.commit()
 
@@ -115,7 +115,7 @@ class EvaluationsResource(Resource):
 class EvaluationsRecentResource(Resource):
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
@@ -139,7 +139,7 @@ class EvaluationsRecentResource(Resource):
 class EvaluationResource(Resource):
 
     @jwt_required
-    @role_required(Role.Read)
+    @permission_required(Permission.Read)
     def get(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,
@@ -152,7 +152,7 @@ class EvaluationResource(Resource):
         return evaluation.to_dict()
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     def delete(self, e_id):
         ident = get_jwt_identity()
         ev = Evaluation.query.get(e_id)
@@ -176,7 +176,7 @@ class EvaluationVoteResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Read)
+    @permission_required(Permission.Read)
     @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
     def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
@@ -211,7 +211,7 @@ class EvaluationVoteResource(Resource):
         return '', 204
 
     @jwt_required
-    @role_required(Role.Read)
+    @permission_required(Permission.Read)
     def delete(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,

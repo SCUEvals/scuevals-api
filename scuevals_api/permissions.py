@@ -13,18 +13,16 @@ def parametrized(dec):
 
 
 @parametrized
-def role_required(fn, *roles):
+def permission_required(fn, permission):
     """
-    If you decorate a view with this, it will ensure that the requester has at
-    least one of the listed roles in its JWT.
+    If you decorate a view with this, it will ensure that the requester has the
+    specified permission in its JWT.
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        accepted_roles = set(roles)
+        identity = get_jwt_identity()
 
-        jwt_data = get_jwt_identity()
-
-        if 'roles' not in jwt_data or len(accepted_roles.intersection(jwt_data['roles'])) == 0:
+        if permission not in identity['permissions']:
             raise Unauthorized('unauthorized')
 
         return fn(*args, **kwargs)

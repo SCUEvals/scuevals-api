@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token
 
 from scuevals_api import create_app, db
 from scuevals_api.cmd import init_db
-from scuevals_api.models import Role
+from scuevals_api.models import Permission
 from tests import seed_db
 from tests.fixtures import factories
 
@@ -23,7 +23,7 @@ def before_all(trans):
 
     stash['student'] = factories.StudentFactory(
         id=1,
-        roles=[Role.query.get(Role.Read), Role.query.get(Role.Write)]
+        permissions=[Permission.query.get(Permission.Read), Permission.query.get(Permission.Write)]
     )
 
     db.session.commit()
@@ -49,7 +49,7 @@ def after_each(trans):
 @hooks.before('Departments > Post Departments')
 @hooks.before('Majors > Post Majors')
 def before_api_key(trans):
-    user = factories.UserFactory(id=100, roles=[Role.query.get(Role.API_Key)])
+    user = factories.UserFactory(id=100, roles=[Permission.query.get(Permission.API_Key)])
 
     db.session.commit()
 

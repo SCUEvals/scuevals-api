@@ -1,11 +1,10 @@
 from datetime import datetime
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, current_user
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, validate
 from werkzeug.exceptions import UnprocessableEntity, Forbidden
 
-from scuevals_api.models import Role, Student, db
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Student, db
 from scuevals_api.utils import use_args
 
 
@@ -21,7 +20,6 @@ class StudentsResource(Resource):
     }
 
     @jwt_required
-    @role_required(Role.Write, Role.Incomplete)
     @use_args(args, locations=('json',))
     def patch(self, args, s_id):
         user = get_jwt_identity()
@@ -38,16 +36,16 @@ class StudentsResource(Resource):
         except ValueError:
             raise UnprocessableEntity('invalid major(s) specified')
 
-        inc = Role.query.get(Role.Incomplete)
-        if inc in student.roles:
-            student.roles.remove(inc)
+        inc = Permission.query.get(Permission.Incomplete)
+        if inc in student.permissions:
+            student.permissions.remove(inc)
 
-            # grant them both reading and writing roles
-            # TEMP: only grant them writing role
-            # student.roles.append(Role.query.get(Role.Read))
-            student.roles.append(Role.query.get(Role.Write))
+            # grant them both reading and writing permissions
+            # TEMP: only grant them writing permission
+            # student.permissions.append(Permission.query.get(Permission.Read))
+            student.permissions.append(Permission.query.get(Permission.Write))
 
-            # set the reading role to expire when the current quarter expires
+            # set the reading permission to expire when the current quarter expires
             # cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
             # student.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
             #                                                tzinfo=timezone.utc)

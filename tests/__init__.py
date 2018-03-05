@@ -12,7 +12,7 @@ from vcr import VCR
 
 from tests.fixtures.factories import StudentFactory, MajorFactory
 from scuevals_api.cmd import init_db
-from scuevals_api.models import db, Role, University, School
+from scuevals_api.models import db, Permission, University, School
 from scuevals_api import create_app
 
 fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
@@ -52,7 +52,7 @@ class TestCase(unittest.TestCase):
 
         api_ident = {
             'university_id': 1,
-            'roles': [Role.API_Key]
+            'permissions': [Permission.API_Key]
         }
 
         cls.api_jwt = create_access_token(identity=api_ident)
@@ -84,11 +84,11 @@ def seed_db(target):
     ])
 
     db.session.add_all([
-        Role(id=0, name='Incomplete'),
-        Role(id=1, name='Read'),
-        Role(id=2, name='Write'),
-        Role(id=10, name='Administrator'),
-        Role(id=20, name='API Key')
+        Permission(id=0, name='Incomplete'),
+        Permission(id=1, name='Read'),
+        Permission(id=2, name='Write'),
+        Permission(id=10, name='Administrator'),
+        Permission(id=20, name='API Key')
     ])
 
     db.session.commit()

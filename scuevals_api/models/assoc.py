@@ -10,7 +10,7 @@ student_major = db.Table('student_major', db.metadata,
                          db.Column('major_id', db.Integer, db.ForeignKey('majors.id')),
                          db.UniqueConstraint('student_id', 'major_id'))
 
-user_role = db.Table('user_role', db.metadata,
-                     db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade')),
-                     db.Column('role_id', db.Integer, db.ForeignKey('roles.id')),
-                     db.UniqueConstraint('user_id', 'role_id'))
+user_permission = db.Table('user_permission', db.metadata,
+                           db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade')),
+                           db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id')),
+                           db.UniqueConstraint('user_id', 'permission_id'))

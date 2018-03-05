@@ -20,11 +20,11 @@ class ResourceTestCase(TestCase):
             ident = student.to_dict()
             self.jwt = create_access_token(identity=ident)
 
-    def test_no_roles(self):
+    def test_no_permissions(self):
         headers = {'Authorization': 'Bearer ' + self.jwt}
 
         rv = self.client.get('/quarters', headers=headers)
-        self.assertEqual(rv.status_code, 401)
+        self.assertEqual(401, rv.status_code)
 
     def test_wrong_mimetype(self):
         headers = {

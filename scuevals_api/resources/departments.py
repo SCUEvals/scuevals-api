@@ -8,8 +8,8 @@ from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from werkzeug.exceptions import UnprocessableEntity
 
-from scuevals_api.models import Role, Department, School, db
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Department, School, db
+from scuevals_api.permissions import permission_required
 from scuevals_api.utils import use_args
 
 
@@ -25,7 +25,7 @@ class DepartmentSchema(Schema):
 class DepartmentsResource(Resource):
 
     @jwt_required
-    @role_required(Role.Write, Role.API_Key)
+    @permission_required(Permission.Write)
     def get(self):
         jwt_data = get_jwt_identity()
 
@@ -36,7 +36,7 @@ class DepartmentsResource(Resource):
         return [department.to_dict() for department in departments]
 
     @jwt_required
-    @role_required(Role.API_Key)
+    @permission_required(Permission.API_Key)
     @use_args({'departments': fields.List(fields.Nested(DepartmentSchema), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()

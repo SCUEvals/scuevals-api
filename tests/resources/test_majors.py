@@ -2,7 +2,7 @@ import json
 
 from flask_jwt_extended import create_access_token
 
-from scuevals_api.models import db, Role
+from scuevals_api.models import db, Permission
 from tests.fixtures.factories import StudentFactory
 from tests import TestCase, no_logging
 
@@ -17,7 +17,7 @@ class MajorsTestCase(TestCase):
         self.assertEqual(1, len(data))
 
     def test_majors_as_incomplete(self):
-        incomplete = StudentFactory(roles=[Role.query.get(Role.Incomplete)])
+        incomplete = StudentFactory(permissions=[Permission.query.get(Permission.Incomplete)])
         db.session.flush()
         jwt = create_access_token(identity=incomplete.to_dict())
         head_auth = {'Authorization': 'Bearer ' + jwt}

@@ -11,7 +11,7 @@ from marshmallow import fields
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType
+from scuevals_api.models import Student, User, db, Permission, APIKey, OfficialUserType
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -59,7 +59,7 @@ def auth(args):
         raise UnprocessableEntity('invalid id_token')
 
     user = User.query.options(
-        subqueryload(User.roles)
+        subqueryload(User.permissions)
     ).with_polymorphic(Student).filter_by(email=data['email']).one_or_none()
 
     if user is None:
@@ -79,7 +79,7 @@ def auth(args):
                 first_name=data['given_name'],
                 last_name=data['family_name'],
                 picture=data['picture'] if 'picture' in data else None,
-                roles=[Role.query.get(Role.Incomplete)],
+                permissions=[Permission.query.get(Permission.Incomplete)],
                 university_id=1
             )
 
@@ -98,8 +98,8 @@ def auth(args):
             user.suspended_until = None
 
         # check if the user has lost its reading privilege (only applies to students)
-        if user.type == User.Student and not user.has_reading_access() and Role.Read in user.roles_list:
-            user.roles = [role for role in user.roles if not role.id == Role.Read]
+        if user.type == User.Student and not user.has_reading_access() and Permission.Read in user.permissions_list:
+            user.permissions = [permission for permission in user.permissions if not permission.id == Permission.Read]
             user.read_access_until = None
 
         # update the image of the existing user
@@ -107,7 +107,7 @@ def auth(args):
             user.picture = data['picture']
 
         # check if user is complete
-        if Role.Incomplete in user.roles_list:
+        if Permission.Incomplete in user.permissions_list:
             status = 'incomplete'
 
     token = create_access_token(identity=user.to_dict())
@@ -135,7 +135,7 @@ def auth_api(args):
 
     ident = {
         'university_id': key.university_id,
-        'roles': [20]
+        'permissions': [Permission.API_Key]
     }
 
     token = create_access_token(identity=ident, expires_delta=timedelta(hours=24))
@@ -146,14 +146,22 @@ def auth_api(args):
 @jwtm.claims_verification_loader
 def claims_verification_loader(user_claims):
     identity = get_jwt_identity()
-    if 'university_id' not in identity or 'roles' not in identity:
-        return False
+
+    keys = [
+        'permissions',
+        'university_id'
+    ]
+
+    for key in keys:
+        if key not in identity:
+            return False
+
     return True
 
 
 @jwtm.user_loader_callback_loader
 def user_loader(identity):
-    if Role.API_Key in identity['roles'] or Role.Incomplete in identity['roles']:
+    if Permission.API_Key in identity['permissions'] or Permission.Incomplete in identity['permissions']:
         return 1
 
     user = load_user(identity['id'])
@@ -163,7 +171,7 @@ def user_loader(identity):
         return None
 
     # fail if the JWT doesn't reflect that the user lost reading access
-    if Role.Read in identity['roles'] and not user.has_reading_access():
+    if Permission.Read in identity['permissions'] and not user.has_reading_access():
         return None
 
     return user
@@ -171,7 +179,7 @@ def user_loader(identity):
 
 def load_user(user_id):
     return User.query.options(
-        subqueryload(User.roles)
+        subqueryload(User.permissions)
     ).with_polymorphic(Student).filter(User.id == user_id).one_or_none()
 
 

@@ -16,8 +16,8 @@ class StudentFactory(UserFactory):
     read_access_until = datetime_from_date(datetime.now() + timedelta(days=180), tzinfo=timezone.utc)
 
     @factory.lazy_attribute
-    def roles(self):
+    def permissions(self):
         return [
-            models.Role.query.get(models.Role.Write),
-            models.Role.query.get(models.Role.Read)
+            models.Permission.query.get(models.Permission.Write),
+            models.Permission.query.get(models.Permission.Read)
         ]

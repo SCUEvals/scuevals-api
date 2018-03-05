@@ -11,7 +11,7 @@ from json import JSONDecodeError
 from tests.fixtures.factories import StudentFactory, OfficialUserTypeFactory, UserFactory
 from tests import TestCase, use_data, vcr
 from scuevals_api.auth import cache
-from scuevals_api.models import db, APIKey, Role
+from scuevals_api.models import db, APIKey, Permission
 
 
 id_token_data = {
@@ -141,7 +141,7 @@ class AuthTestCase(TestCase):
     @vcr.use_cassette('test_auth')
     def test_id_token_existing_user_incomplete(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu')
-        student.roles_list = [Role.Incomplete]
+        student.permissions_list = [Permission.Incomplete]
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
@@ -178,7 +178,7 @@ class AuthTestCase(TestCase):
     @vcr.use_cassette('test_auth')
     def test_id_token_existing_user_read_access_expired(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))
-        student.roles_list = [Role.Read, Role.Write]
+        student.permissions_list = [Permission.Read, Permission.Write]
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
@@ -187,7 +187,7 @@ class AuthTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual('ok', data['status'])
 
-        self.assertNotIn(Role.Read, student.roles_list)
+        self.assertNotIn(Permission.Read, student.permissions_list)
 
     @use_data('auth.yaml')
     @vcr.use_cassette
@@ -255,7 +255,7 @@ class AuthValidationTestCase(TestCase):
         self.assertEqual(rv.status_code, 401)
 
     def test_read_access_expired(self):
-        student = StudentFactory(roles=[Role.query.get(Role.Read)],
+        student = StudentFactory(permissions=[Permission.query.get(Permission.Read)],
                                  read_access_until=(datetime.now() - timedelta(days=1)))
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())
@@ -269,7 +269,7 @@ class AuthValidationTestCase(TestCase):
         self.assertEqual('invalid or expired user info', data['message'])
 
     def test_read_access_none(self):
-        student = StudentFactory(roles=[Role.query.get(Role.Read)],
+        student = StudentFactory(permissions=[Permission.query.get(Permission.Read)],
                                  read_access_until=None)
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())
@@ -304,8 +304,8 @@ class AuthAPITestCase(TestCase):
         self.assertIn('jwt', resp)
 
         claims = jwt.get_unverified_claims(resp['jwt'])
-        self.assertIn('roles', claims['sub'])
-        self.assertEqual([20], claims['sub']['roles'])
+        self.assertIn('permissions', claims['sub'])
+        self.assertEqual([20], claims['sub']['permissions'])
 
     def test_api_unauthorized(self):
         rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},

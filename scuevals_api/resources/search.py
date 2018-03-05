@@ -3,8 +3,8 @@ from flask_restful import Resource
 from marshmallow import fields
 from sqlalchemy import func
 
-from scuevals_api.models import Role, Course, Department, School, Professor
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Course, Department, School, Professor
+from scuevals_api.permissions import permission_required
 from scuevals_api.utils import use_args
 
 
@@ -12,7 +12,7 @@ class SearchResource(Resource):
     args = {'q': fields.String(required=True), 'limit': fields.Integer()}
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     @use_args(args)
     def get(self, args):
         jwt_data = get_jwt_identity()

@@ -1,4 +1,4 @@
-from scuevals_api.models import Role
+from scuevals_api.models import Permission
 from tests import TestCase
 from tests.fixtures.factories import UserFactory
 
@@ -8,12 +8,12 @@ class UserTestCase(TestCase):
         super().setUp()
         self.user = UserFactory()
 
-    def test_roles_list(self):
-        self.user.roles_list = [Role.Read]
-        self.assertEqual(self.user.roles_list, [1])
-        self.user.roles_list = []
-        self.assertEqual(self.user.roles_list, [])
+    def test_permissions_list(self):
+        self.user.permissions_list = [Permission.Read]
+        self.assertEqual(self.user.permissions_list, [1])
+        self.user.permissions_list = []
+        self.assertEqual(self.user.permissions_list, [])
 
-    def test_roles_list_invalid_role(self):
-        with self.assertRaisesRegex(ValueError, 'role does not exist'):
-            self.user.roles_list = [-1]
+    def test_permissions_list_invalid_permission(self):
+        with self.assertRaisesRegex(ValueError, 'permission does not exist'):
+            self.user.permissions_list = [-1]

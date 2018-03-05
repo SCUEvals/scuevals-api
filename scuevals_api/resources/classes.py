@@ -3,14 +3,14 @@ from flask_restful import Resource
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.models import Role, db, Section, Quarter, Professor, Evaluation
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, db, Section, Quarter, Professor, Evaluation
+from scuevals_api.permissions import permission_required
 
 
 class ClassResource(Resource):
 
     @jwt_required
-    @role_required(Role.Write)
+    @permission_required(Permission.Write)
     def get(self, q_id, p_id, c_id):
         ident = get_jwt_identity()
         query = Section.query.options(
