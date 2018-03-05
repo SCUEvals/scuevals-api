@@ -43,7 +43,7 @@ class StudentsResource(Resource):
             # grant them both reading and writing permissions
             # TEMP: only grant them writing permission
             # student.permissions.append(Permission.query.get(Permission.Read))
-            student.permissions.append(Permission.query.get(Permission.Write))
+            student.permissions.append(Permission.query.get(Permission.WriteEvaluations))
 
             # set the reading permission to expire when the current quarter expires
             # cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]

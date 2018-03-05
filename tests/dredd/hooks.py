@@ -23,7 +23,10 @@ def before_all(trans):
 
     stash['student'] = factories.StudentFactory(
         id=1,
-        permissions=[Permission.query.get(Permission.Read), Permission.query.get(Permission.Write)]
+        permissions=[
+            Permission.query.get(Permission.ReadEvaluations),
+            Permission.query.get(Permission.WriteEvaluations)
+        ]
     )
 
     db.session.commit()

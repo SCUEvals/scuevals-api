@@ -18,6 +18,6 @@ class StudentFactory(UserFactory):
     @factory.lazy_attribute
     def permissions(self):
         return [
-            models.Permission.query.get(models.Permission.Write),
-            models.Permission.query.get(models.Permission.Read)
+            models.Permission.query.get(models.Permission.WriteEvaluations),
+            models.Permission.query.get(models.Permission.ReadEvaluations)
         ]

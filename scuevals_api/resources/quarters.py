@@ -11,7 +11,7 @@ from scuevals_api.utils import use_args
 class QuartersResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     @use_args({'course_id': fields.Int(), 'professor_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()

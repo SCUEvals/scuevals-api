@@ -12,7 +12,7 @@ class SearchResource(Resource):
     args = {'q': fields.String(required=True), 'limit': fields.Integer()}
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     @use_args(args)
     def get(self, args):
         jwt_data = get_jwt_identity()

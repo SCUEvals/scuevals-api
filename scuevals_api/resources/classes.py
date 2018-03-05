@@ -10,7 +10,7 @@ from scuevals_api.permissions import permission_required
 class ClassResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     def get(self, q_id, p_id, c_id):
         ident = get_jwt_identity()
         query = Section.query.options(

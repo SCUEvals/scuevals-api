@@ -178,7 +178,7 @@ class AuthTestCase(TestCase):
     @vcr.use_cassette('test_auth')
     def test_id_token_existing_user_read_access_expired(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))
-        student.permissions_list = [Permission.Read, Permission.Write]
+        student.permissions_list = [Permission.ReadEvaluations, Permission.WriteEvaluations]
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
@@ -187,7 +187,7 @@ class AuthTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual('ok', data['status'])
 
-        self.assertNotIn(Permission.Read, student.permissions_list)
+        self.assertNotIn(Permission.ReadEvaluations, student.permissions_list)
 
     @use_data('auth.yaml')
     @vcr.use_cassette
@@ -255,7 +255,7 @@ class AuthValidationTestCase(TestCase):
         self.assertEqual(rv.status_code, 401)
 
     def test_read_access_expired(self):
-        student = StudentFactory(permissions=[Permission.query.get(Permission.Read)],
+        student = StudentFactory(permissions=[Permission.query.get(Permission.ReadEvaluations)],
                                  read_access_until=(datetime.now() - timedelta(days=1)))
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())
@@ -269,7 +269,7 @@ class AuthValidationTestCase(TestCase):
         self.assertEqual('invalid or expired user info', data['message'])
 
     def test_read_access_none(self):
-        student = StudentFactory(permissions=[Permission.query.get(Permission.Read)],
+        student = StudentFactory(permissions=[Permission.query.get(Permission.ReadEvaluations)],
                                  read_access_until=None)
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())

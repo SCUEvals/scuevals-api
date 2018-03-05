@@ -9,7 +9,7 @@ class UserTestCase(TestCase):
         self.user = UserFactory()
 
     def test_permissions_list(self):
-        self.user.permissions_list = [Permission.Read]
+        self.user.permissions_list = [Permission.ReadEvaluations]
         self.assertEqual(self.user.permissions_list, [1])
         self.user.permissions_list = []
         self.assertEqual(self.user.permissions_list, [])

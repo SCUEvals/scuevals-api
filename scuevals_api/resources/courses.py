@@ -30,7 +30,7 @@ class CourseSchema(Schema):
 class CoursesResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     @use_args({'professor_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -56,7 +56,7 @@ class CoursesResource(Resource):
         return [course.to_dict() for course in courses.all()]
 
     @jwt_required
-    @permission_required(Permission.API_Key)
+    @permission_required(Permission.UpdateCourses)
     @use_args({'courses': fields.List(fields.Nested(CourseSchema), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()
@@ -83,7 +83,7 @@ class CoursesResource(Resource):
 class CourseResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Read)
+    @permission_required(Permission.ReadEvaluations)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['professors']))})
     def get(self, args, c_id):
         q = Course.query.options(

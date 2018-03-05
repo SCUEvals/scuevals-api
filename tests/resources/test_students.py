@@ -44,7 +44,7 @@ class StudentsTestCase(TestCase):
         self.assertEqual(self.student.gender, self.patch_data['gender'])
         self.assertEqual(self.student.majors_list, self.patch_data['majors'])
 
-        self.assertIn(Permission.Write, self.student.permissions_list)
+        self.assertIn(Permission.WriteEvaluations, self.student.permissions_list)
         # self.assertIn(Permission.Read, self.student.permissions_list)
         # self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), self.student.read_access_until)
 

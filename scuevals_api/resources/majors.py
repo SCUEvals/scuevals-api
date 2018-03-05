@@ -20,7 +20,7 @@ class MajorsResource(Resource):
         return [major.to_dict() for major in majors]
 
     @jwt_required
-    @permission_required(Permission.API_Key)
+    @permission_required(Permission.UpdateMajors)
     @use_args({'majors': fields.List(fields.Str(), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()

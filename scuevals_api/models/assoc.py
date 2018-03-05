@@ -14,3 +14,8 @@ user_permission = db.Table('user_permission', db.metadata,
                            db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade')),
                            db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id')),
                            db.UniqueConstraint('user_id', 'permission_id'))
+
+api_key_permission = db.Table('api_key_permission', db.metadata,
+                              db.Column('api_key_id', db.Integer, db.ForeignKey('api_keys.id', ondelete='cascade')),
+                              db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id')),
+                              db.UniqueConstraint('api_key_id', 'permission_id'))

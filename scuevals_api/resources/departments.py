@@ -25,7 +25,7 @@ class DepartmentSchema(Schema):
 class DepartmentsResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     def get(self):
         jwt_data = get_jwt_identity()
 
@@ -36,7 +36,7 @@ class DepartmentsResource(Resource):
         return [department.to_dict() for department in departments]
 
     @jwt_required
-    @permission_required(Permission.API_Key)
+    @permission_required(Permission.UpdateDepartments)
     @use_args({'departments': fields.List(fields.Nested(DepartmentSchema), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()

@@ -98,8 +98,12 @@ def auth(args):
             user.suspended_until = None
 
         # check if the user has lost its reading privilege (only applies to students)
-        if user.type == User.Student and not user.has_reading_access() and Permission.Read in user.permissions_list:
-            user.permissions = [permission for permission in user.permissions if not permission.id == Permission.Read]
+        if (user.type == User.Student and
+                not user.has_reading_access() and
+                Permission.ReadEvaluations in user.permissions_list):
+            user.permissions = [permission for permission in user.permissions if
+                                not permission.id == Permission.ReadEvaluations]
+
             user.read_access_until = None
 
         # update the image of the existing user
@@ -134,8 +138,9 @@ def auth_api(args):
         raise Unauthorized('invalid api key')
 
     ident = {
+        'type': 'api_key',
         'university_id': key.university_id,
-        'permissions': [Permission.API_Key]
+        'permissions': key.permissions_list
     }
 
     token = create_access_token(identity=ident, expires_delta=timedelta(hours=24))
@@ -148,6 +153,7 @@ def claims_verification_loader(user_claims):
     identity = get_jwt_identity()
 
     keys = [
+        'type',
         'permissions',
         'university_id'
     ]
@@ -161,7 +167,7 @@ def claims_verification_loader(user_claims):
 
 @jwtm.user_loader_callback_loader
 def user_loader(identity):
-    if Permission.API_Key in identity['permissions'] or Permission.Incomplete in identity['permissions']:
+    if identity['type'] == 'api_key':
         return 1
 
     user = load_user(identity['id'])
@@ -171,7 +177,7 @@ def user_loader(identity):
         return None
 
     # fail if the JWT doesn't reflect that the user lost reading access
-    if Permission.Read in identity['permissions'] and not user.has_reading_access():
+    if Permission.ReadEvaluations in identity['permissions'] and not user.has_reading_access():
         return None
 
     return user

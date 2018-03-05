@@ -32,7 +32,7 @@ class EvaluationSchemaV1(Schema):
 class EvaluationsResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     def get(self):
         ident = get_jwt_identity()
         evals = Evaluation.query.options(
@@ -60,7 +60,7 @@ class EvaluationsResource(Resource):
     }
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     @use_args(args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
@@ -100,7 +100,7 @@ class EvaluationsResource(Resource):
                                                             tzinfo=timezone.utc)
 
         # add the read access permission in case they don't have it
-        sr = Permission.query.get(Permission.Read)
+        sr = Permission.query.get(Permission.ReadEvaluations)
         if sr not in current_user.permissions_list:
             current_user.permissions.append(sr)
 
@@ -115,7 +115,7 @@ class EvaluationsResource(Resource):
 class EvaluationsRecentResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
@@ -139,7 +139,7 @@ class EvaluationsRecentResource(Resource):
 class EvaluationResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Read)
+    @permission_required(Permission.ReadEvaluations)
     def get(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,
@@ -152,7 +152,7 @@ class EvaluationResource(Resource):
         return evaluation.to_dict()
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     def delete(self, e_id):
         ident = get_jwt_identity()
         ev = Evaluation.query.get(e_id)
@@ -176,7 +176,7 @@ class EvaluationVoteResource(Resource):
     }
 
     @jwt_required
-    @permission_required(Permission.Read)
+    @permission_required(Permission.ReadEvaluations)
     @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
     def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
@@ -211,7 +211,7 @@ class EvaluationVoteResource(Resource):
         return '', 204
 
     @jwt_required
-    @permission_required(Permission.Read)
+    @permission_required(Permission.ReadEvaluations)
     def delete(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,

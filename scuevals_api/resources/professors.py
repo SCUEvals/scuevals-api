@@ -13,7 +13,7 @@ from scuevals_api.utils import use_args
 class ProfessorsResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Write)
+    @permission_required(Permission.WriteEvaluations)
     @use_args({'course_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -42,7 +42,7 @@ class ProfessorsResource(Resource):
 class ProfessorResource(Resource):
 
     @jwt_required
-    @permission_required(Permission.Read)
+    @permission_required(Permission.ReadEvaluations)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['courses']))})
     def get(self, args, p_id):
         q = Professor.query.options(

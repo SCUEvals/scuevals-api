@@ -1,6 +1,7 @@
 from sqlalchemy import func
 
 from . import db
+from .assoc import api_key_permission
 
 
 class APIKey(db.Model):
@@ -12,3 +13,6 @@ class APIKey(db.Model):
     university_id = db.Column('university_id', db.Integer, db.ForeignKey('universities.id'), nullable=False)
 
     university = db.relationship('University', back_populates='api_keys')
+    permissions = db.relationship(
+        'Permission', secondary=api_key_permission, back_populates='api_keys', passive_deletes=True
+    )
