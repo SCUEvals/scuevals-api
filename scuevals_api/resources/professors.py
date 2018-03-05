@@ -5,7 +5,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.models import Permission, Professor, Section, Evaluation
+from scuevals_api.models import Permission, Professor, Section, Evaluation, Course
 from scuevals_api.permissions import permission_required
 from scuevals_api.utils import use_args
 
@@ -52,9 +52,6 @@ class ProfessorResource(Resource):
             Professor.university_id == current_user.university_id
         )
 
-        if 'embed' in args:
-            q.options(subqueryload(Professor.sections).subqueryload(Section.course))
-
         professor = q.one_or_none()
 
         if professor is None:
@@ -77,6 +74,10 @@ class ProfessorResource(Resource):
         ]
 
         if 'embed' in args:
-            data['courses'] = [section.course.to_dict() for section in professor.sections]
+            courses = Course.query.filter(
+                Course.sections.any(Section.professors.any(Professor.id == p_id))
+            ).all()
+
+            data['courses'] = [course.to_dict() for course in courses]
 
         return data

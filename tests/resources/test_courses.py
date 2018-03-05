@@ -119,7 +119,12 @@ class CourseTestCase(TestCase):
         prof2 = ProfessorFactory()
         prof3 = ProfessorFactory()
         student = StudentFactory()
+
         section = SectionFactory(course=self.course, professors=[prof, prof2, prof3])
+
+        # prof2 has taught this course multiple quarters
+        SectionFactory(course=self.course, professors=[prof2])
+
         EvaluationFactory(student=self.student, professor=prof, section=section)
         evaluation = EvaluationFactory(student=student, professor=prof, section=section)
         VoteFactory(student=self.student, evaluation=evaluation, value=Vote.UPVOTE)

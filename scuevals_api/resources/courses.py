@@ -93,9 +93,6 @@ class CourseResource(Resource):
             Course.department.has(Department.school.has(School.university_id == current_user.university_id))
         )
 
-        if 'embed' in args:
-            q.options(subqueryload(Course.sections).subqueryload(Section.professors))
-
         course = q.one_or_none()
 
         if course is None:
@@ -118,8 +115,10 @@ class CourseResource(Resource):
         ]
 
         if 'embed' in args:
-            data['professors'] = [professor.to_dict()
-                                  for section in course.sections
-                                  for professor in section.professors]
+            professors = Professor.query.filter(
+                Professor.sections.any(Section.course.has(Course.id == c_id))
+            ).all()
+
+            data['professors'] = [professor.to_dict() for professor in professors]
 
         return data
