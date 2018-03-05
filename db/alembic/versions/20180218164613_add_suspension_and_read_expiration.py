@@ -8,8 +8,6 @@ Create Date: 2018-02-18 16:46:13.708454
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.orm.session import Session
-from scuevals_api.models import Role
 
 
 # revision identifiers, used by Alembic.
@@ -29,14 +27,9 @@ def upgrade():
 
     op.add_column('users', sa.Column('suspended_until', sa.DateTime(timezone=True), nullable=True))
 
-    session = Session(bind=op.get_bind())
-    sread = session.query(Role).get(1)
-    sread.name = 'Read'
-
-    swrite = Role(id=Role.Write, name='Write')
-    session.add(swrite)
-
-    session.commit()
+    conn = op.get_bind()
+    conn.execute("update roles set name = 'Read' where id = 1")
+    conn.execute("insert into roles (id, name) values (2, 'Write')")
 
 
 def downgrade():

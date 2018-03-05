@@ -7,10 +7,7 @@ Create Date: 2018-02-19 20:45:36.235441
 """
 
 from alembic import op
-from sqlalchemy.orm.session import Session
-from datetime import timedelta
-from scuevals_api.models import Role, Quarter
-
+import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'bd5bc783b2c0'
@@ -22,25 +19,26 @@ depends_on = None
 def upgrade():
     op.alter_column('students', 'read_access_until', nullable=True)
 
-    session = Session(bind=op.get_bind())
-    sread = session.query(Role).get(Role.Read)
-    swrite = session.query(Role).get(Role.Write)
-
-    # select the period of the current quarter
-    cur_quarter_period = session.query(Quarter.period).filter_by(current=True).one()[0]
+    conn = op.get_bind()
 
     # add the writing permission to everyone who currently has the reading permission
     # allow them to keep the reading permission until the last day of the current quarter
-    for user in sread.users:
-        user.read_access_until = cur_quarter_period.upper + timedelta(days=1)
-        user.roles.append(swrite)
+    conn.execute("""
+update students
+set read_access_until = (select (upper(period) + interval '1 day') from quarters where current = true)
+where id in (select id from user_role where role_id = 1)
+                 """)
+
+    conn.execute("""
+insert into user_role (user_id, role_id)
+select user_id, 2 from user_role where role_id = 1
+                 """)
 
     # set the read_access_until to null for all incomplete students
-    incomp = session.query(Role).get(Role.Incomplete)
-    for user in incomp.users:
-        user.read_access_until = None
-
-    session.commit()
+    conn.execute("""
+update students set read_access_until = null
+where id in (select user_id from user_role where role_id = 0)
+                 """)
 
 
 def downgrade():
