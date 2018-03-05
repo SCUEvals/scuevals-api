@@ -12,6 +12,7 @@ from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
 from scuevals_api.models import Student, User, db, Permission, APIKey, OfficialUserType
+from scuevals_api.models.api_key import API_KEY_TYPE
 from scuevals_api.utils import use_args
 
 auth_bp = Blueprint('auth', __name__)
@@ -137,13 +138,7 @@ def auth_api(args):
     if key is None:
         raise Unauthorized('invalid api key')
 
-    ident = {
-        'type': 'api_key',
-        'university_id': key.university_id,
-        'permissions': key.permissions_list
-    }
-
-    token = create_access_token(identity=ident, expires_delta=timedelta(hours=24))
+    token = create_access_token(identity=key.identity(), expires_delta=timedelta(hours=24))
 
     return jsonify({'jwt': token})
 
@@ -165,9 +160,14 @@ def claims_verification_loader(user_claims):
     return True
 
 
+@jwtm.claims_verification_failed_loader
+def claim_verification_failed():
+    return jsonify({'message': 'invalid or expired user info'}), 401
+
+
 @jwtm.user_loader_callback_loader
 def user_loader(identity):
-    if identity['type'] == 'api_key':
+    if identity['type'] == API_KEY_TYPE:
         return 1
 
     user = load_user(identity['id'])

@@ -1,3 +1,4 @@
+from .api_key import APIKeyFactory  # noqa
 from .course import CourseFactory  # noqa
 from .department import DepartmentFactory  # noqa
 from .evaluation import EvaluationFactory  # noqa

@@ -8,10 +8,10 @@ from flask_jwt_extended import create_access_token
 from jose import jwt
 from json import JSONDecodeError
 
-from tests.fixtures.factories import StudentFactory, OfficialUserTypeFactory, UserFactory
+from tests.fixtures.factories import StudentFactory, OfficialUserTypeFactory, UserFactory, APIKeyFactory
 from tests import TestCase, use_data, vcr
 from scuevals_api.auth import cache
-from scuevals_api.models import db, APIKey, Permission
+from scuevals_api.models import db, Permission
 
 
 id_token_data = {
@@ -240,9 +240,9 @@ class AuthValidationTestCase(TestCase):
         self.jwt = create_access_token(identity=invalid_ident)
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + self.jwt})
-        self.assertEqual(400, rv.status_code)
+        self.assertEqual(401, rv.status_code)
         data = json.loads(rv.data)
-        self.assertEqual('User claims verification failed', data['msg'])
+        self.assertEqual('invalid or expired user info', data['message'])
 
     def test_suspended(self):
         user = UserFactory()
@@ -286,26 +286,22 @@ class AuthValidationTestCase(TestCase):
 class AuthAPITestCase(TestCase):
     def setUp(self):
         super().setUp()
-
-        db.session.add(APIKey(key='API_KEY', university_id=1))
+        self.api_key = APIKeyFactory()
         cache.clear()
 
     def test_auth_api(self):
         rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},
-                              data=json.dumps({'api_key': 'API_KEY'}))
+                              data=json.dumps({'api_key': self.api_key.key}))
 
         self.assertEqual(rv.status_code, 200)
 
-        try:
-            resp = json.loads(rv.data)
-        except JSONDecodeError:
-            self.fail('invalid response')
+        resp = json.loads(rv.data)
 
         self.assertIn('jwt', resp)
 
         claims = jwt.get_unverified_claims(resp['jwt'])
         self.assertIn('permissions', claims['sub'])
-        self.assertEqual([20], claims['sub']['permissions'])
+        self.assertEqual(self.api_key.permissions_list, claims['sub']['permissions'])
 
     def test_api_unauthorized(self):
         rv = self.client.post('/auth/api', headers={'Content-Type': 'application/json'},
