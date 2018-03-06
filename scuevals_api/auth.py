@@ -98,12 +98,10 @@ def auth(args):
         if user.suspension_expired():
             user.suspended_until = None
 
-        # check if the user has lost its reading privilege (only applies to students)
-        if (user.type == User.Student and
-                not user.has_reading_access() and
-                Permission.ReadEvaluations in user.permissions_list):
+        # make sure the permissions are correct in case the student lost reading access
+        if user.type == User.Student and not user.has_reading_access():
             user.permissions = [permission for permission in user.permissions if
-                                not permission.id == Permission.ReadEvaluations]
+                                permission.id not in [Permission.ReadEvaluations, Permission.VoteOnEvaluations]]
 
             user.read_access_until = None
 

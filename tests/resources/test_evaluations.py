@@ -68,7 +68,8 @@ class EvaluationsTestCase(TestCase):
 
         self.assertEqual(data['evaluation'], evaluation.data)
 
-        self.assertIn(Permission.ReadEvaluations, self.student.permissions_list)
+        self.assertIn(Permission.ReadEvaluations, student.permissions_list)
+        self.assertIn(Permission.VoteOnEvaluations, student.permissions_list)
         self.assertEqual(datetime(2018, 2, 2, 0, 0, tzinfo=timezone.utc), student.read_access_until)
 
     def test_post_evaluation_duplicate(self):

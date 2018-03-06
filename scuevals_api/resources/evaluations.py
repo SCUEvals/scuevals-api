@@ -99,10 +99,17 @@ class EvaluationsResource(Resource):
         current_user.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
                                                             tzinfo=timezone.utc)
 
-        # add the read access permission in case they don't have it
-        sr = Permission.query.get(Permission.ReadEvaluations)
-        if sr not in current_user.permissions_list:
-            current_user.permissions.append(sr)
+        # add the read/vote access permissions in case they don't have them
+        read = Permission.query.get(Permission.ReadEvaluations)
+        vote = Permission.query.get(Permission.VoteOnEvaluations)
+
+        current_permissions = current_user.permissions_list
+
+        if read not in current_permissions:
+            current_user.permissions.append(read)
+
+        if vote not in current_permissions:
+            current_user.permissions.append(vote)
 
         db.session.commit()
 

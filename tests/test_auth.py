@@ -77,6 +77,10 @@ class AuthTestCase(TestCase):
         self.assertIn('status', data)
         self.assertEqual('new', data['status'])
 
+        self.assertIn('jwt', data)
+        identity = jwt.get_unverified_claims(data['jwt'])
+        self.assertEqual([Permission.Incomplete], identity['sub']['permissions'])
+
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value=id_token_data)
     @vcr.use_cassette
