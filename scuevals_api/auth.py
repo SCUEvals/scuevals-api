@@ -26,7 +26,7 @@ def auth(args):
     try:
         headers = jwt.get_unverified_header(args['id_token'])
     except JWTError as e:
-        raise UnprocessableEntity('invalid id_token format: {}'.format(e))
+        raise UnprocessableEntity('invalid id_token: invalid format: {}'.format(e))
 
     key = cache.get(headers['kid'])
     if not key:
@@ -52,12 +52,12 @@ def auth(args):
             options=decode_options
         )
     except ExpiredSignatureError:
-        raise Unauthorized('token is expired')
+        raise UnprocessableEntity('invalid id_token: expired')
     except JWTError as e:
         raise UnprocessableEntity('invalid id_token: {}'.format(e))
 
     if data['hd'] != 'scu.edu':
-        raise UnprocessableEntity('invalid id_token')
+        raise UnprocessableEntity('invalid id_token: incorrect hd')
 
     user = User.query.options(
         subqueryload(User.permissions)

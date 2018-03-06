@@ -100,14 +100,16 @@ class AuthTestCase(TestCase):
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
-        self.assertEqual(401, rv.status_code)
+        self.assertEqual(422, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual('invalid id_token: expired', data['message'])
 
     def test_id_token_invalid_format(self):
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': 'foo'}))
         self.assertEqual(422, rv.status_code)
         data = json.loads(rv.data)
-        self.assertIn('invalid id_token format:', data['message'])
+        self.assertIn('invalid id_token: invalid format:', data['message'])
 
     @use_data('auth.yaml')
     @vcr.use_cassette('test_auth')
@@ -134,7 +136,7 @@ class AuthTestCase(TestCase):
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
-    def test_id_token_existing_user(self, data, decode_func):
+    def test_existing_user(self, data, decode_func):
         StudentFactory(email='jdoe@scu.edu')
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
@@ -143,7 +145,7 @@ class AuthTestCase(TestCase):
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
-    def test_id_token_existing_user_incomplete(self, data, decode_func):
+    def test_existing_user_incomplete(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu')
         student.permissions_list = [Permission.Incomplete]
 
@@ -154,7 +156,7 @@ class AuthTestCase(TestCase):
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
-    def test_id_token_existing_user_suspended(self, data, decode_func):
+    def test_existing_user_suspended(self, data, decode_func):
         StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() + timedelta(days=1)))
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
@@ -167,8 +169,8 @@ class AuthTestCase(TestCase):
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
-    def test_id_token_existing_user_suspension_expired(self, data, decode_func):
-        StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() - timedelta(days=1)))
+    def test_existing_user_suspension_expired(self, data, decode_func):
+        student = StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() - timedelta(days=1)))
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
@@ -176,13 +178,16 @@ class AuthTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual('ok', data['status'])
+        self.assertEqual(None, student.suspended_until)
 
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
     @vcr.use_cassette('test_auth')
-    def test_id_token_existing_user_read_access_expired(self, data, decode_func):
+    def test_existing_user_read_access_expired(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))
-        student.permissions_list = [Permission.ReadEvaluations, Permission.WriteEvaluations]
+        student.permissions_list = [
+            Permission.ReadEvaluations, Permission.WriteEvaluations, Permission.VoteOnEvaluations
+        ]
 
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
@@ -191,7 +196,9 @@ class AuthTestCase(TestCase):
         data = json.loads(rv.data)
         self.assertEqual('ok', data['status'])
 
+        self.assertEqual(None, student.read_access_until)
         self.assertNotIn(Permission.ReadEvaluations, student.permissions_list)
+        self.assertNotIn(Permission.VoteOnEvaluations, student.permissions_list)
 
     @use_data('auth.yaml')
     @vcr.use_cassette
