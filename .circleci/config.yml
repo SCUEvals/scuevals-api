@@ -64,8 +64,12 @@ jobs:
       - run:
           name: Restore Database From Production
           command: |
-            heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
-            heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+            if [ "$DEPLOY_STAGING_RESTORE_DB" == "1" ]; then
+              heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+              heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+            else
+              echo Skipping DB restore according to env var...
+            fi
       - run:
           name: Push to Heroku
           command: |
