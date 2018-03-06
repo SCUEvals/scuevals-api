@@ -9,7 +9,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### Get API Status [GET]
 
 + Response 200 (application/json)
-
     + Attributes
         + status: ok (string, required)
             
@@ -19,55 +18,46 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### Authenticate New/Old User [POST]
 
 + Request (application/json)
-
     + Attributes
         + id_token (string, required)
 
 + Response 200 (application/json)
-
     + Attributes
         + status: ok, new, incomplete (enum[string], required, fixed)
         + jwt (string, required)
 
 + Response 500 (application/json)
-
     + Attributes
         + message: `failed to get certificates from Google: <reason>` (string, required)
 
 + Response 401 (application/json)
-
     + Attributes
-        + message: `token is expired` (string, required)
-        
-+ Response 422 (application/json)
+        + status: `suspended` (string, required, fixed)
+        + until: `2018-03-07T12:14:04.531000+00:00` (string, required) - ISO 8601
 
++ Response 422 (application/json)
     + Attributes
         + message (enum[string], required, fixed-type)
-            + `invalid id_token`
             + `invalid id_token: <reason>`
-            + `invalid id_token format: <reason>`
 
 + Response 403 (application/json)
-
     + Attributes
         + status: non-student (string, required, fixed)
+        
 
 ### Validate User [GET /auth/validate]
 
 + Response 200 (application/json)
-
     + Attributes
         + jwt (string, required) - New JWT
 
 ### Authenticate API Key [POST /auth/api]
 
 + Request (application/json)
-
     + Attributes
         + api_key (string, required)
 
 + Response 200 (application/json)
-
     + Attributes
         + jwt (string, required)
 
@@ -81,7 +71,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
     + course_id: 1 (number) - The ID of the course that was taught
 
 + Response 200 (application/json)
-
     + Attributes
         + course (Course, required)
         + quarter (Quarter, required)
@@ -92,7 +81,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
             
 
 + Response 404 (application/json)
-
     + Attributes
         + message: class does not exist (string, required, fixed)
             
@@ -106,13 +94,11 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
     + professor_id (optional, number) - Limit the list to courses that were taught by the specified professor
 
 + Response 200 (application/json)
-
     + Attributes (array[Course], fixed-type)
 
 ### Post Courses [POST]
 
 + Request (application/json)
-
     + Attributes
         + courses (array, fixed-type)
             + (object, required)
@@ -125,13 +111,11 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
                 + instr_3 (string, required)
 
 + Response 200 (application/json)
-
     + Attributes
         + result: success (string, fixed)
         + updated_count: 248 (number, required)
 
 + Response 422 (application/json)
-
     + Attributes
         + message (enum[string], required, fixed)
             + Members
@@ -167,7 +151,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
         + professors (array[Professor], optional)
 
 + Response 404 (application/json)
-            
     + Attributes
         + message: course with the specified id not found (string, required, fixed)
             
@@ -177,13 +160,11 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### List All Departments [GET]
 
 + Response 200 (application/json)
-    
     + Attributes (array[Department], required, fixed-type)
 
 ### Post Departments [POST]
 
 + Request (application/json)
-
     + Attributes
         + departments (array, required, fixed-type)
             + (object)
@@ -192,13 +173,11 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
                 + school: BUS (string, required)
 
 + Response 200 (application/json)
-
     + Attributes
         + result: success (string, required, fixed)
         + updated_count: 74 (number, required)
 
 + Response 422 (application/json)
-
     + Attributes
         + message: `The request was well-formed but was unable to be followed due to semantic errors.` (string, required, fixed)
 
@@ -222,7 +201,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
         + Default: 10
 
 + Response 200 (application/json)
-
     + Attributes (array, required)
         + (Evaluation, required)
             + quarter_id: 3900 (number, required)
@@ -239,7 +217,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
     + Attributes (Evaluation, required)
     
 + Response 404 (application/json)
-
     + Attributes
         + message: `evaluation with the specified id not found` (string, required, fixed)
 
@@ -247,7 +224,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### Submit Evaluation [POST]
 
 + Request (application/json)
-
     + Attributes
         + quarter_id: 3900 (number, required)
         + professor_id: 1 (number, required)
@@ -257,17 +233,14 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
         + evaluation (EvaluationDataV1, required)
 
 + Response 201 (application/json)
-
     + Attributes
         + result: success (string, required, fixed)
         
 + Response 422 (application/json)
-
     + Attributes
         + message: `invalid quarter/course/professor combination` (string, required, fixed)
 
 + Response 409
-
     + Attributes
         + message: `evaluation for this combination already exists` (string, required, fixed)
 
@@ -279,12 +252,10 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 + Response 204 (application/json)
 
 + Response 404 (application/json)
-
     + Attributes
         + message: `evaluation with the specified id not found` (string, required, fixed)
 
 + Response 403 (application/json)
-
     + Attributes
         + message: `you are only allowed to delete your own evaluations` (string, required, fixed)
 
@@ -299,12 +270,10 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 + Response 204 (application/json)
 
 + Response 404 (application/json)
-
     + Attributes
         + message: `evaluation with the specified id not found` (string, required, fixed)
 
 + Response 403 (application/json)
-
     + Attributes
         + message: `not allowed to vote on your own evaluations` (string, required, fixed)
 
@@ -317,7 +286,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 + Response 204 (application/json)
 
 + Response 404 (application/json)
-
     + Attributes
         + message (enum[string], required, fixed)
             + `evaluation with the specified id not found`
@@ -329,23 +297,19 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### List All Majors [GET]
 
 + Response 200 (application/json)
-
     + Attributes (array[Major], required, fixed-type)
 
 ### Post Majors [POST]
 
 + Request (application/json)
-
     + Attributes
         + majors (array[string], required, fixed-type)
     
 + Response 200 (application/json)
-
     + Attributes
         + result: success (string, required, fixed)
 
 + Response 422 (application/json)
-
     + Attributes
         + message: `failed to insert majors: <db error>` (string, required)
 
@@ -359,7 +323,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
     + quarter_id: 3900 (number, optional) - Limit the list to professors who taught during the specified quarter.
 
 + Response 200 (application/json)
-
     + Attributes (array[Professor], required, fixed-type)
 
 ### Get Professor Details [GET /professors/{id}{?embed}]
@@ -404,7 +367,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
     + professor_id: 1 (number, optional) - Limit the list to quarters during which the specified professor taught.
 
 + Response 200 (application/json)
-
     + Attributes (array[Quarter], required, fixed-type)
 
 
@@ -418,7 +380,6 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### Search For Classes And Professors [GET]
 
 + Response 200 (application/json)
-
     + Attributes
         + courses (array[Course], required, fixed-type)
         + professors (array[Professor], required, fixed-type)
@@ -432,25 +393,21 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 ### Update Info [PUT]
 
 + Request (application/json)
-
     + Attributes
         + graduation_year: 2020 (number, required)
         + gender: m, f, o (enum[string], required, fixed)
         + majors: 1, 4 (array[number], required) - Between 1 and 3 major IDs.
 
 + Response 200 (application/json)
-
     + Attributes
         + result: success (string, required, fixed)
         + jwt (string, required)
         
 + Response 403 (application/json)
-
     + Attributes
         + message: `you do not have the rights to modify another student` (string, required, fixed)
 
 + Response 422 (application/json)
-
     + Attributes
         + message: `invalid major(s) specified` (string, required, fixed)
 
