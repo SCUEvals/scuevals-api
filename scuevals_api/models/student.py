@@ -4,6 +4,7 @@ from . import db
 from .assoc import student_major
 from .major import Major
 from .user import User
+from .permission import Permission
 
 
 class Student(User):
@@ -44,6 +45,45 @@ class Student(User):
                            None,
                            'Property majors_list is a simple wrapper for majors relation')
 
+    def check_read_access(self):
+        if self.read_access_until is None:
+            return False
+
+        if self.read_access_until >= datetime.now(self.read_access_until.tzinfo):
+            return True
+        else:
+            # the access expired
+            self.read_access = False
+
+    def _set_read_access(self, value):
+        if value:
+            # extend the read access until the set value
+            self.read_access_until = value
+
+            # add the read/vote access permissions in case they don't have them
+            read = Permission.query.get(Permission.ReadEvaluations)
+            vote = Permission.query.get(Permission.VoteOnEvaluations)
+
+            current_permissions = self.permissions_list
+
+            if read not in current_permissions:
+                self.permissions.append(read)
+
+            if vote not in current_permissions:
+                self.permissions.append(vote)
+        else:
+            # remove the permissions
+            self.permissions = [permission for permission in self.permissions if
+                                permission.id not in [Permission.ReadEvaluations, Permission.VoteOnEvaluations]]
+
+            # reset read access tracker
+            self.read_access_until = None
+
+    read_access = property(check_read_access,
+                           _set_read_access,
+                           None,
+                           'Property read access is a simple wrapper for controlling reading access')
+
     def to_dict(self):
         student = {
             **super().to_dict(),
@@ -53,7 +93,3 @@ class Student(User):
         }
 
         return {k: v for k, v in student.items() if v is not None}
-
-    def has_reading_access(self):
-        return (self.read_access_until is not None and
-                self.read_access_until >= datetime.now(self.read_access_until.tzinfo))

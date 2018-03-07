@@ -41,4 +41,4 @@ def user_loader(identity):
 
 @jwtm.user_loader_error_loader
 def user_loader_error(identity):
-    return jsonify({'message': 'invalid or expired user info'}), 401
+    return jsonify({'message': 'unable to load user'}), 500

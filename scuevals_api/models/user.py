@@ -68,7 +68,11 @@ class User(db.Model):
         return {k: v for k, v in user.items() if v is not None}
 
     def suspended(self):
-        return self.suspended_until is not None and self.suspended_until > datetime.now(self.suspended_until.tzinfo)
+        if self.suspended_until is None:
+            return False
 
-    def suspension_expired(self):
-        return self.suspended_until is not None and self.suspended_until <= datetime.now(self.suspended_until.tzinfo)
+        if self.suspended_until > datetime.now(self.suspended_until.tzinfo):
+            return True
+
+        self.suspended_until = None
+        return False

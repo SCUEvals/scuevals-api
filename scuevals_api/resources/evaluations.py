@@ -94,20 +94,8 @@ class EvaluationsResource(Resource):
 
         # extend their read access until the end of the current quarter
         cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
-        current_user.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
-                                                            tzinfo=timezone.utc)
-
-        # add the read/vote access permissions in case they don't have them
-        read = Permission.query.get(Permission.ReadEvaluations)
-        vote = Permission.query.get(Permission.VoteOnEvaluations)
-
-        current_permissions = current_user.permissions_list
-
-        if read not in current_permissions:
-            current_user.permissions.append(read)
-
-        if vote not in current_permissions:
-            current_user.permissions.append(vote)
+        current_user.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
+                                                      tzinfo=timezone.utc)
 
         db.session.commit()
 

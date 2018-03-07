@@ -243,7 +243,7 @@ class AuthValidationTestCase(TestCase):
 
     def test_invalid_jwt(self):
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer foobar'})
-        self.assertEqual(rv.status_code, 422)
+        self.assertEqual(422, rv.status_code)
 
     def test_invalid_jwt_claims(self):
         invalid_ident = {'university_id': 1}
@@ -263,7 +263,7 @@ class AuthValidationTestCase(TestCase):
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + user_jwt})
 
-        self.assertEqual(rv.status_code, 401)
+        self.assertEqual(401, rv.status_code)
 
     def test_read_access_expired(self):
         student = StudentFactory(permissions=[Permission.query.get(Permission.ReadEvaluations)],
@@ -273,11 +273,11 @@ class AuthValidationTestCase(TestCase):
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
 
-        self.assertEqual(rv.status_code, 401)
+        self.assertEqual(401, rv.status_code)
 
         data = json.loads(rv.data)
         self.assertIn('message', data)
-        self.assertEqual('invalid or expired user info', data['message'])
+        self.assertEqual('read access expired', data['message'])
 
     def test_read_access_none(self):
         student = StudentFactory(permissions=[Permission.query.get(Permission.ReadEvaluations)],
@@ -287,11 +287,33 @@ class AuthValidationTestCase(TestCase):
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
 
-        self.assertEqual(rv.status_code, 401)
+        self.assertEqual(401, rv.status_code)
 
         data = json.loads(rv.data)
         self.assertIn('message', data)
-        self.assertEqual('invalid or expired user info', data['message'])
+        self.assertEqual('read access expired', data['message'])
+
+
+class AuthRefreshTestCase(TestCase):
+    def test_refresh(self):
+        student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))
+        student.permissions_list = [
+            Permission.ReadEvaluations, Permission.WriteEvaluations, Permission.VoteOnEvaluations
+        ]
+
+        old_jwt = create_access_token(identity=student.to_dict())
+
+        rv = self.client.get('/auth/refresh', headers={'Authorization': 'Bearer ' + old_jwt})
+        self.assertEqual(200, rv.status_code)
+
+        data = json.loads(rv.data)
+
+        new_identity = jwt.get_unverified_claims(data['jwt'])['sub']
+
+        self.assertEqual(None, student.read_access_until)
+        self.assertNotIn(Permission.ReadEvaluations, student.permissions_list)
+        self.assertNotIn(Permission.VoteOnEvaluations, student.permissions_list)
+        self.assertEqual([Permission.WriteEvaluations], new_identity['permissions'])
 
 
 class AuthAPITestCase(TestCase):

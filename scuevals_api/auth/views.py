@@ -3,7 +3,7 @@ import os
 import requests
 from datetime import timedelta
 from flask import jsonify, current_app as app
-from flask_jwt_extended import create_access_token, get_jwt_identity
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from sqlalchemy.orm import subqueryload
@@ -89,16 +89,9 @@ def auth(args):
         if user.suspended():
             return jsonify({'status': 'suspended', 'until': user.suspended_until.isoformat()}), 401
 
-        # check if they should be unsuspended
-        if user.suspension_expired():
-            user.suspended_until = None
-
         # make sure the permissions are correct in case the student lost reading access
-        if user.type == User.Student and not user.has_reading_access():
-            user.permissions = [permission for permission in user.permissions if
-                                permission.id not in [Permission.ReadEvaluations, Permission.VoteOnEvaluations]]
-
-            user.read_access_until = None
+        if user.type == User.Student:
+            user.check_read_access()
 
         # update the image of the existing user
         if 'picture' in data:
@@ -120,6 +113,21 @@ def auth(args):
 def validate():
     ident = get_jwt_identity()
     new_token = create_access_token(identity=ident)
+    return jsonify({'jwt': new_token})
+
+
+@auth_bp.route('/auth/refresh')
+@jwt_required
+def refresh():
+    if current_user.suspended():
+        return jsonify({'status': 'suspended', 'until': current_user.suspended_until.isoformat()}), 401
+
+    if current_user.type == User.Student:
+        current_user.check_read_access()
+
+    db.session.commit()
+
+    new_token = create_access_token(identity=current_user.to_dict())
     return jsonify({'jwt': new_token})
 
 
