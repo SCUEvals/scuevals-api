@@ -301,6 +301,8 @@ class AuthRefreshTestCase(TestCase):
             Permission.ReadEvaluations, Permission.WriteEvaluations, Permission.VoteOnEvaluations
         ]
 
+        db.session.flush()
+
         old_jwt = create_access_token(identity=student.to_dict())
 
         rv = self.client.get('/auth/refresh', headers={'Authorization': 'Bearer ' + old_jwt})
@@ -314,6 +316,23 @@ class AuthRefreshTestCase(TestCase):
         self.assertNotIn(Permission.ReadEvaluations, student.permissions_list)
         self.assertNotIn(Permission.VoteOnEvaluations, student.permissions_list)
         self.assertEqual([Permission.WriteEvaluations], new_identity['permissions'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @vcr.use_cassette('test_auth')
+    def test_existing_user_suspended(self, data, decode_func):
+        student = StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() + timedelta(days=1)))
+
+        db.session.flush()
+
+        token = create_access_token(identity=student.to_dict())
+
+        rv = self.client.get('/auth/refresh', headers={'Authorization': 'Bearer ' + token})
+
+        self.assertEqual(401, rv.status_code)
+
+        data = json.loads(rv.data)
+        self.assertEqual('suspended', data['status'])
 
 
 class AuthAPITestCase(TestCase):
