@@ -2,7 +2,7 @@ from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.orm import subqueryload
 
-from scuevals_api.models import Permission, User, Student
+from scuevals_api.models import User, Student
 from scuevals_api.models.api_key import API_KEY_TYPE
 from . import jwtm
 
@@ -34,23 +34,9 @@ def user_loader(identity):
     if identity['type'] == API_KEY_TYPE:
         return 1
 
-    user = load_user(identity['id'])
-
-    # fail if the user is still suspended
-    if user.suspended():
-        return None
-
-    # fail if the JWT doesn't reflect that the user lost reading access
-    if Permission.ReadEvaluations in identity['permissions'] and not user.has_reading_access():
-        return None
-
-    return user
-
-
-def load_user(user_id):
     return User.query.options(
         subqueryload(User.permissions)
-    ).with_polymorphic(Student).filter(User.id == user_id).one_or_none()
+    ).with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
 
 
 @jwtm.user_loader_error_loader
