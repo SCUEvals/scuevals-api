@@ -1,4 +1,4 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
+from flask_jwt_extended import get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, validate
 from sqlalchemy import and_
@@ -6,14 +6,13 @@ from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
 from scuevals_api.models import Permission, Professor, Section, Evaluation, Course
-from scuevals_api.permissions import permission_required
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
 
 class ProfessorsResource(Resource):
 
-    @jwt_required
-    @permission_required(Permission.WriteEvaluations)
+    @auth_required(Permission.WriteEvaluations)
     @use_args({'course_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -41,8 +40,7 @@ class ProfessorsResource(Resource):
 
 class ProfessorResource(Resource):
 
-    @jwt_required
-    @permission_required(Permission.ReadEvaluations)
+    @auth_required(Permission.ReadEvaluations)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['courses']))})
     def get(self, args, p_id):
         q = Professor.query.options(

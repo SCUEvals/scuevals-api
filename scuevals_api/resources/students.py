@@ -1,9 +1,10 @@
 from datetime import datetime
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+from flask_jwt_extended import get_jwt_identity, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, validate
 from werkzeug.exceptions import UnprocessableEntity, Forbidden
 
+from scuevals_api.auth import auth_required
 from scuevals_api.models import Permission, Student, db
 from scuevals_api.utils import use_args
 
@@ -19,7 +20,7 @@ class StudentsResource(Resource):
         'majors': fields.List(fields.Int(), required=True, validate=validate.Length(1, 3)),
     }
 
-    @jwt_required
+    @auth_required
     @use_args(args, locations=('json',))
     def patch(self, args, s_id):
         user = get_jwt_identity()

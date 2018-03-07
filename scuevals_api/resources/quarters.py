@@ -1,17 +1,16 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields
 from sqlalchemy import and_, func
 
 from scuevals_api.models import Permission, Quarter, Section, Professor, db
-from scuevals_api.permissions import permission_required
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
 
 class QuartersResource(Resource):
 
-    @jwt_required
-    @permission_required(Permission.WriteEvaluations)
+    @auth_required(Permission.WriteEvaluations)
     @use_args({'course_id': fields.Int(), 'professor_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()

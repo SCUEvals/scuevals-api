@@ -2,22 +2,17 @@ import json
 import os
 import requests
 from datetime import timedelta
-from flask import Blueprint, jsonify, current_app as app
-from flask_caching import Cache
-from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity
-from flask_jwt_extended.view_decorators import jwt_required
+from flask import jsonify, current_app as app
+from flask_jwt_extended import create_access_token, get_jwt_identity
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
+from . import auth_bp, cache
+from .decorators import auth_required
 from scuevals_api.models import Student, User, db, Permission, APIKey, OfficialUserType
-from scuevals_api.models.api_key import API_KEY_TYPE
 from scuevals_api.utils import use_args
-
-auth_bp = Blueprint('auth', __name__)
-cache = Cache(config={'CACHE_TYPE': 'simple'})
-jwtm = JWTManager()
 
 
 @auth_bp.route('/auth', methods=['POST'])
@@ -121,7 +116,7 @@ def auth(args):
 
 
 @auth_bp.route('/auth/validate')
-@jwt_required
+@auth_required
 def validate():
     ident = get_jwt_identity()
     new_token = create_access_token(identity=ident)
@@ -139,57 +134,6 @@ def auth_api(args):
     token = create_access_token(identity=key.identity(), expires_delta=timedelta(hours=24))
 
     return jsonify({'jwt': token})
-
-
-@jwtm.claims_verification_loader
-def claims_verification_loader(user_claims):
-    identity = get_jwt_identity()
-
-    keys = [
-        'type',
-        'permissions',
-        'university_id'
-    ]
-
-    for key in keys:
-        if key not in identity:
-            return False
-
-    return True
-
-
-@jwtm.claims_verification_failed_loader
-def claim_verification_failed():
-    return jsonify({'message': 'invalid or expired user info'}), 401
-
-
-@jwtm.user_loader_callback_loader
-def user_loader(identity):
-    if identity['type'] == API_KEY_TYPE:
-        return 1
-
-    user = load_user(identity['id'])
-
-    # fail if the user is still suspended
-    if user.suspended():
-        return None
-
-    # fail if the JWT doesn't reflect that the user lost reading access
-    if Permission.ReadEvaluations in identity['permissions'] and not user.has_reading_access():
-        return None
-
-    return user
-
-
-def load_user(user_id):
-    return User.query.options(
-        subqueryload(User.permissions)
-    ).with_polymorphic(Student).filter(User.id == user_id).one_or_none()
-
-
-@jwtm.user_loader_error_loader
-def user_loader_error(identity):
-    return jsonify({'message': 'invalid or expired user info'}), 401
 
 
 def refresh_key_cache(data_store):

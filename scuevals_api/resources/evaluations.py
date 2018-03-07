@@ -1,6 +1,6 @@
 from datetime import timedelta, timezone
 
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user, create_access_token
+from flask_jwt_extended import get_jwt_identity, current_user, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
 from sqlalchemy import func
@@ -8,7 +8,7 @@ from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
 from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote
-from scuevals_api.permissions import permission_required
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args, datetime_from_date
 
 
@@ -31,8 +31,7 @@ class EvaluationSchemaV1(Schema):
 
 class EvaluationsResource(Resource):
 
-    @jwt_required
-    @permission_required(Permission.WriteEvaluations)
+    @auth_required(Permission.WriteEvaluations)
     def get(self):
         ident = get_jwt_identity()
         evals = Evaluation.query.options(
@@ -59,8 +58,7 @@ class EvaluationsResource(Resource):
         'evaluation': fields.Nested(EvaluationSchemaV1, required=True)
     }
 
-    @jwt_required
-    @permission_required(Permission.WriteEvaluations)
+    @auth_required(Permission.WriteEvaluations)
     @use_args(args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
@@ -121,8 +119,7 @@ class EvaluationsResource(Resource):
 
 class EvaluationsRecentResource(Resource):
 
-    @jwt_required
-    @permission_required(Permission.WriteEvaluations)
+    @auth_required(Permission.WriteEvaluations)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
@@ -145,8 +142,7 @@ class EvaluationsRecentResource(Resource):
 
 class EvaluationResource(Resource):
 
-    @jwt_required
-    @permission_required(Permission.ReadEvaluations)
+    @auth_required(Permission.ReadEvaluations)
     def get(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,
@@ -158,8 +154,7 @@ class EvaluationResource(Resource):
 
         return evaluation.to_dict()
 
-    @jwt_required
-    @permission_required(Permission.WriteEvaluations)
+    @auth_required(Permission.WriteEvaluations)
     def delete(self, e_id):
         ident = get_jwt_identity()
         ev = Evaluation.query.get(e_id)
@@ -182,8 +177,7 @@ class EvaluationVoteResource(Resource):
         'd': Vote.DOWNVOTE
     }
 
-    @jwt_required
-    @permission_required(Permission.ReadEvaluations)
+    @auth_required(Permission.ReadEvaluations)
     @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
     def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
@@ -217,8 +211,7 @@ class EvaluationVoteResource(Resource):
 
         return '', 204
 
-    @jwt_required
-    @permission_required(Permission.ReadEvaluations)
+    @auth_required(Permission.ReadEvaluations)
     def delete(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,
