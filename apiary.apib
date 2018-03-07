@@ -45,7 +45,19 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
         + status: non-student (string, required, fixed)
         
 
-### Validate User [GET /auth/validate]
+### Validate User Token [GET /auth/validate]
+
+Validates the JWT and verifies that the permissions in it are up-to-date,
+then returns a new one based on the information in the first one.
+
++ Response 200 (application/json)
+    + Attributes
+        + jwt (string, required) - New JWT
+
+
+### Refresh User Token [GET /auth/refresh]
+
+Validates the JWT and returns a new one freshly generated from the database.
 
 + Response 200 (application/json)
     + Attributes
