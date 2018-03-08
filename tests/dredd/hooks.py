@@ -25,7 +25,11 @@ def before_all(trans):
         id=1,
         permissions=[
             Permission.query.get(Permission.ReadEvaluations),
-            Permission.query.get(Permission.WriteEvaluations)
+            Permission.query.get(Permission.WriteEvaluations),
+            Permission.query.get(Permission.VoteOnEvaluations),
+            Permission.query.get(Permission.UpdateMajors),
+            Permission.query.get(Permission.UpdateDepartments),
+            Permission.query.get(Permission.UpdateCourses)
         ]
     )
 
@@ -48,19 +52,11 @@ def after_each(trans):
     db.session.remove()
 
 
-@hooks.before('Courses > Post Courses')
-@hooks.before('Departments > Post Departments')
-@hooks.before('Majors > Post Majors')
-def before_api_key(trans):
-    user = factories.UserFactory(id=100, roles=[Permission.query.get(Permission.API_Key)])
-
-    db.session.commit()
-
-    jwt = create_access_token(identity=user.to_dict())
-
-    trans['request']['headers']['Authorization'] = 'Bearer ' + jwt
-
-
 @hooks.before('Evaluations > Get Evaluation Details')
 def evaluation(trans):
     factories.EvaluationFactory(id=1, student=stash['student'])
+
+
+@hooks.before('Authentication > Authenticate API Key')
+def auth_new_old_user(trans):
+    factories.APIKeyFactory(key='<API_KEY>')
