@@ -277,21 +277,17 @@ class AuthValidationTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertIn('message', data)
-        self.assertEqual('read access expired', data['message'])
+        self.assertEqual('invalid or expired user info', data['message'])
 
     def test_read_access_none(self):
-        student = StudentFactory(permissions=[Permission.query.get(Permission.ReadEvaluations)],
+        student = StudentFactory(permissions=[Permission.query.get(Permission.WriteEvaluations)],
                                  read_access_until=None)
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())
 
         rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
 
-        self.assertEqual(401, rv.status_code)
-
-        data = json.loads(rv.data)
-        self.assertIn('message', data)
-        self.assertEqual('read access expired', data['message'])
+        self.assertEqual(200, rv.status_code)
 
 
 class AuthRefreshTestCase(TestCase):
