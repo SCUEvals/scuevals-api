@@ -38,8 +38,8 @@ def auth_required(fn, permission=None):
                 raise Unauthorized('user is suspended')
 
         if identity['type'] == User.Student:
-            if not current_user.check_read_access():
-                raise Unauthorized('read access expired')
+            # make sure the read access is synced up
+            current_user.check_read_access()
 
             if set(identity['permissions']) != set(current_user.permissions_list):
                 raise Unauthorized('invalid or expired user info')
