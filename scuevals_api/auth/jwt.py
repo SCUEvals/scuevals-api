@@ -2,7 +2,7 @@ from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.orm import subqueryload
 
-from scuevals_api.models import User, Student
+from scuevals_api.models import User, Student, APIKey
 from scuevals_api.models.api_key import API_KEY_TYPE
 from . import jwtm
 
@@ -32,7 +32,7 @@ def claim_verification_failed():
 @jwtm.user_loader_callback_loader
 def user_loader(identity):
     if identity['type'] == API_KEY_TYPE:
-        return 1
+        return APIKey.query.get(identity['id'])
 
     return User.query.options(
         subqueryload(User.permissions)
