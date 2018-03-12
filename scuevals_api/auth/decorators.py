@@ -41,11 +41,8 @@ def auth_required(fn, permission=None):
             # make sure the read access is synced up
             current_user.check_read_access()
 
-            if set(identity['permissions']) != set(current_user.permissions_list):
-                raise Unauthorized('invalid or expired user info')
-
         # verify that the user has the correct permissions for this view
-        if permission is not None and permission not in identity['permissions']:
+        if permission is not None and permission not in current_user.permissions_list:
             raise Unauthorized()
 
         return fn(*args, **kwargs)

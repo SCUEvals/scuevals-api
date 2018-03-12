@@ -271,13 +271,13 @@ class AuthValidationTestCase(TestCase):
         db.session.flush()
         student_jwt = create_access_token(identity=student.to_dict())
 
-        rv = self.client.get('/auth/validate', headers={'Authorization': 'Bearer ' + student_jwt})
+        rv = self.client.get('/search?q=', headers={'Authorization': 'Bearer ' + student_jwt})
 
         self.assertEqual(401, rv.status_code)
 
         data = json.loads(rv.data)
         self.assertIn('message', data)
-        self.assertEqual('invalid or expired user info', data['message'])
+        self.assertIn('could not verify that you are authorized to access the URL requested', data['message'])
 
     def test_read_access_none(self):
         student = StudentFactory(permissions=[Permission.query.get(Permission.WriteEvaluations)],

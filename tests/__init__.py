@@ -43,14 +43,11 @@ class TestCase(unittest.TestCase):
             majors=[MajorFactory()],
         )
 
-        ident = cls.student.to_dict()
+        cls.api_key = APIKeyFactory(id=0)
 
-        db.session.add(cls.student)
         db.session.commit()
 
-        cls.jwt = create_access_token(identity=ident)
-
-        cls.api_key = APIKeyFactory(id=0)
+        cls.jwt = create_access_token(identity=cls.student.to_dict())
         cls.api_jwt = create_access_token(identity=cls.api_key.identity())
 
         # these are just shorthands to DRY up the code

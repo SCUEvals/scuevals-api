@@ -111,8 +111,7 @@ def auth(args):
 @auth_bp.route('/auth/validate')
 @auth_required
 def validate():
-    ident = get_jwt_identity()
-    new_token = create_access_token(identity=ident)
+    new_token = create_access_token(identity=current_user.to_dict())
     return jsonify({'jwt': new_token})
 
 
