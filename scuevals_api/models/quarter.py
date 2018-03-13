@@ -20,7 +20,8 @@ class Quarter(db.Model):
     __table_args__ = (
         ExcludeConstraint(('period', '&&')),
         db.UniqueConstraint('year', 'name', 'university_id'),
-        db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']), name='valid_quarter')
+        db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']), name='valid_quarter'),
+        db.Index('uq_quarters_current', current, unique=True, postgresql_where=current),
     )
 
     def to_dict(self):
