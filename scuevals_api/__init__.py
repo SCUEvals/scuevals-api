@@ -1,4 +1,3 @@
-import logging
 import os
 from flask import Flask
 
@@ -13,9 +12,6 @@ def create_app(config='development'):
 
     load_config(app, 'default')
     load_config(app, config)
-
-    if 'ENV' in app.config and app.config['ENV'] == 'test':
-        logging.disable(logging.CRITICAL)
 
     register_error_handler(app)
     register_extensions(app)

@@ -50,6 +50,11 @@ class ProfessorTestCase(TestCase):
         prof3 = ProfessorFactory()
         student = StudentFactory()
         section = SectionFactory(course=self.course, professors=[self.prof, prof2, prof3])
+
+        # prof has taught this course twice
+        SectionFactory(course=self.course, professors=[self.prof])
+
+        SectionFactory(professors=[self.prof])
         EvaluationFactory(student=self.student, professor=self.prof, section=section)
         evaluation = EvaluationFactory(student=student, professor=self.prof, section=section)
         VoteFactory(student=self.student, evaluation=evaluation)
@@ -57,6 +62,15 @@ class ProfessorTestCase(TestCase):
         db.session.flush()
 
     def test_get(self):
+        rv = self.client.get('/professors/{}'.format(self.prof.id), headers=self.head_auth)
+        self.assertEqual(200, rv.status_code)
+
+        assert_valid_schema(rv.data, 'professor_with_evals.json')
+
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data['evaluations']))
+
+    def test_get_embed_courses(self):
         rv = self.client.get('/professors/{}'.format(self.prof.id),
                              headers=self.head_auth,
                              query_string=urlencode({'embed': 'courses'}))
@@ -67,15 +81,7 @@ class ProfessorTestCase(TestCase):
 
         data = json.loads(rv.data)
         self.assertEqual(2, len(data['evaluations']))
-
-    def test_get_embed_courses(self):
-        rv = self.client.get('/professors/{}'.format(self.prof.id), headers=self.head_auth)
-        self.assertEqual(200, rv.status_code)
-
-        assert_valid_schema(rv.data, 'professor_with_evals.json')
-
-        data = json.loads(rv.data)
-        self.assertEqual(2, len(data['evaluations']))
+        self.assertEqual(2, len(data['courses']))
 
     def test_get_non_existing(self):
         rv = self.client.get('/professors/0', headers=self.head_auth)

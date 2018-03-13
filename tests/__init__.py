@@ -1,15 +1,18 @@
 import json
+import logging
 import unittest
 import os
+from contextlib import contextmanager
+
 import yaml
 from functools import wraps
 from flask_jwt_extended import create_access_token
 from jsonschema import validate, RefResolver
 from vcr import VCR
 
-from tests.fixtures.factories import StudentFactory, MajorFactory
+from tests.fixtures.factories import StudentFactory, MajorFactory, APIKeyFactory
 from scuevals_api.cmd import init_db
-from scuevals_api.models import db, Role, University, School
+from scuevals_api.models import db, Permission, University, School
 from scuevals_api import create_app
 
 fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
@@ -37,23 +40,15 @@ class TestCase(unittest.TestCase):
 
         cls.student = StudentFactory(
             id=0,
-            roles=[Role.query.get(Role.Student)],
             majors=[MajorFactory()],
         )
 
-        ident = cls.student.to_dict()
+        cls.api_key = APIKeyFactory(id=0)
 
-        db.session.add(cls.student)
         db.session.commit()
 
-        cls.jwt = create_access_token(identity=ident)
-
-        api_ident = {
-            'university_id': 1,
-            'roles': [Role.API_Key]
-        }
-
-        cls.api_jwt = create_access_token(identity=api_ident)
+        cls.jwt = create_access_token(identity=cls.student.to_dict())
+        cls.api_jwt = create_access_token(identity=cls.api_key.identity())
 
         # these are just shorthands to DRY up the code
         cls.head_auth = {'Authorization': 'Bearer ' + cls.jwt}
@@ -82,10 +77,14 @@ def seed_db(target):
     ])
 
     db.session.add_all([
-        Role(id=0, name='Incomplete'),
-        Role(id=1, name='Student'),
-        Role(id=10, name='Administrator'),
-        Role(id=20, name='API Key')
+        Permission(id=0, name='Incomplete'),
+        Permission(id=1, name='ReadEvaluations'),
+        Permission(id=2, name='WriteEvaluations'),
+        Permission(id=3, name='VoteOnEvaluations'),
+        Permission(id=100, name='UpdateCourses'),
+        Permission(id=101, name='UpdateDepartments'),
+        Permission(id=102, name='UpdateMajors'),
+        Permission(id=1000, name='Administrator'),
     ])
 
     db.session.commit()
@@ -102,6 +101,14 @@ def use_data(file):
             return f(*args)
         return wrapper
     return use_data_decorator
+
+
+@contextmanager
+def no_logging():
+    log_state = logging.getLogger().getEffectiveLevel()
+    logging.disable(logging.CRITICAL)
+    yield
+    logging.disable(log_state)
 
 
 # source: https://medium.com/grammofy/testing-your-python-api-app-with-json-schema-52677fe73351

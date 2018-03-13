@@ -67,7 +67,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Request (application/json)
     + Attributes
-        + api_key (string, required)
+        + `api_key`: ``<API_KEY>` (string, required)
 
 + Response 200 (application/json)
     + Attributes
@@ -116,7 +116,7 @@ Validates the JWT and returns a new one freshly generated from the database.
             + (object, required)
                 + term: 3900 (string, required)
                 + subject: ANTH (string, required)
-                + catalog_nbr: 1 (number, required)
+                + catalog_nbr: 1L (string, required)
                 + class_descr: Intro to Bio Anth (string, required)
                 + instr_1: Doe, John (string, required)
                 + instr_2 (string, required)
@@ -247,6 +247,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 201 (application/json)
     + Attributes
         + result: success (string, required, fixed)
+        + jwt (string, required)
         
 + Response 422 (application/json)
     + Attributes
@@ -402,7 +403,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Parameters
     + id: 1 (number, required)
 
-### Update Info [PUT]
+### Update Info [PATCH]
 
 + Request (application/json)
     + Attributes

@@ -1,19 +1,18 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
+from flask_jwt_extended import get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, validate
 from sqlalchemy import and_
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.models import Role, Professor, Section, Evaluation
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Professor, Section, Evaluation, Course
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
 
 class ProfessorsResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     @use_args({'course_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -41,8 +40,7 @@ class ProfessorsResource(Resource):
 
 class ProfessorResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.ReadEvaluations)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['courses']))})
     def get(self, args, p_id):
         q = Professor.query.options(
@@ -51,9 +49,6 @@ class ProfessorResource(Resource):
             Professor.id == p_id,
             Professor.university_id == current_user.university_id
         )
-
-        if 'embed' in args:
-            q.options(subqueryload(Professor.sections).subqueryload(Section.course))
 
         professor = q.one_or_none()
 
@@ -77,6 +72,10 @@ class ProfessorResource(Resource):
         ]
 
         if 'embed' in args:
-            data['courses'] = [section.course.to_dict() for section in professor.sections]
+            courses = Course.query.filter(
+                Course.sections.any(Section.professors.any(Professor.id == p_id))
+            ).all()
+
+            data['courses'] = [course.to_dict() for course in courses]
 
         return data

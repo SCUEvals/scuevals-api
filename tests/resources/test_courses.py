@@ -2,32 +2,24 @@ import json
 from urllib.parse import urlencode
 
 from tests.fixtures.factories import (
-    StudentFactory, ProfessorFactory, SectionFactory, CourseFactory, EvaluationFactory, VoteFactory
+    StudentFactory, ProfessorFactory, SectionFactory, CourseFactory, EvaluationFactory, VoteFactory,
+    QuarterFactory, DepartmentFactory
 )
-from scuevals_api.models import db, Quarter, Department, Course, Section, Professor, Vote
-from tests import TestCase, use_data, assert_valid_schema
+from scuevals_api.models import db, Vote
+from tests import TestCase, use_data, assert_valid_schema, no_logging
 
 
 class CoursesTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        db.session.add(Quarter(id=1, year=2017, name='Winter', current=False,
-                               period='[2017-01-01, 2017-02-01]', university_id=1))
-        db.session.add(Quarter(id=2, year=2017, name='Spring', current=False,
-                               period='[2017-03-01, 2017-04-01]', university_id=1))
-        db.session.add(Quarter(id=3900, year=2017, name='Fall', current=False,
-                               period='[2017-05-01, 2017-06-01]', university_id=1))
-        db.session.add(Department(id=1, abbreviation='ANTH', name='Anthropology', school_id=1))
-        db.session.add(Department(id=2, abbreviation='COMM', name='Communications', school_id=1))
-        db.session.add(Course(id=1000, title='Math Course', number='1', department_id=1))
-        db.session.add(Course(id=1001, title='Arts Course', number='2', department_id=1))
-        db.session.add(Section(quarter_id=1, course_id=1000))
-
-        section = Section(quarter_id=2, course_id=1001)
-        db.session.add(section)
-
-        section.professors.append(Professor(id=0, first_name='Peter', university_id=1))
+        self.quarter = QuarterFactory()
+        self.quarter2 = QuarterFactory()
+        self.course = CourseFactory()
+        self.course2 = CourseFactory()
+        self.professor = ProfessorFactory()
+        SectionFactory(quarter=self.quarter, course=self.course)
+        self.section = SectionFactory(quarter=self.quarter2, course=self.course2, professors=[self.professor])
 
         db.session.flush()
 
@@ -40,7 +32,9 @@ class CoursesTestCase(TestCase):
         self.assertEqual(2, len(data))
 
     def test_get_quarter_id(self):
-        rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({'quarter_id': 1}))
+        rv = self.client.get('/courses',
+                             headers=self.head_auth,
+                             query_string=urlencode({'quarter_id': self.quarter.id}))
 
         self.assertEqual(200, rv.status_code)
 
@@ -48,7 +42,9 @@ class CoursesTestCase(TestCase):
         self.assertEqual(1, len(data))
 
     def test_get_professor_id(self):
-        rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({'professor_id': 0}))
+        rv = self.client.get('/courses',
+                             headers=self.head_auth,
+                             query_string=urlencode({'professor_id': self.professor.id}))
 
         self.assertEqual(200, rv.status_code)
 
@@ -57,7 +53,7 @@ class CoursesTestCase(TestCase):
 
     def test_get_quarter_id_professor_id(self):
         rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({
-            'professor_id': 0, 'quarter_id': 2
+            'professor_id': self.professor.id, 'quarter_id': self.quarter2.id
         }))
 
         self.assertEqual(200, rv.status_code)
@@ -67,6 +63,11 @@ class CoursesTestCase(TestCase):
 
     @use_data('courses.yaml')
     def test_post(self, data):
+        QuarterFactory(id=3900)
+        DepartmentFactory(abbreviation='ANTH')
+        DepartmentFactory(abbreviation='COMM')
+        db.session.flush()
+
         headers = {
             'Authorization': 'Bearer ' + self.api_jwt,
             'Content-Type': 'application/json'
@@ -84,20 +85,29 @@ class CoursesTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        rv = self.client.post('/courses', headers=headers, data=data['courses_missing_department'])
+        with no_logging():
+            rv = self.client.post('/courses', headers=headers, data=data['courses_missing_department'])
+
         self.assertEqual(422, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual('missing department ACTG', resp['message'])
 
     @use_data('courses.yaml')
     def test_post_invalid_quarter(self, data):
+        DepartmentFactory(abbreviation='ANTH')
+        db.session.flush()
+
         headers = {
             'Authorization': 'Bearer ' + self.api_jwt,
             'Content-Type': 'application/json'
         }
 
-        rv = self.client.post('/courses', headers=headers, data=data['courses_invalid_quarter'])
+        with no_logging():
+            rv = self.client.post('/courses', headers=headers, data=data['courses_invalid_quarter'])
+
         self.assertEqual(422, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('semantic errors', data['message'])
 
 
 class CourseTestCase(TestCase):
@@ -109,7 +119,12 @@ class CourseTestCase(TestCase):
         prof2 = ProfessorFactory()
         prof3 = ProfessorFactory()
         student = StudentFactory()
+
         section = SectionFactory(course=self.course, professors=[prof, prof2, prof3])
+
+        # prof2 has taught this course multiple quarters
+        SectionFactory(course=self.course, professors=[prof2])
+
         EvaluationFactory(student=self.student, professor=prof, section=section)
         evaluation = EvaluationFactory(student=student, professor=prof, section=section)
         VoteFactory(student=self.student, evaluation=evaluation, value=Vote.UPVOTE)

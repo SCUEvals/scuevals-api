@@ -1,16 +1,15 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from flask_restful import Resource
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.models import Role, db, Section, Quarter, Professor, Evaluation
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, db, Section, Quarter, Professor, Evaluation
+from scuevals_api.auth import auth_required
 
 
 class ClassResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     def get(self, q_id, p_id, c_id):
         ident = get_jwt_identity()
         query = Section.query.options(

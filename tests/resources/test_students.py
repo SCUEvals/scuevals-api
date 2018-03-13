@@ -1,8 +1,9 @@
 import json
 from flask_jwt_extended import create_access_token
+# from datetime import datetime, timezone
 
-from tests.fixtures.factories import MajorFactory, StudentFactory
-from scuevals_api.models import db, Role
+from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory
+from scuevals_api.models import db, Permission
 from tests import TestCase
 
 
@@ -19,7 +20,7 @@ class StudentsTestCase(TestCase):
         MajorFactory()
         MajorFactory()
 
-        self.student = StudentFactory(roles=[Role.query.get(Role.Incomplete)])
+        self.student = StudentFactory(permissions=[Permission.query.get(Permission.Incomplete)])
         db.session.flush()
 
         ident = self.student.to_dict()
@@ -31,6 +32,8 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
+        QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
+
         rv = self.client.patch('/students/{}'.format(self.student.id),
                                headers=headers,
                                data=json.dumps(self.patch_data))
@@ -40,6 +43,10 @@ class StudentsTestCase(TestCase):
         self.assertEqual(self.student.graduation_year, self.patch_data['graduation_year'])
         self.assertEqual(self.student.gender, self.patch_data['gender'])
         self.assertEqual(self.student.majors_list, self.patch_data['majors'])
+
+        self.assertIn(Permission.WriteEvaluations, self.student.permissions_list)
+        # self.assertIn(Permission.Read, self.student.permissions_list)
+        # self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), self.student.read_access_until)
 
     def test_patch_wrong_user(self):
         headers = {

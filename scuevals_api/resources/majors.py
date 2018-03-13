@@ -1,27 +1,25 @@
 import logging
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields
 from sqlalchemy.exc import DatabaseError
 from werkzeug.exceptions import UnprocessableEntity
 
-from scuevals_api.models import Role, Major, db
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Major, db
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
 
 class MajorsResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student, Role.Incomplete)
+    @auth_required
     def get(self):
         majors = Major.query.all()
 
         return [major.to_dict() for major in majors]
 
-    @jwt_required
-    @role_required(Role.API_Key)
+    @auth_required(Permission.UpdateMajors)
     @use_args({'majors': fields.List(fields.Str(), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()

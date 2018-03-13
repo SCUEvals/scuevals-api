@@ -1,15 +1,15 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
+from datetime import timedelta, timezone
+
+from flask_jwt_extended import get_jwt_identity, current_user, create_access_token
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
 from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
-from scuevals_api.models import Vote
-from scuevals_api.auth import validate_university_id
-from scuevals_api.models import Role, Section, Evaluation, db, Professor, Quarter
-from scuevals_api.roles import role_required
-from scuevals_api.utils import use_args
+from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote
+from scuevals_api.auth import auth_required
+from scuevals_api.utils import use_args, datetime_from_date
 
 
 class EvaluationSchemaV1(Schema):
@@ -31,8 +31,7 @@ class EvaluationSchemaV1(Schema):
 
 class EvaluationsResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     def get(self):
         ident = get_jwt_identity()
         evals = Evaluation.query.options(
@@ -59,14 +58,14 @@ class EvaluationsResource(Resource):
         'evaluation': fields.Nested(EvaluationSchemaV1, required=True)
     }
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     @use_args(args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
             Section.quarter_id == args['quarter_id'],
             Section.course_id == args['course_id'],
-            Section.professors.any(Professor.id == args['professor_id'])
+            Section.professors.any(Professor.id == args['professor_id']),
+            Section.quarter.has(Quarter.university_id == current_user.university_id)
         ).one_or_none()
 
         if section is None:
@@ -92,15 +91,23 @@ class EvaluationsResource(Resource):
         )
 
         db.session.add(evaluation)
+
+        # extend their read access until the end of the current quarter
+        cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+        current_user.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1, hours=11),
+                                                      tzinfo=timezone.utc)
+
         db.session.commit()
 
-        return {'result': 'success'}, 201
+        return {
+                   'result': 'success',
+                   'jwt': create_access_token(identity=current_user.to_dict())
+               }, 201
 
 
 class EvaluationsRecentResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
@@ -123,19 +130,19 @@ class EvaluationsRecentResource(Resource):
 
 class EvaluationResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.ReadEvaluations)
     def get(self, e_id):
-        evaluation = Evaluation.query.get(e_id)
+        evaluation = Evaluation.query.filter(
+            Evaluation.id == e_id,
+            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id)),
+        ).one_or_none()
+
         if evaluation is None:
             raise NotFound('evaluation with the specified id not found')
 
-        validate_university_id(evaluation.section.course.department.school.university_id)
-
         return evaluation.to_dict()
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     def delete(self, e_id):
         ident = get_jwt_identity()
         ev = Evaluation.query.get(e_id)
@@ -153,24 +160,24 @@ class EvaluationResource(Resource):
 
 
 class EvaluationVoteResource(Resource):
-
     values = {
         'u': Vote.UPVOTE,
         'd': Vote.DOWNVOTE
     }
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.ReadEvaluations)
     @use_args({'value': fields.Str(required=True, validate=validate.OneOf(['u', 'd']))}, locations=('json',))
     def put(self, args, e_id):
         student_id = get_jwt_identity()['id']
         value = self.values[args['value']]
 
-        evaluation = Evaluation.query.get(e_id)
+        evaluation = Evaluation.query.filter(
+            Evaluation.id == e_id,
+            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
+        ).one_or_none()
+
         if evaluation is None:
             raise NotFound('evaluation with the specified id not found')
-
-        validate_university_id(evaluation.section.course.department.school.university_id)
 
         # do not allow voting on your own evaluations
         if evaluation.student_id == student_id:
@@ -192,8 +199,7 @@ class EvaluationVoteResource(Resource):
 
         return '', 204
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.ReadEvaluations)
     def delete(self, e_id):
         evaluation = Evaluation.query.filter(
             Evaluation.id == e_id,

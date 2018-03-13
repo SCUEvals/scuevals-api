@@ -12,6 +12,6 @@ class DepartmentFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = models.Department
         sqlalchemy_session = models.db.session
 
-    abbreviation = factory.Iterator(['COEN', 'MATH', 'POLI', 'MECH'])
+    abbreviation = factory.Iterator(['COEN', 'MATH', 'POLI', 'MECH', 'ELEN'])
     name = 'Sample Department'
     school = factory.iterator(schools)

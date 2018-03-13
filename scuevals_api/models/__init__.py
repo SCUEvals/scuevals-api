@@ -21,19 +21,19 @@ def on_load(state):
     db.init_app(state.app)
 
 
-from .api_key import APIKey
-from .assoc import user_role, student_major, section_professor
-from .course import Course
-from .department import Department
-from .evaluation import Evaluation
-from .major import Major
-from .professor import Professor
-from .quarter import Quarter
-from .role import Role
-from .school import School
-from .section import Section
-from .student import Student
-from .university import University
-from .official_user_type import OfficialUserType
-from .user import User
-from .vote import Vote
+from .api_key import APIKey  # noqa
+from .assoc import user_permission, student_major, section_professor, api_key_permission  # noqa
+from .course import Course  # noqa
+from .department import Department  # noqa
+from .evaluation import Evaluation  # noqa
+from .major import Major  # noqa
+from .professor import Professor  # noqa
+from .quarter import Quarter  # noqa
+from .permission import Permission  # noqa
+from .school import School  # noqa
+from .section import Section  # noqa
+from .student import Student  # noqa
+from .university import University  # noqa
+from .official_user_type import OfficialUserType  # noqa
+from .user import User  # noqa
+from .vote import Vote  # noqa

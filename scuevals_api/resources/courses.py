@@ -1,7 +1,7 @@
 import json
 import logging
 
-from flask_jwt_extended import jwt_required, get_jwt_identity, current_user
+from flask_jwt_extended import get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
 from sqlalchemy import text, and_
@@ -9,8 +9,8 @@ from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
-from scuevals_api.models import Role, Course, Section, db, Department, School, Professor
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Course, Section, db, Department, School, Professor
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args, get_pg_error_msg
 
 
@@ -29,8 +29,7 @@ class CourseSchema(Schema):
 
 class CoursesResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.WriteEvaluations)
     @use_args({'professor_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -55,8 +54,7 @@ class CoursesResource(Resource):
 
         return [course.to_dict() for course in courses.all()]
 
-    @jwt_required
-    @role_required(Role.API_Key)
+    @auth_required(Permission.UpdateCourses)
     @use_args({'courses': fields.List(fields.Nested(CourseSchema), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()
@@ -82,8 +80,7 @@ class CoursesResource(Resource):
 
 class CourseResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student)
+    @auth_required(Permission.ReadEvaluations)
     @use_args({'embed': fields.Str(validate=validate.OneOf(['professors']))})
     def get(self, args, c_id):
         q = Course.query.options(
@@ -92,9 +89,6 @@ class CourseResource(Resource):
             Course.id == c_id,
             Course.department.has(Department.school.has(School.university_id == current_user.university_id))
         )
-
-        if 'embed' in args:
-            q.options(subqueryload(Course.sections).subqueryload(Section.professors))
 
         course = q.one_or_none()
 
@@ -118,8 +112,10 @@ class CourseResource(Resource):
         ]
 
         if 'embed' in args:
-            data['professors'] = [professor.to_dict()
-                                  for section in course.sections
-                                  for professor in section.professors]
+            professors = Professor.query.filter(
+                Professor.sections.any(Section.course.has(Course.id == c_id))
+            ).all()
+
+            data['professors'] = [professor.to_dict() for professor in professors]
 
         return data

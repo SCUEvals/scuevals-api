@@ -1,3 +1,5 @@
+from datetime import datetime, time
+
 from webargs.flaskparser import FlaskParser, is_json_request
 from flask_restful import abort
 
@@ -28,3 +30,7 @@ def handle_request_parsing_error(err):
 def get_pg_error_msg(e):
     parts = str(e).split('\n')
     return None if len(parts) == 0 else parts[0]
+
+
+def datetime_from_date(date, tzinfo=None):
+    return datetime.combine(date, time(tzinfo=tzinfo))

@@ -1,24 +1,19 @@
 import json
 from urllib.parse import urlencode
 
-from scuevals_api.models import db, Professor, Department, Course
 from tests import TestCase
+from tests.fixtures.factories import ProfessorFactory, CourseFactory
 
 
 class SearchTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        db.session.add(Professor(first_name='Mathias', last_name='Doe', university_id=1))
-        db.session.add(Department(id=1, abbreviation='MATH', name='Mathematics', school_id=1))
-        db.session.add(Course(title='Math Course', number='1', department_id=1))
+        ProfessorFactory(first_name='Mathias')
+        CourseFactory(title='Math Stuff')
 
     def test_search(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt
-        }
-
-        rv = self.client.get('/search', headers=headers, query_string=urlencode({'q': 'mat'}))
+        rv = self.client.get('/search', headers=self.head_auth, query_string=urlencode({'q': 'mat'}))
         self.assertEqual(rv.status_code, 200)
 
         data = json.loads(rv.data)

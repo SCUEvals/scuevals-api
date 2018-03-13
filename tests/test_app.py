@@ -9,7 +9,8 @@ from scuevals_api import create_app
 class AppTestCase(unittest.TestCase):
     def test_create_app(self):
         os.environ['DATABASE_URL'] = os.environ['TEST_DATABASE_URL']
-        create_app()
+        app = create_app()
+        self.assertIsNotNone(app)
 
     @mock.patch('scuevals_api.errors.rollbar.init_app', create=True, return_value=True)
     def test_create_app_production(self, rollbar_init_func):

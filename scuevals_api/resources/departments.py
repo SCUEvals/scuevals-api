@@ -1,15 +1,15 @@
 import json
 import logging
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from flask_restful import Resource
 from marshmallow import fields, Schema
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from werkzeug.exceptions import UnprocessableEntity
 
-from scuevals_api.models import Role, Department, School, db
-from scuevals_api.roles import role_required
+from scuevals_api.models import Permission, Department, School, db
+from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
 
@@ -24,8 +24,7 @@ class DepartmentSchema(Schema):
 
 class DepartmentsResource(Resource):
 
-    @jwt_required
-    @role_required(Role.Student, Role.API_Key)
+    @auth_required(Permission.WriteEvaluations)
     def get(self):
         jwt_data = get_jwt_identity()
 
@@ -35,8 +34,7 @@ class DepartmentsResource(Resource):
 
         return [department.to_dict() for department in departments]
 
-    @jwt_required
-    @role_required(Role.API_Key)
+    @auth_required(Permission.UpdateDepartments)
     @use_args({'departments': fields.List(fields.Nested(DepartmentSchema), required=True)}, locations=('json',))
     def post(self, args):
         jwt_data = get_jwt_identity()

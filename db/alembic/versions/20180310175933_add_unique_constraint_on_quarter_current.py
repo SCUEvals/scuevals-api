@@ -1,7 +1,7 @@
 """Add unique constraint on quarter current
 
 Revision ID: 7fce5e7f49af
-Revises: 5e1a65b96e72
+Revises: 75b3de1db013
 Create Date: 2018-03-10 17:59:33.547817
 
 """

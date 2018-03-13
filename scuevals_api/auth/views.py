@@ -1,20 +1,18 @@
 import json
 import os
-import datetime
 import requests
-from flask import Blueprint, jsonify, current_app as app
-from flask_caching import Cache
-from flask_jwt_extended import create_access_token, JWTManager, get_jwt_identity, jwt_required
+from datetime import timedelta
+from flask import jsonify, current_app as app
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
+from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
 
-from scuevals_api.models import Student, User, db, Role, APIKey, OfficialUserType
+from . import auth_bp, cache
+from .decorators import auth_required
+from scuevals_api.models import Student, User, db, Permission, APIKey, OfficialUserType
 from scuevals_api.utils import use_args
-
-auth_bp = Blueprint('auth', __name__)
-cache = Cache(config={'CACHE_TYPE': 'simple'})
-jwtm = JWTManager()
 
 
 @auth_bp.route('/auth', methods=['POST'])
@@ -23,7 +21,7 @@ def auth(args):
     try:
         headers = jwt.get_unverified_header(args['id_token'])
     except JWTError as e:
-        raise UnprocessableEntity('invalid id_token format: {}'.format(e))
+        raise UnprocessableEntity('invalid id_token: invalid format: {}'.format(e))
 
     key = cache.get(headers['kid'])
     if not key:
@@ -49,14 +47,16 @@ def auth(args):
             options=decode_options
         )
     except ExpiredSignatureError:
-        raise Unauthorized('token is expired')
+        raise UnprocessableEntity('invalid id_token: expired')
     except JWTError as e:
         raise UnprocessableEntity('invalid id_token: {}'.format(e))
 
     if data['hd'] != 'scu.edu':
-        raise UnprocessableEntity('invalid id_token')
+        raise UnprocessableEntity('invalid id_token: incorrect hd')
 
-    user = User.query.filter_by(email=data['email']).one_or_none()
+    user = User.query.options(
+        subqueryload(User.permissions)
+    ).with_polymorphic(Student).filter_by(email=data['email']).one_or_none()
 
     if user is None:
         # new user
@@ -75,26 +75,33 @@ def auth(args):
                 first_name=data['given_name'],
                 last_name=data['family_name'],
                 picture=data['picture'] if 'picture' in data else None,
-                roles=[Role.query.get(Role.Incomplete)],
+                permissions=[Permission.query.get(Permission.Incomplete)],
                 university_id=1
             )
 
         db.session.add(user)
         db.session.flush()
     else:
+        # existing user
+        status = 'ok'
+
+        # check if user is suspended
+        if user.suspended():
+            return jsonify({'status': 'suspended', 'until': user.suspended_until.isoformat()}), 401
+
+        # make sure the permissions are correct in case the student lost reading access
+        if user.type == User.Student:
+            user.check_read_access()
+
         # update the image of the existing user
         if 'picture' in data:
             user.picture = data['picture']
 
         # check if user is complete
-        if Role.Incomplete in user.roles_list:
+        if Permission.Incomplete in user.permissions_list:
             status = 'incomplete'
-        else:
-            status = 'ok'
 
-    ident = user.to_dict()
-
-    token = create_access_token(identity=ident)
+    token = create_access_token(identity=user.to_dict())
 
     db.session.commit()
 
@@ -102,11 +109,24 @@ def auth(args):
 
 
 @auth_bp.route('/auth/validate')
-@jwt_required
+@auth_required
 def validate():
-    ident = get_jwt_identity()
-    new_token = create_access_token(identity=ident)
+    new_token = create_access_token(identity=current_user.to_dict())
+    return jsonify({'jwt': new_token})
 
+
+@auth_bp.route('/auth/refresh')
+@jwt_required
+def refresh():
+    if current_user.suspended():
+        return jsonify({'status': 'suspended', 'until': current_user.suspended_until.isoformat()}), 401
+
+    if current_user.type == User.Student:
+        current_user.check_read_access()
+
+    db.session.commit()
+
+    new_token = create_access_token(identity=current_user.to_dict())
     return jsonify({'jwt': new_token})
 
 
@@ -118,30 +138,9 @@ def auth_api(args):
     if key is None:
         raise Unauthorized('invalid api key')
 
-    ident = {
-        'university_id': key.university_id,
-        'roles': [20]
-    }
-
-    token = create_access_token(identity=ident, expires_delta=datetime.timedelta(hours=24))
+    token = create_access_token(identity=key.identity(), expires_delta=timedelta(hours=24))
 
     return jsonify({'jwt': token})
-
-
-@jwtm.claims_verification_loader
-def claims_verification_loader(user_claims):
-    identity = get_jwt_identity()
-    if 'university_id' not in identity or 'roles' not in identity:
-        return False
-    return True
-
-
-@jwtm.user_loader_callback_loader
-def user_loader(identity):
-    if Role.API_Key in identity['roles'] or Role.Incomplete in identity['roles']:
-        return 1
-
-    return User.query.with_polymorphic(Student).filter(User.id == identity['id']).one_or_none()
 
 
 def refresh_key_cache(data_store):
@@ -162,10 +161,3 @@ def get_certs():
         raise HTTPException('failed to get Google JWKs')
 
     return resp.json()
-
-
-def validate_university_id(u_id):
-    ident = get_jwt_identity()
-
-    if u_id != ident['university_id']:
-        raise Unauthorized('not allowed to access resource from another university')

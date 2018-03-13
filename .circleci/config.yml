@@ -64,13 +64,18 @@ jobs:
       - run:
           name: Restore Database From Production
           command: |
-            heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
-            heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+            if [ "$DEPLOY_STAGING_RESTORE_DB" == "1" ]; then
+              heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+              heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+            else
+              echo Skipping DB restore according to env var...
+            fi
       - run:
-          name: Push to Heroku
+          name: Deploy to Heroku
           command: |
             heroku git:remote -a $HEROKU_APP_STAGING
-            git push heroku develop:master
+            echo Pushing to Heroku...
+            git push heroku develop:master &>/dev/null
 
   deploy-production:
     machine:
@@ -84,10 +89,11 @@ jobs:
           name: Setup Heroku
           command: bash .circleci/setup-heroku.sh
       - run:
-          name: Push to Heroku
+          name: Deploy to Heroku
           command: |
             heroku git:remote -a $HEROKU_APP_PRODUCTION
-            git push heroku master:master
+            echo Pushing to Heroku...
+            git push heroku master:master &>/dev/null
 
 workflows:
   version: 2
