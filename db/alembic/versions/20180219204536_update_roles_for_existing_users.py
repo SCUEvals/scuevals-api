@@ -25,7 +25,7 @@ def upgrade():
     # allow them to keep the reading permission until the last day of the current quarter
     conn.execute("""
 update students
-set read_access_until = (select (upper(period) + interval '1 day') from quarters where current = true)
+set read_access_until = (select (upper(period) + interval '35 hours') from quarters where current = true)
 where id in (select id from user_role where role_id = 1)
                  """)
 

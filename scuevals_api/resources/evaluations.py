@@ -94,7 +94,7 @@ class EvaluationsResource(Resource):
 
         # extend their read access until the end of the current quarter
         cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
-        current_user.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
+        current_user.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1, hours=11),
                                                       tzinfo=timezone.utc)
 
         db.session.commit()
