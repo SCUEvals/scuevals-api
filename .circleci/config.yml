@@ -71,9 +71,10 @@ jobs:
               echo Skipping DB restore according to env var...
             fi
       - run:
-          name: Push to Heroku
+          name: Deploy to Heroku
           command: |
             heroku git:remote -a $HEROKU_APP_STAGING
+            echo Pushing to Heroku...
             git push heroku develop:master &>/dev/null
 
   deploy-production:
@@ -88,9 +89,10 @@ jobs:
           name: Setup Heroku
           command: bash .circleci/setup-heroku.sh
       - run:
-          name: Push to Heroku
+          name: Deploy to Heroku
           command: |
             heroku git:remote -a $HEROKU_APP_PRODUCTION
+            echo Pushing to Heroku...
             git push heroku master:master &>/dev/null
 
 workflows:
