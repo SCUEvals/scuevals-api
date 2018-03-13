@@ -74,7 +74,7 @@ jobs:
           name: Push to Heroku
           command: |
             heroku git:remote -a $HEROKU_APP_STAGING
-            git push heroku develop:master
+            git push -q heroku develop:master
 
   deploy-production:
     machine:
@@ -91,7 +91,7 @@ jobs:
           name: Push to Heroku
           command: |
             heroku git:remote -a $HEROKU_APP_PRODUCTION
-            git push heroku master:master
+            git push -q heroku master:master
 
 workflows:
   version: 2
