@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
-from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote
+from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote, Flag, Reason
 from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args, datetime_from_date
 
@@ -221,3 +221,49 @@ class EvaluationVoteResource(Resource):
         db.session.commit()
 
         return '', 204
+
+
+class EvaluationFlagResource(Resource):
+    args = {
+        'reason_ids': fields.List(fields.Int(), required=True, validate=validate.Length(min=1)),
+        'comment': fields.Str(required=False, validate=validate.Length(max=500))
+    }
+
+    @auth_required(Permission.ReadEvaluations)
+    @use_args(args, locations=('json',))
+    def post(self, args, e_id):
+
+        evaluation = Evaluation.query.filter(
+            Evaluation.id == e_id,
+            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
+        ).one_or_none()
+
+        if evaluation is None:
+            raise NotFound('evaluation with the specified id not found')
+
+        # do not allow flagging your own evaluations
+        if evaluation.student_id == current_user.id:
+            raise Forbidden('not allowed to flag your own evaluations')
+
+        # get the reasons
+        reasons = []
+        for reason_id in args['reason_ids']:
+            reason = Reason.query.get(reason_id)
+            if reason is None:
+                raise UnprocessableEntity('no reason with id {} exists'.format(reason_id))
+            reasons.append(reason)
+
+        flag = Flag(
+            reasons=reasons,
+            user_id=current_user.id,
+            accused_student_id=evaluation.student_id,
+            evaluation_id=evaluation.id
+        )
+
+        if 'comment' in args:
+            flag.comment = args['comment']
+
+        db.session.add(flag)
+        db.session.commit()
+
+        return '', 201
