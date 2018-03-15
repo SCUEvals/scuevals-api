@@ -4,7 +4,9 @@ from urllib.parse import urlencode
 
 from flask_jwt_extended import create_access_token
 
-from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory
+from tests.fixtures.factories import (
+    SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory, ReasonFactory
+)
 from scuevals_api.models import db, Evaluation, Vote, Permission
 from tests import TestCase, assert_valid_schema
 
@@ -203,7 +205,7 @@ class EvaluationTestCase(TestCase):
         self.assertIsNone(ev)
 
 
-class TestEvaluationVoteTestCase(TestCase):
+class EvaluationVoteTestCase(TestCase):
     def setUp(self):
         super().setUp()
         self.section = SectionFactory()
@@ -279,3 +281,23 @@ class TestEvaluationVoteTestCase(TestCase):
         self.assertEqual(404, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('vote not found', data['message'])
+
+
+class EvaluationFlagTestCase(TestCase):
+    def test_post_flag(self):
+        evaluation = EvaluationFactory()
+        reason1 = ReasonFactory()
+        reason2 = ReasonFactory()
+
+        db.session.flush()
+
+        data = {
+            'reason_ids': [reason1.id, reason2.id],
+            'comment': 'Foo'
+        }
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth,
+                              data=json.dumps(data))
+
+        self.assertEqual(201, rv.status_code)
