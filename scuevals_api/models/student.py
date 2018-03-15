@@ -19,6 +19,7 @@ class Student(User):
 
     majors = db.relationship('Major', secondary=student_major, back_populates='students', passive_deletes=True)
     votes = db.relationship('Vote', back_populates='student', passive_deletes=True)
+    accused_flags = db.relationship('Flag', back_populates='accused_student', passive_deletes=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 's',

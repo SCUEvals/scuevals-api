@@ -23,6 +23,7 @@ class Evaluation(db.Model):
     professor = db.relationship('Professor', back_populates='evaluations')
     section = db.relationship('Section', back_populates='evaluations')
     votes = db.relationship('Vote', back_populates='evaluation', passive_deletes=True)
+    flags = db.relationship('Flag', back_populates='evaluation', passive_deletes=True)
 
     __table_args__ = (
         db.UniqueConstraint('student_id', 'professor_id', 'section_id'),

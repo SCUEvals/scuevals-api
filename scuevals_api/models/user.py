@@ -26,6 +26,7 @@ class User(db.Model):
 
     university = db.relationship('University', back_populates='users')
     permissions = db.relationship('Permission', secondary=user_permission, back_populates='users', passive_deletes=True)
+    flags = db.relationship('Flag', back_populates='user', passive_deletes=True)
 
     __mapper_args__ = {
         'polymorphic_identity': 'u',
