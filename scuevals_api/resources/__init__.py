@@ -6,7 +6,9 @@ from .professors import ProfessorsResource, ProfessorResource
 from .classes import ClassResource
 from .courses import CoursesResource, CourseResource
 from .departments import DepartmentsResource
-from .evaluations import EvaluationsResource, EvaluationsRecentResource, EvaluationResource, EvaluationVoteResource
+from .evaluations import (
+    EvaluationsResource, EvaluationsRecentResource, EvaluationResource, EvaluationVoteResource, EvaluationFlagResource
+)
 from .majors import MajorsResource
 from .quarters import QuartersResource
 from .search import SearchResource
@@ -29,6 +31,7 @@ api.add_resource(EvaluationsResource, '/evaluations')
 api.add_resource(EvaluationsRecentResource, '/evaluations/recent')
 api.add_resource(EvaluationResource, '/evaluations/<int:e_id>')
 api.add_resource(EvaluationVoteResource, '/evaluations/<int:e_id>/vote')
+api.add_resource(EvaluationFlagResource, '/evaluations/<int:e_id>/flag')
 
 api.add_resource(MajorsResource, '/majors')
 

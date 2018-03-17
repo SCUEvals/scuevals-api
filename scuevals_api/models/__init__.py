@@ -26,10 +26,12 @@ from .assoc import user_permission, student_major, section_professor, api_key_pe
 from .course import Course  # noqa
 from .department import Department  # noqa
 from .evaluation import Evaluation  # noqa
+from .flag import Flag  # noqa
 from .major import Major  # noqa
+from .permission import Permission  # noqa
 from .professor import Professor  # noqa
 from .quarter import Quarter  # noqa
-from .permission import Permission  # noqa
+from .reason import Reason  # noqa
 from .school import School  # noqa
 from .section import Section  # noqa
 from .student import Student  # noqa

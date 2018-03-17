@@ -19,3 +19,8 @@ api_key_permission = db.Table('api_key_permission', db.metadata,
                               db.Column('api_key_id', db.Integer, db.ForeignKey('api_keys.id', ondelete='cascade')),
                               db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id')),
                               db.UniqueConstraint('api_key_id', 'permission_id'))
+
+flag_reason = db.Table('flag_reason', db.metadata,
+                       db.Column('flag_id', db.Integer, db.ForeignKey('flags.id', ondelete='cascade')),
+                       db.Column('reason_id', db.Integer, db.ForeignKey('reasons.id')),
+                       db.UniqueConstraint('flag_id', 'reason_id'))
