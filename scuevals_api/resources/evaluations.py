@@ -132,14 +132,7 @@ class EvaluationResource(Resource):
 
     @auth_required(Permission.ReadEvaluations)
     def get(self, e_id):
-        evaluation = Evaluation.query.filter(
-            Evaluation.id == e_id,
-            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id)),
-        ).one_or_none()
-
-        if evaluation is None:
-            raise NotFound('evaluation with the specified id not found')
-
+        evaluation = get_eval(e_id)
         return evaluation.to_dict()
 
     @auth_required(Permission.WriteEvaluations)
@@ -171,13 +164,7 @@ class EvaluationVoteResource(Resource):
         student_id = get_jwt_identity()['id']
         value = self.values[args['value']]
 
-        evaluation = Evaluation.query.filter(
-            Evaluation.id == e_id,
-            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
-        ).one_or_none()
-
-        if evaluation is None:
-            raise NotFound('evaluation with the specified id not found')
+        evaluation = get_eval(e_id)
 
         # do not allow voting on your own evaluations
         if evaluation.student_id == student_id:
@@ -201,13 +188,7 @@ class EvaluationVoteResource(Resource):
 
     @auth_required(Permission.ReadEvaluations)
     def delete(self, e_id):
-        evaluation = Evaluation.query.filter(
-            Evaluation.id == e_id,
-            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
-        ).one_or_none()
-
-        if evaluation is None:
-            raise NotFound('evaluation with the specified id not found')
+        evaluation = get_eval(e_id)
 
         vote = Vote.query.filter(
             Vote.evaluation == evaluation,
@@ -233,13 +214,7 @@ class EvaluationFlagResource(Resource):
     @use_args(args, locations=('json',))
     def post(self, args, e_id):
 
-        evaluation = Evaluation.query.filter(
-            Evaluation.id == e_id,
-            Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
-        ).one_or_none()
-
-        if evaluation is None:
-            raise NotFound('evaluation with the specified id not found')
+        evaluation = get_eval(e_id)
 
         # do not allow flagging your own evaluations
         if evaluation.student_id == current_user.id:
@@ -267,3 +242,15 @@ class EvaluationFlagResource(Resource):
         db.session.commit()
 
         return '', 201
+
+
+def get_eval(eval_id):
+    evaluation = Evaluation.query.filter(
+        Evaluation.id == eval_id,
+        Evaluation.section.has(Section.quarter.has(Quarter.university_id == current_user.university_id))
+    ).one_or_none()
+
+    if evaluation is None:
+        raise NotFound('evaluation with the specified id not found')
+
+    return evaluation

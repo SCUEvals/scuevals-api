@@ -284,20 +284,72 @@ class EvaluationVoteTestCase(TestCase):
 
 
 class EvaluationFlagTestCase(TestCase):
-    def test_post_flag(self):
-        evaluation = EvaluationFactory()
-        reason1 = ReasonFactory()
-        reason2 = ReasonFactory()
+    def setUp(self):
+        self.reason1 = ReasonFactory()
+        self.reason2 = ReasonFactory()
 
         db.session.flush()
 
+        self.post_data = {
+            'reason_ids': [self.reason1.id, self.reason2.id],
+            'comment': 'Foo'
+        }
+
+    def test_post_flag(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(201, rv.status_code)
+
+        flags = evaluation.flags
+        self.assertEqual(1, len(flags))
+
+    def test_post_flag_no_comment(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        data = self.post_data
+        del data['comment']
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(201, rv.status_code)
+
+    def test_post_flag_non_existing_eval(self):
+        rv = self.client.post('/evaluations/0/flag', headers=self.head_auth, data=json.dumps(self.post_data))
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('evaluation with the specified id not found', data['message'])
+
+    def test_post_flag_own_evaluation(self):
+        evaluation = EvaluationFactory(student=self.student)
+        db.session.flush()
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(403, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not allowed to flag your own evaluations', data['message'])
+
+    def test_post_flag_invalid_reason(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
         data = {
-            'reason_ids': [reason1.id, reason2.id],
+            'reason_ids': [-1],
             'comment': 'Foo'
         }
 
         rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
-                              headers=self.head_auth,
+                              headers=self.head_auth_json,
                               data=json.dumps(data))
 
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(422, rv.status_code)
