@@ -321,6 +321,22 @@ class EvaluationFlagTestCase(TestCase):
 
         self.assertEqual(201, rv.status_code)
 
+    def test_post_flag_duplicate(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(201, rv.status_code)
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(409, rv.status_code)
+
     def test_post_flag_non_existing_eval(self):
         rv = self.client.post('/evaluations/0/flag', headers=self.head_auth, data=json.dumps(self.post_data))
         self.assertEqual(404, rv.status_code)

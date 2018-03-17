@@ -220,6 +220,12 @@ class EvaluationFlagResource(Resource):
         if evaluation.student_id == current_user.id:
             raise Forbidden('not allowed to flag your own evaluations')
 
+        # check if user already flagged this eval
+        existing_flag = Flag.query.filter_by(evaluation_id=e_id, user_id=current_user.id).one_or_none()
+
+        if existing_flag is not None:
+            raise Conflict('user already flagged this evaluation')
+
         # get the reasons
         reasons = []
         for reason_id in args['reason_ids']:
