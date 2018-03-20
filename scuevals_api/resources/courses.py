@@ -100,6 +100,7 @@ class CourseResource(Resource):
             {
                 **ev.to_dict(),
                 'user_vote': ev.user_vote(current_user),
+                'user_flagged': ev.user_flag(current_user),
                 'quarter_id': ev.section.quarter_id,
                 'professor': ev.professor.to_dict(),
                 'author': {

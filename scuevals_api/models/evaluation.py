@@ -1,7 +1,8 @@
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
 
-from scuevals_api.models.vote import Vote
+from .flag import Flag
+from .vote import Vote
 from . import db
 
 
@@ -41,6 +42,10 @@ class Evaluation(db.Model):
     def user_vote(self, user):
         vote = Vote.query.filter(Vote.student_id == user.id, Vote.evaluation_id == self.id).one_or_none()
         return None if vote is None else Vote.SYMBOLS[vote.value]
+
+    def user_flag(self, user):
+        flag = Flag.query.filter_by(user_id=user.id, evaluation_id=self.id).one_or_none()
+        return False if flag is None else True
 
     def votes_value(self):
         return sum(v.value for v in self.votes)
