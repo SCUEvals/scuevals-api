@@ -67,7 +67,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Request (application/json)
     + Attributes
-        + `api_key`: ``<API_KEY>` (string, required)
+        + `api_key`: `<API_KEY>` (string, required)
 
 + Response 200 (application/json)
     + Attributes
@@ -280,21 +280,24 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 ### Add/Overwrite Vote [PUT]
 
-+ Response 204 (application/json)
-
-+ Response 404 (application/json)
++ Request (application/json)
     + Attributes
-        + message: `evaluation with the specified id not found` (string, required, fixed)
+        + value: u, p (enum[string], required, fixed)
+
++ Response 204 (application/json)
 
 + Response 403 (application/json)
     + Attributes
         + message: `not allowed to vote on your own evaluations` (string, required, fixed)
 
-### Delete Vote [DELETE /evaluations/{eval_id}/vote/{vote_id}]
++ Response 404 (application/json)
+    + Attributes
+        + message: `evaluation with the specified id not found` (string, required, fixed).
+
+### Delete Vote [DELETE /evaluations/{eval_id}/vote]
 
 + Parameters
     + eval_id: 1 (number, required)
-    + vote_id: 1 (number, required)
     
 + Response 204 (application/json)
 
@@ -303,6 +306,34 @@ Validates the JWT and returns a new one freshly generated from the database.
         + message (enum[string], required, fixed)
             + `evaluation with the specified id not found`
             + `vote not found`
+
+            
+## Evaluation Flags [/evaluations/{id}/flag]
+
++ Parameters
+    + id: 1 (number, required)
+
+### Add Flag [POST]
+
++ Request (application/json)
+    + Attributes
+        + `reason_ids`: 1, 2 (array[number], required)
+        + comment: Foo (string, optional)
+
++ Response 201 (application/json)
+
++ Response 403 (application/json)
+    + Attributes
+        + message: `not allowed to flag your own evaluations` (string, required, fixed)
+
++ Response 409 (application/json)
+    + Attributes
+        + message: `user already flagged this evaluation` (string, required, fixed)
+
++ Response 422 (application/json)
+    + Attributes
+        + message: `no reason with id <ID> exists` (string, required, fixed)
+
 
 
 ## Majors [/majors]
