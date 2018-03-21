@@ -153,7 +153,8 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes (Course, required)
         + evaluations (array, required, fixed-type)
             + (Evaluation, required)
-                + user_vote: true (boolean, required)
+                + user_vote: u, d (enum[string], required)
+                + user_flagged: false (boolean, required) 
                 + quarter_id: 3900 (number, required)
                 + professor (Professor, required)
                 + author (required)
@@ -387,7 +388,8 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes (Professor, required)
         + evaluations (array, required, fixed-type)
             + (Evaluation, required)
-                + user_vote: true (boolean, required)
+                + user_vote: u, d (enum[string], required)
+                + user_flagged: false (boolean, required) 
                 + quarter_id: 3900 (number, required)
                 + course (Course, required)
                 + author (required)
@@ -460,7 +462,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 ## Course (object)
 + id: 1 (number, required)
-+ number: 42 (number, required)
++ number: 42 (string, required)
 + title: What is Life (string, required)
 + department_id: 3 (number, required)
 
