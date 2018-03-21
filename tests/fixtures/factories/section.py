@@ -10,6 +10,7 @@ class SectionFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.Section
         sqlalchemy_session = models.db.session
+        sqlalchemy_session_persistence = 'flush'
 
     quarter = factory.SubFactory(QuarterFactory)
     course = factory.SubFactory(CourseFactory)

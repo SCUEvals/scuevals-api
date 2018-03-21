@@ -25,6 +25,7 @@ class EvaluationFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.Evaluation
         sqlalchemy_session = models.db.session
+        sqlalchemy_session_persistence = 'flush'
 
     version = 1
     data = eval_v1_data
