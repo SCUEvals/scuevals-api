@@ -165,9 +165,8 @@ class EvaluationTestCase(TestCase):
         self.section = SectionFactory()
         self.eval = EvaluationFactory(student=self.student)
         self.eval2 = EvaluationFactory(section=self.section, professor=self.section.professors[0])
-        EvaluationFactory(student=self.student, votes=[VoteFactory(student_id=0)])
-
-        db.session.flush()
+        eval3 = EvaluationFactory(student=self.student)
+        VoteFactory(student_id=0, evaluation=eval3)
 
     def test_get(self):
         rv = self.client.get('/evaluations/{}'.format(self.eval.id), headers=self.head_auth)
@@ -236,7 +235,7 @@ class EvaluationVoteTestCase(TestCase):
         self.assertEqual(Vote.DOWNVOTE, self.eval2.votes[0].value)
 
     def test_put_upvote_existing_downvote(self):
-        self.eval2.votes.append(VoteFactory(value=Vote.DOWNVOTE, student_id=self.student.id))
+        VoteFactory(value=Vote.DOWNVOTE, student_id=self.student.id, evaluation=self.eval2)
 
         rv = self.client.put('/evaluations/{}/vote'.format(self.eval2.id),
                              headers=self.head_auth,
