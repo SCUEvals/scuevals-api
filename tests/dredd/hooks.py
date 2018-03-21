@@ -1,4 +1,5 @@
 import dredd_hooks as hooks
+
 from flask_jwt_extended import create_access_token
 
 from scuevals_api import create_app, db
@@ -17,8 +18,15 @@ def before_all(trans):
     ctx = app.app_context()
     ctx.push()
 
+    stash['app'] = app
+
+    db.session.close_all()
     db.drop_all()
-    init_db(app, db)
+
+
+@hooks.before_each
+def before_each(trans):
+    init_db(stash['app'], db)
     seed_db(db)
 
     stash['student'] = factories.StudentFactory(
@@ -33,30 +41,41 @@ def before_all(trans):
         ]
     )
 
+    factories.UserFactory.reset_sequence(2)
+
     db.session.commit()
 
     jwt = create_access_token(identity=stash['student'].to_dict())
 
-    for t in trans:
-        t['request']['headers']['Authorization'] = 'Bearer ' + jwt
-
-
-@hooks.before_each
-def before_each(trans):
-    db.session.begin_nested()
+    trans['request']['headers']['Authorization'] = 'Bearer ' + jwt
 
 
 @hooks.after_each
 def after_each(trans):
-    db.session.rollback()
-    db.session.remove()
+    db.session.close_all()
+    db.drop_all()
+
+
+@hooks.before('Authentication > Authenticate New/Old User')
+def skip_test(trans):
+    trans['skip'] = True
+
+
+@hooks.before('Authentication > Authenticate API Key')
+def auth_api_key(trans):
+    factories.APIKeyFactory(key='<API_KEY>')
+    db.session.commit()
 
 
 @hooks.before('Evaluations > Get Evaluation Details')
 def evaluation(trans):
     factories.EvaluationFactory(id=1, student=stash['student'])
+    db.session.commit()
 
 
-@hooks.before('Authentication > Authenticate API Key')
-def auth_new_old_user(trans):
-    factories.APIKeyFactory(key='<API_KEY>')
+# @hooks.before('Professors > Get Professor Details')
+# def professor_details(trans):
+#     prof = factories.ProfessorFactory(id=1)
+#     factories.EvaluationFactory(professor=prof)
+#     factories.EvaluationFactory(professor=prof)
+#     db.session.commit()
