@@ -25,4 +25,3 @@ class SectionFactory(factory.alchemy.SQLAlchemyModelFactory):
                 self.professors.append(professor)
         else:
             self.professors.append(ProfessorFactory())
-            self.professors.append(ProfessorFactory())

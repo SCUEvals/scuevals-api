@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token
 
 from scuevals_api import create_app, db
 from scuevals_api.cmd import init_db
-from scuevals_api.models import Permission
+from scuevals_api.models import Permission, Vote
 from tests import seed_db
 from tests.fixtures import factories
 
@@ -64,6 +64,15 @@ def skip_test(trans):
 @hooks.before('Authentication > Authenticate API Key')
 def auth_api_key(trans):
     factories.APIKeyFactory(key='<API_KEY>')
+    db.session.commit()
+
+
+@hooks.before('Courses > Get Course Details')
+def course_details(trans):
+    course = factories.CourseFactory(id=1)
+    section = factories.SectionFactory(course=course)
+    ev = factories.EvaluationFactory(section=section, professor=section.professors[0])
+    factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
     db.session.commit()
 
 

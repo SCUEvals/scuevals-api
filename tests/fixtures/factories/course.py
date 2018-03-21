@@ -10,6 +10,6 @@ class CourseFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = models.db.session
         sqlalchemy_session_persistence = 'flush'
 
-    number = factory.Sequence(lambda n: str(n))
+    number = factory.Sequence(lambda n: str(n + 1))
     title = 'What is Life'
     department = factory.SubFactory(DepartmentFactory)
