@@ -1,5 +1,8 @@
 import os
+
+import click
 from flask import Flask
+from flask.cli import run_command
 
 from scuevals_api.models import models_bp, db
 from scuevals_api.auth import auth_bp
@@ -45,6 +48,12 @@ def register_blueprints(app):
 
 def register_cli(app):
     from scuevals_api.models import db
+
+    @app.cli.command('start')
+    @click.option('--env', default='development', type=click.Choice(['development', 'test']))
+    def start(env):
+        new_app = create_app(env)
+        new_app.run(host='0.0.0.0')
 
     @app.cli.command(short_help='Initializes the DB.')
     def initdb():
