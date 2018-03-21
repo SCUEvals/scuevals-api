@@ -3,7 +3,7 @@ import os
 import requests
 from datetime import timedelta
 from flask import jsonify, current_app as app
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, current_user
+from flask_jwt_extended import create_access_token, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from sqlalchemy.orm import subqueryload
