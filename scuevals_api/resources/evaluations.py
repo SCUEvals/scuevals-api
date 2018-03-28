@@ -107,7 +107,7 @@ class EvaluationsResource(Resource):
 
 class EvaluationsRecentResource(Resource):
 
-    @auth_required(Permission.WriteEvaluations)
+    @auth_required(Permission.ReadEvaluations)
     @use_args({'count': fields.Int(missing=10, validate=validate.Range(min=1, max=25))})
     def get(self, args):
         evals = Evaluation.query.options(
