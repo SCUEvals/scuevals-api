@@ -44,7 +44,7 @@ jobs:
           command: |
             . venv/bin/activate
             python setup.py test
-            (coverage run --source=scuevals_api setup.py test && coveralls)
+            (coverage run --fail-under=100 --source=scuevals_api setup.py test && coveralls)
 
       - store_artifacts:
           path: test-reports
