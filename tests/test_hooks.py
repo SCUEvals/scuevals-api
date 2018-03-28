@@ -1,6 +1,6 @@
 import unittest
 
-from tests.dredd.hooks import before_all, before_each, after_each, course_details
+from tests.dredd import hooks
 
 transaction = {
     'request': {
@@ -14,13 +14,19 @@ transaction = {
 class HooksTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        before_all(transaction)
+        hooks.before_all(transaction)
 
     def setUp(self):
-        before_each(transaction)
+        hooks.before_each(transaction)
 
     def tearDown(self):
-        after_each(transaction)
+        hooks.after_each(transaction)
 
     def test_course_details(self):
-        course_details(transaction)
+        hooks.course_details(transaction)
+
+    def test_evaluation(self):
+        hooks.evaluation(transaction)
+
+    def test_professor_details(self):
+        hooks.professor_details(transaction)

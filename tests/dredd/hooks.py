@@ -82,9 +82,12 @@ def evaluation(trans):
     db.session.commit()
 
 
-# @hooks.before('Professors > Get Professor Details')
-# def professor_details(trans):
-#     prof = factories.ProfessorFactory(id=1)
-#     factories.EvaluationFactory(professor=prof)
-#     factories.EvaluationFactory(professor=prof)
-#     db.session.commit()
+@hooks.before('Professors > Get Professor Details')
+def professor_details(trans):
+    prof = factories.ProfessorFactory(id=1)
+
+    sec = factories.SectionFactory(professors=[prof])
+    ev = factories.EvaluationFactory(professor=prof, section=sec)
+    factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
+
+    db.session.commit()

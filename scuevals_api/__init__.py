@@ -2,7 +2,6 @@ import os
 
 import click
 from flask import Flask
-from flask.cli import run_command
 
 from scuevals_api.models import models_bp, db
 from scuevals_api.auth import auth_bp

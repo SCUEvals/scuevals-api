@@ -14,14 +14,4 @@ class SectionFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     quarter = factory.SubFactory(QuarterFactory)
     course = factory.SubFactory(CourseFactory)
-
-    @factory.post_generation
-    def professors(self, create, extracted):
-        if not create:
-            return
-
-        if extracted:
-            for professor in extracted:
-                self.professors.append(professor)
-        else:
-            self.professors.append(ProfessorFactory())
+    professors = factory.List([factory.SubFactory(ProfessorFactory)])

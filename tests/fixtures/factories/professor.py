@@ -9,6 +9,7 @@ class ProfessorFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = models.db.session
         sqlalchemy_session_persistence = 'flush'
 
+    id = factory.Sequence(lambda n: n)
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
     university_id = 1
