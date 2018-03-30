@@ -25,8 +25,14 @@ class HooksTestCase(unittest.TestCase):
     def test_course_details(self):
         hooks.course_details(transaction)
 
+    def test_evaluations(self):
+        hooks.evaluations(transaction)
+
     def test_evaluation(self):
         hooks.evaluation(transaction)
 
     def test_professor_details(self):
         hooks.professor_details(transaction)
+
+    def test_student_evaluations(self):
+        hooks.student_evaluations(transaction)

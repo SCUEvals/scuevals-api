@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
-from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote, Flag, Reason
+from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote, Flag, Reason, Course
 from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args, datetime_from_date
 
@@ -30,26 +30,19 @@ class EvaluationSchemaV1(Schema):
 
 
 class EvaluationsResource(Resource):
+    get_args = {
+        'professor_id': fields.Int(),
+        'course_id': fields.Int(),
+        'quarter_id': fields.Int(),
+        'embed': fields.List(fields.Str(validate=validate.OneOf(['professor', 'course'])), missing=[])
+    }
 
-    @auth_required(Permission.WriteEvaluations)
-    def get(self):
-        ident = get_jwt_identity()
-        evals = Evaluation.query.options(
-            subqueryload(Evaluation.professor),
-            subqueryload(Evaluation.section).subqueryload(Section.course)
-        ).filter_by(student_id=ident['id'])
+    @auth_required(Permission.ReadEvaluations)
+    @use_args(get_args)
+    def get(self, args):
+        return get_evals_json(args)
 
-        return [
-            {
-                **ev.to_dict(),
-                'quarter_id': ev.section.quarter_id,
-                'professor': ev.professor.to_dict(),
-                'course': ev.section.course.to_dict()
-            }
-            for ev in evals.all()
-        ]
-
-    args = {
+    post_args = {
         'quarter_id': fields.Int(required=True),
         'professor_id': fields.Int(required=True),
         'course_id': fields.Int(required=True),
@@ -59,7 +52,7 @@ class EvaluationsResource(Resource):
     }
 
     @auth_required(Permission.WriteEvaluations)
-    @use_args(args, locations=('json',))
+    @use_args(post_args, locations=('json',))
     def post(self, args):
         section = db.session.query(Section.id).filter(
             Section.quarter_id == args['quarter_id'],
@@ -260,3 +253,43 @@ def get_eval(eval_id):
         raise NotFound('evaluation with the specified id not found')
 
     return evaluation
+
+
+def get_evals_json(args, student_id=None):
+    evals = Evaluation.query
+
+    if 'professor' in args['embed']:
+        evals = evals.options(subqueryload(Evaluation.professor))
+
+    if 'course' in args['embed']:
+        evals = evals.options(subqueryload(Evaluation.section).subqueryload(Section.course))
+
+    if student_id is not None:
+        evals = evals.filter_by(student_id=student_id)
+
+    if 'professor_id' in args:
+        evals = evals.filter_by(professor_id=args['professor_id'])
+
+    if 'course_id' in args:
+        evals = evals.filter(Evaluation.section.has(Section.course_id == args['course_id']))
+
+    if 'quarter_id' in args:
+        evals = evals.filter(Evaluation.section.has(Section.quarter_id == args['quarter_id']))
+
+    data = []
+
+    for ev in evals.all():
+        ev_data = {
+            **ev.to_dict(),
+            'quarter_id': ev.section.quarter_id
+        }
+
+        if 'professor' in args['embed']:
+            ev_data['professor'] = ev.professor.to_dict()
+
+        if 'course' in args['embed']:
+            ev_data['course'] = ev.section.course.to_dict()
+
+        data.append(ev_data)
+
+    return data

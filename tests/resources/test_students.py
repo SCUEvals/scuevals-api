@@ -1,8 +1,9 @@
 import json
+from urllib.parse import urlencode
+
 from flask_jwt_extended import create_access_token
 # from datetime import datetime, timezone
-
-from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory
+from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory, EvaluationFactory
 from scuevals_api.models import db, Permission
 from tests import TestCase
 
@@ -71,3 +72,24 @@ class StudentsTestCase(TestCase):
         self.assertEqual(rv.status_code, 422)
         resp = json.loads(rv.data)
         self.assertEqual('invalid major(s) specified', resp['message'])
+
+
+class StudentEvaluations(TestCase):
+    def test_get(self):
+        EvaluationFactory(student=self.student)
+        EvaluationFactory(student=self.student)
+        EvaluationFactory()
+
+        rv = self.client.get('/students/{}/evaluations'.format(self.student.id),
+                             headers=self.head_auth,
+                             query_string=urlencode({'embed': ['professor', 'course']}, True))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(2, len(evals))
+
+    def test_get_wrong_user(self):
+        student = StudentFactory()
+
+        rv = self.client.get('/students/{}/evaluations'.format(student.id), headers=self.head_auth)
+        self.assertEqual(rv.status_code, 403)

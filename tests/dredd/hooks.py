@@ -76,6 +76,16 @@ def course_details(trans):
     db.session.commit()
 
 
+@hooks.before('Evaluations > List All Evaluations')
+def evaluations(trans):
+    prof = factories.ProfessorFactory(id=1)
+    course = factories.CourseFactory(id=1)
+    quarter = factories.QuarterFactory(id=1)
+    sec = factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
+    factories.EvaluationFactory(section=sec, professor=prof)
+    db.session.commit()
+
+
 @hooks.before('Evaluations > Get Evaluation Details')
 def evaluation(trans):
     factories.EvaluationFactory(id=1, student=stash['student'])
@@ -90,4 +100,14 @@ def professor_details(trans):
     ev = factories.EvaluationFactory(professor=prof, section=sec)
     factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
 
+    db.session.commit()
+
+
+@hooks.before('Student > List All Evaluations')
+def student_evaluations(trans):
+    prof = factories.ProfessorFactory(id=1)
+    course = factories.CourseFactory(id=1)
+    quarter = factories.QuarterFactory(id=1)
+    sec = factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
+    factories.EvaluationFactory(section=sec, professor=prof, student=stash['student'])
     db.session.commit()

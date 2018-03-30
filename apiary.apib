@@ -197,15 +197,24 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 ## Evaluations [/evaluations]
 
-### List All Your Own Evaluations [GET]
+### List All Evaluations [GET /evaluations{?professor_id,course_id,quarter_id,embed}]
+
++ Parameters
+    + professor_id: 1 (number, optional)
+    + course_id: 1 (number, optional)
+    + quarter_id: 1 (number, optional)
+    + embed (array, optional)
+        + (enum)
+            + professor
+            + course
 
 + Response 200 (application/json)
-
     + Attributes (array, required, fixed-type)
         + (Evaluation)
             + quarter_id: 3900 (number, required)
-            + professor (Professor, required)
-            + course (Course, required)
+            + professor (Professor, optional)
+            + course (Course, optional)
+
 
 ### List Recent Evaluations [GET /evaluations/recent{?count}]
 
@@ -219,6 +228,7 @@ Validates the JWT and returns a new one freshly generated from the database.
             + quarter_id: 3900 (number, required)
             + professor (Professor, required)
             + course (Course, required)
+
 
 ### Get Evaluation Details [GET /evaluations/{id}]
 
@@ -431,7 +441,7 @@ Validates the JWT and returns a new one freshly generated from the database.
         + professors (array[Professor], required, fixed-type)
 
 
-## Students [/students/{id}]
+## Student [/students/{id}]
 
 + Parameters
     + id: 1 (number, required)
@@ -456,6 +466,25 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 422 (application/json)
     + Attributes
         + message: `invalid major(s) specified` (string, required, fixed)
+
+
+### List All Evaluations [GET /students/{id}/evaluations{?professor_id,course_id,quarter_id,embed}]
+
++ Parameters
+    + professor_id: 1 (number, optional)
+    + course_id: 1 (number, optional)
+    + quarter_id: 1 (number, optional)
+    + embed (array, optional)
+        + (enum)
+            + professor
+            + course
+
++ Response 200 (application/json)
+    + Attributes (array, required, fixed-type)
+        + (Evaluation)
+            + quarter_id: 3900 (number, required)
+            + professor (Professor, optional)
+            + course (Course, optional)
 
 
 # Data Structures

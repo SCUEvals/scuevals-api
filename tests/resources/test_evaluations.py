@@ -17,16 +17,55 @@ class EvaluationsTestCase(TestCase):
 
         QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
         self.section = SectionFactory()
-        EvaluationFactory(student=self.student)
-        EvaluationFactory(student=self.student)
-        EvaluationFactory()
 
     def test_get(self):
-        rv = self.client.get('/evaluations', headers=self.head_auth)
+        EvaluationFactory()
+        EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'embed': ['professor', 'course']}, True))
+
         self.assertEqual(200, rv.status_code)
         evals = json.loads(rv.data)
-        self.assertEqual(2, len(evals))
-        assert_valid_schema(rv.data, 'evaluations.json')
+        self.assertEqual(3, len(evals))
+
+    def test_get_quarter_id(self):
+        ev = EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'quarter_id': ev.section.quarter_id}))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(1, len(evals))
+
+    def test_get_professor_id(self):
+        ev = EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'professor_id': ev.professor_id}))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(1, len(evals))
+
+    def test_get_course_id(self):
+        ev = EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'course_id': ev.section.course_id}))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(1, len(evals))
 
     def test_post_evaluation(self):
         student = StudentFactory(permissions=[Permission.query.get(Permission.WriteEvaluations)])
