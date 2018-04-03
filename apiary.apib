@@ -78,7 +78,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 ### Get Class Details [GET]
 
 + Parameters
-    + quarter_id: 3900 (number) - The ID of the quarter that the class was taught 
+    + quarter_id: 1 (number) - The ID of the quarter that the class was taught
     + professor_id: 1 (number) - The ID of the professor that taught the class
     + course_id: 1 (number) - The ID of the course that was taught
 
@@ -114,7 +114,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes
         + courses (array, fixed-type)
             + (object, required)
-                + term: 3900 (string, required)
+                + term: 1 (string, required)
                 + subject: ANTH (string, required)
                 + catalog_nbr: 1L (string, required)
                 + class_descr: Intro to Bio Anth (string, required)
@@ -155,7 +155,7 @@ Validates the JWT and returns a new one freshly generated from the database.
             + (Evaluation, required)
                 + user_vote: u, d (enum[string], required)
                 + user_flagged: false (boolean, required)
-                + quarter_id: 3900 (number, required)
+                + quarter_id: 1 (number, required)
                 + professor (Professor, required)
                 + author (required)
                     + self: false (boolean, required)
@@ -211,9 +211,15 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 200 (application/json)
     + Attributes (array, required, fixed-type)
         + (Evaluation)
-            + quarter_id: 3900 (number, required)
+            + quarter_id: 1 (number, required)
             + professor (Professor, optional)
             + course (Course, optional)
+            + user_vote: u, d (enum[string], required)
+            + user_flagged: false (boolean, required)
+            + author (required)
+                + self: false (boolean, required)
+                + majors: 1, 3 (array[number], required)
+                + graduation_year: 2020 (number, required)
 
 
 ### List Recent Evaluations [GET /evaluations/recent{?count}]
@@ -225,9 +231,15 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 200 (application/json)
     + Attributes (array, required)
         + (Evaluation, required)
-            + quarter_id: 3900 (number, required)
+            + quarter_id: 1 (number, required)
             + professor (Professor, required)
             + course (Course, required)
+            + user_vote: u, d (enum[string], required)
+            + user_flagged: false (boolean, required)
+            + author (required)
+                + self: false (boolean, required)
+                + majors: 1, 3 (array[number], required)
+                + graduation_year: 2020 (number, required)
 
 
 ### Get Evaluation Details [GET /evaluations/{id}]
@@ -248,7 +260,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Request (application/json)
     + Attributes
-        + quarter_id: 3900 (number, required)
+        + quarter_id: 1 (number, required)
         + professor_id: 1 (number, required)
         + course_id: 1 (number, required)
         + display_grad_year: false (boolean, required)
@@ -358,7 +370,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Request (application/json)
     + Attributes
-        + majors (array[string], required, fixed-type)
+        + majors: `Sample Major 1`, `Sample Major 2` (array[string], required, fixed-type)
 
 + Response 200 (application/json)
     + Attributes
@@ -375,7 +387,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Parameters
     + course_id: 1 (number, optional) - Limit the list to professors that taught the specified course.
-    + quarter_id: 3900 (number, optional) - Limit the list to professors who taught during the specified quarter.
+    + quarter_id: 1 (number, optional) - Limit the list to professors who taught during the specified quarter.
 
 + Response 200 (application/json)
     + Attributes (array[Professor], required, fixed-type)
@@ -400,7 +412,7 @@ Validates the JWT and returns a new one freshly generated from the database.
             + (Evaluation, required)
                 + user_vote: u, d (enum[string], required)
                 + user_flagged: false (boolean, required)
-                + quarter_id: 3900 (number, required)
+                + quarter_id: 1 (number, required)
                 + course (Course, required)
                 + author (required)
                     + self: false (boolean, required)
@@ -482,9 +494,15 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 200 (application/json)
     + Attributes (array, required, fixed-type)
         + (Evaluation)
-            + quarter_id: 3900 (number, required)
+            + quarter_id: 1 (number, required)
             + professor (Professor, optional)
             + course (Course, optional)
+            + user_vote: u, d (enum[string], required)
+            + user_flagged: false (boolean, required)
+            + author (required)
+                + self: false (boolean, required)
+                + majors: 1, 3 (array[number], required)
+                + graduation_year: 2020 (number, required)
 
 
 # Data Structures

@@ -1,6 +1,7 @@
 import factory
 
 from scuevals_api import models
+from .student import StudentFactory
 
 
 class VoteFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -10,3 +11,4 @@ class VoteFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = 'flush'
 
     value = factory.Iterator([models.Vote.UPVOTE, models.Vote.DOWNVOTE])
+    student = factory.SubFactory(StudentFactory)

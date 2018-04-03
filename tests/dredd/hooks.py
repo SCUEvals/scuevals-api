@@ -67,6 +67,31 @@ def auth_api_key(trans):
     db.session.commit()
 
 
+@hooks.before('Classes > Get Class Details')
+def class_details(trans):
+    q = factories.QuarterFactory(id=1)
+    c = factories.CourseFactory(id=1)
+    prof = factories.ProfessorFactory(id=1)
+    factories.QuarterFactory.reset_sequence(2)
+    factories.CourseFactory.reset_sequence(2)
+    factories.ProfessorFactory.reset_sequence(2)
+    factories.SectionFactory(quarter=q, course=c, professors=[prof])
+    db.session.commit()
+
+
+@hooks.before('Courses > List All Courses')
+def courses(trans):
+    factories.CourseFactory()
+    db.session.commit()
+
+
+@hooks.before('Courses > Post Courses')
+def post_course(trans):
+    factories.QuarterFactory(id=1)
+    factories.DepartmentFactory(abbreviation='ANTH')
+    db.session.commit()
+
+
 @hooks.before('Courses > Get Course Details')
 def course_details(trans):
     course = factories.CourseFactory(id=1)
@@ -76,13 +101,29 @@ def course_details(trans):
     db.session.commit()
 
 
+@hooks.before('Departments > List All Departments')
+def departments(trans):
+    factories.DepartmentFactory()
+    db.session.commit()
+
+
 @hooks.before('Evaluations > List All Evaluations')
 def evaluations(trans):
     prof = factories.ProfessorFactory(id=1)
     course = factories.CourseFactory(id=1)
     quarter = factories.QuarterFactory(id=1)
+    factories.QuarterFactory.reset_sequence(2)
+    factories.CourseFactory.reset_sequence(2)
+    factories.ProfessorFactory.reset_sequence(2)
     sec = factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
-    factories.EvaluationFactory(section=sec, professor=prof)
+    ev = factories.EvaluationFactory(section=sec, professor=prof)
+    factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
+    db.session.commit()
+
+
+@hooks.before('Evaluations > List Recent Evaluations')
+def evaluations_recent(trans):
+    factories.EvaluationFactory()
     db.session.commit()
 
 
@@ -92,14 +133,87 @@ def evaluation(trans):
     db.session.commit()
 
 
+@hooks.before('Evaluations > Submit Evaluation')
+def evaluations_submit(trans):
+    prof = factories.ProfessorFactory(id=1)
+    course = factories.CourseFactory(id=1)
+    quarter = factories.QuarterFactory(id=1)
+    factories.QuarterFactory(current=True)
+
+    factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
+    db.session.commit()
+
+
+@hooks.before('Evaluations > Delete Evaluation')
+def evaluations_delete(trans):
+    factories.EvaluationFactory(id=1, student=stash['student'])
+    db.session.commit()
+
+
+@hooks.before('Evaluation Votes > Add/Overwrite Vote')
+def evaluation_votes_add(trans):
+    factories.EvaluationFactory(id=1)
+    db.session.commit()
+
+
+@hooks.before('Evaluation Votes > Delete Vote')
+def evaluation_votes_delete(trans):
+    ev = factories.EvaluationFactory(id=1)
+    factories.VoteFactory(evaluation=ev, student=stash['student'])
+    db.session.commit()
+
+
+@hooks.before('Evaluation Flags > Add Flag')
+def evaluation_flags_add(trans):
+    factories.EvaluationFactory(id=1)
+    db.session.commit()
+
+
+@hooks.before('Majors > List All Majors')
+def majors(trans):
+    factories.MajorFactory()
+    db.session.commit()
+
+
+@hooks.before('Professors > List All Professors')
+def professors(trans):
+    prof = factories.ProfessorFactory()
+    course = factories.CourseFactory(id=1)
+    quarter = factories.QuarterFactory(id=1)
+    section = factories.SectionFactory(course=course, quarter=quarter)
+    ev = factories.EvaluationFactory(section=section, professor=prof)
+    factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
+    db.session.commit()
+
+
 @hooks.before('Professors > Get Professor Details')
 def professor_details(trans):
     prof = factories.ProfessorFactory(id=1)
+    factories.SectionFactory(professors=[prof])
+    db.session.commit()
 
-    sec = factories.SectionFactory(professors=[prof])
-    ev = factories.EvaluationFactory(professor=prof, section=sec)
-    factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
 
+@hooks.before('Quarters > List All Quarters')
+def quarters(trans):
+    quarter = factories.QuarterFactory()
+    course = factories.CourseFactory(id=1)
+    prof = factories.ProfessorFactory(id=1)
+    factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
+    factories.QuarterFactory(current=True)
+    db.session.commit()
+
+
+@hooks.before('Search > Search For Classes And Professors')
+def search(trans):
+    factories.CourseFactory(title='Mathematics and Such')
+    factories.ProfessorFactory(first_name='Matthew')
+    db.session.commit()
+
+
+@hooks.before('Student > Update Info')
+def student_update_info(trans):
+    factories.MajorFactory(id=1)
+    factories.MajorFactory(id=4)
     db.session.commit()
 
 
@@ -109,5 +223,6 @@ def student_evaluations(trans):
     course = factories.CourseFactory(id=1)
     quarter = factories.QuarterFactory(id=1)
     sec = factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
-    factories.EvaluationFactory(section=sec, professor=prof, student=stash['student'])
+    ev = factories.EvaluationFactory(section=sec, professor=prof, student=stash['student'])
+    factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
     db.session.commit()

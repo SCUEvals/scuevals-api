@@ -9,6 +9,7 @@ class QuarterFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = models.db.session
         sqlalchemy_session_persistence = 'flush'
 
+    id = factory.Sequence(lambda n: n)
     year = factory.Sequence(lambda n: 2018 + int(floor(n / 4)))
     name = factory.Iterator(['Fall', 'Winter', 'Spring', 'Summer'])
     current = False

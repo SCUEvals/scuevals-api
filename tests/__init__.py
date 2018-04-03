@@ -12,7 +12,7 @@ from vcr import VCR
 
 from tests.fixtures.factories import StudentFactory, MajorFactory, APIKeyFactory
 from scuevals_api.cmd import init_db
-from scuevals_api.models import db, Permission, University, School
+from scuevals_api.models import db, Permission, University, School, Reason
 from scuevals_api import create_app
 
 fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
@@ -85,6 +85,13 @@ def seed_db(target):
         Permission(id=101, name='UpdateDepartments'),
         Permission(id=102, name='UpdateMajors'),
         Permission(id=1000, name='Administrator'),
+    ])
+
+    db.session.add_all([
+        Reason(id=0, name='Other'),
+        Reason(id=1, name='Spam'),
+        Reason(id=2, name='Offensive'),
+        Reason(id=3, name='SensitiveInfo')
     ])
 
     db.session.commit()

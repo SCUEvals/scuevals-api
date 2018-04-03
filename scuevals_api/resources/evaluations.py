@@ -171,7 +171,7 @@ class EvaluationVoteResource(Resource):
         if vote is None:
             db.session.add(Vote(value=value, student_id=student_id, evaluation=evaluation))
             db.session.commit()
-            return '', 201
+            return '', 204
         elif vote.value != value:
             vote.value = value
             vote.time = func.now()
@@ -281,7 +281,14 @@ def get_evals_json(args, student_id=None):
     for ev in evals.all():
         ev_data = {
             **ev.to_dict(),
-            'quarter_id': ev.section.quarter_id
+            'quarter_id': ev.section.quarter_id,
+            'user_vote': ev.user_vote(current_user),
+            'user_flagged': ev.user_flag(current_user),
+            'author': {
+                'self': current_user.id == ev.student.id,
+                'majors': ev.student.majors_list if ev.display_majors else None,
+                'graduation_year': ev.student.graduation_year if ev.display_grad_year else None
+            }
         }
 
         if 'professor' in args['embed']:
