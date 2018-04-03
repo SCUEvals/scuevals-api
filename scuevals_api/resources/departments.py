@@ -24,7 +24,7 @@ class DepartmentSchema(Schema):
 
 class DepartmentsResource(Resource):
 
-    @auth_required(Permission.WriteEvaluations)
+    @auth_required(Permission.ReadEvaluations, Permission.WriteEvaluations)
     def get(self):
         jwt_data = get_jwt_identity()
 
