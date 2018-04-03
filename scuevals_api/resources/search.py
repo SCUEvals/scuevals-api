@@ -11,7 +11,7 @@ from scuevals_api.utils import use_args
 class SearchResource(Resource):
     args = {'q': fields.String(required=True), 'limit': fields.Integer()}
 
-    @auth_required(Permission.WriteEvaluations)
+    @auth_required(Permission.ReadEvaluations)
     @use_args(args)
     def get(self, args):
         jwt_data = get_jwt_identity()
