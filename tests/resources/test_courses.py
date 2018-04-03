@@ -10,20 +10,11 @@ from tests import TestCase, use_data, assert_valid_schema, no_logging
 
 
 class CoursesTestCase(TestCase):
-    def setUp(self):
-        super().setUp()
-
-        self.quarter = QuarterFactory()
-        self.quarter2 = QuarterFactory()
-        self.course = CourseFactory()
-        self.course2 = CourseFactory()
-        self.professor = ProfessorFactory()
-        SectionFactory(quarter=self.quarter, course=self.course)
-        self.section = SectionFactory(quarter=self.quarter2, course=self.course2, professors=[self.professor])
-
-        db.session.flush()
 
     def test_get(self):
+        CourseFactory()
+        CourseFactory()
+
         rv = self.client.get('/courses', headers=self.head_auth)
 
         self.assertEqual(200, rv.status_code)
@@ -32,9 +23,16 @@ class CoursesTestCase(TestCase):
         self.assertEqual(2, len(data))
 
     def test_get_quarter_id(self):
+        quarter = QuarterFactory()
+        quarter2 = QuarterFactory()
+        course = CourseFactory()
+        course2 = CourseFactory()
+        SectionFactory(quarter=quarter, course=course)
+        SectionFactory(quarter=quarter2, course=course2)
+
         rv = self.client.get('/courses',
                              headers=self.head_auth,
-                             query_string=urlencode({'quarter_id': self.quarter.id}))
+                             query_string=urlencode({'quarter_id': quarter.id}))
 
         self.assertEqual(200, rv.status_code)
 
@@ -42,9 +40,15 @@ class CoursesTestCase(TestCase):
         self.assertEqual(1, len(data))
 
     def test_get_professor_id(self):
+        course = CourseFactory()
+        course2 = CourseFactory()
+        prof = ProfessorFactory()
+        SectionFactory(course=course)
+        SectionFactory(course=course2, professors=[prof])
+
         rv = self.client.get('/courses',
                              headers=self.head_auth,
-                             query_string=urlencode({'professor_id': self.professor.id}))
+                             query_string=urlencode({'professor_id': prof.id}))
 
         self.assertEqual(200, rv.status_code)
 
@@ -52,8 +56,16 @@ class CoursesTestCase(TestCase):
         self.assertEqual(1, len(data))
 
     def test_get_quarter_id_professor_id(self):
+        quarter = QuarterFactory()
+        quarter2 = QuarterFactory()
+        course = CourseFactory()
+        course2 = CourseFactory()
+        prof = ProfessorFactory()
+        SectionFactory(quarter=quarter, course=course)
+        SectionFactory(quarter=quarter2, course=course2, professors=[prof])
+
         rv = self.client.get('/courses', headers=self.head_auth, query_string=urlencode({
-            'professor_id': self.professor.id, 'quarter_id': self.quarter2.id
+            'professor_id': prof.id, 'quarter_id': quarter2.id
         }))
 
         self.assertEqual(200, rv.status_code)

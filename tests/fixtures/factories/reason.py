@@ -8,4 +8,5 @@ class ReasonFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = models.db.session
         sqlalchemy_session_persistence = 'flush'
 
+    id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: 'Reason ' + str(n))

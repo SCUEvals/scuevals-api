@@ -258,7 +258,7 @@ class EvaluationVoteTestCase(TestCase):
                              headers=self.head_auth,
                              data=json.dumps({'value': 'u'}))
 
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(204, rv.status_code)
 
         self.assertEqual(1, len(self.eval2.votes))
         self.assertEqual(Vote.UPVOTE, self.eval2.votes[0].value)
@@ -268,13 +268,13 @@ class EvaluationVoteTestCase(TestCase):
                              headers=self.head_auth,
                              data=json.dumps({'value': 'd'}))
 
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(204, rv.status_code)
 
         self.assertEqual(1, len(self.eval2.votes))
         self.assertEqual(Vote.DOWNVOTE, self.eval2.votes[0].value)
 
     def test_put_upvote_existing_downvote(self):
-        VoteFactory(value=Vote.DOWNVOTE, student_id=self.student.id, evaluation=self.eval2)
+        VoteFactory(value=Vote.DOWNVOTE, student=self.student, evaluation=self.eval2)
 
         rv = self.client.put('/evaluations/{}/vote'.format(self.eval2.id),
                              headers=self.head_auth,
