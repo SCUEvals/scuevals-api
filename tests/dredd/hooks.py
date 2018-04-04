@@ -1,3 +1,5 @@
+import json
+
 import dredd_hooks as hooks
 
 from flask_jwt_extended import create_access_token
@@ -54,6 +56,14 @@ def before_each(trans):
 def after_each(trans):
     db.session.close_all()
     db.drop_all()
+
+    if 'real' not in trans or 'body' not in trans['real']:
+        return
+
+    data = json.loads(trans['real']['body'])
+    if isinstance(data, (list,)):
+        if len(data) == 0:
+            trans['fail'] = "Empty array returned, nothing was verified"
 
 
 @hooks.before('Authentication > Authenticate New/Old User')
