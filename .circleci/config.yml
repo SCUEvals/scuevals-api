@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
 
-      - image: circleci/python:3.6.4
+      - image: scuevals/circleci
         environment:
           FLASK_ENV: test
           JWT_SECRET_KEY: lHmxPAbKYd4wCQctLEuJK7K5CTlQb8sP
@@ -28,7 +28,7 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: install dependencies
+          name: Install dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
@@ -41,11 +41,15 @@ jobs:
           key: v1-dependencies-{{ checksum "setup.py" }}
 
       - run:
-          name: run tests
+          name: Run tests
           command: |
             . venv/bin/activate
             python setup.py test
             (coverage run --source=scuevals_api setup.py test && coverage report --fail-under=100 && coveralls)
+
+      - run:
+          name: Run documentation tests
+          command: dredd
 
       - store_artifacts:
           path: test-reports
