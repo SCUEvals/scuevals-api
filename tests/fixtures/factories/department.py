@@ -11,6 +11,7 @@ class DepartmentFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.Department
         sqlalchemy_session = models.db.session
+        sqlalchemy_session_persistence = 'flush'
 
     abbreviation = factory.Iterator(['COEN', 'MATH', 'POLI', 'MECH', 'ELEN'])
     name = 'Sample Department'

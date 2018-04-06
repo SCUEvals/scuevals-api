@@ -3,7 +3,7 @@ import os
 import requests
 from datetime import timedelta
 from flask import jsonify, current_app as app
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, current_user
+from flask_jwt_extended import create_access_token, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from sqlalchemy.orm import subqueryload
@@ -31,6 +31,9 @@ def auth(args):
             raise InternalServerError('failed to get certificates from Google: {}'.format(e))
 
     key = cache.get(headers['kid'])
+
+    if not key:
+        raise UnprocessableEntity('invalid id_token: unable to get matching key from Google')
 
     decode_options = {'verify_at_hash': False}
 
@@ -65,11 +68,7 @@ def auth(args):
         # check the official type of the user
         official = OfficialUserType.query.get(data['email'])
 
-        if official is None or official.type != 'student':
-            # create a user
-            # but for now, return message
-            return jsonify({'status': 'non-student'}), 403
-        else:
+        if official.type == 'student':
             user = Student(
                 email=data['email'],
                 first_name=data['given_name'],
@@ -78,6 +77,21 @@ def auth(args):
                 permissions=[Permission.query.get(Permission.Incomplete)],
                 university_id=1
             )
+        elif official.type == 'faculty':
+            # create a normal user account for them
+            # they will only be professors once they link up with a professor account
+            user = User(
+                email=data['email'],
+                first_name=data['given_name'],
+                last_name=data['family_name'],
+                picture=data['picture'] if 'picture' in data else None,
+                permissions=[Permission.query.get(Permission.ReadEvaluations)],
+                university_id=1
+            )
+
+        else:
+            # we do not support other kinds of users
+            return jsonify({'status': 'invalid user type'}), 403
 
         db.session.add(user)
         db.session.flush()

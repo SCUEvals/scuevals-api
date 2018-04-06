@@ -13,24 +13,12 @@ from tests import TestCase, use_data, vcr
 from scuevals_api.auth import cache
 from scuevals_api.models import db, Permission
 
-
-id_token_data = {
-    'azp': '471296732031-0hqhs9au11ro6mt87cpv1gog7kbdruer.apps.googleusercontent.com',
-    'aud': '471296732031-0hqhs9au11ro6mt87cpv1gog7kbdruer.apps.googleusercontent.com',
-    'sub': '116863427253343930740',
+sample_id_token = {
     'hd': 'scu.edu',
-    'email': 'astudent@scu.edu',
-    'email_verified': True,
-    'at_hash': '3DOWjzVDZxgIs7MNGr4dyw',
-    'iss': 'accounts.google.com',
-    'jti': 'b3d9967b4b4a3f95af24509dc93b1ce024cf111a',
-    'iat': 1507796167,
-    'exp': 1507799767,
-    'name': 'A Student',
-    'picture': 'https://lh3.googleusercontent.com/-ByXCWfs-xjA/AAAA/AAAAAAAAAAA/rabkS1ia12c/s96-c/photo.jpg',
-    'given_name': 'A',
-    'family_name': 'Student',
-    'locale': 'en'
+    'email': 'jdoe@scu.edu',
+    'picture': 'foo.jpg',
+    'given_name': 'John',
+    'family_name': 'Doe',
 }
 
 
@@ -41,8 +29,8 @@ class AuthTestCase(TestCase):
         cache.clear()
 
     @use_data('auth.yaml')
-    @vcr.use_cassette
-    def test_auth(self, data):
+    @vcr.use_cassette('test_auth')
+    def test_existing_student(self, data):
         StudentFactory(email='fblomqvist@scu.edu')
 
         # make sure the new token will have a new expiration time
@@ -66,10 +54,10 @@ class AuthTestCase(TestCase):
         self.assertGreater(new_data['exp'], old_jwt['exp'])
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value=id_token_data)
-    @vcr.use_cassette
-    def test_student(self, data, decode_func):
-        OfficialUserTypeFactory(email='astudent@scu.edu', type='student')
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
+    @vcr.use_cassette('test_auth')
+    def test_new_student(self, data, decode_func):
+        OfficialUserTypeFactory(email='jdoe@scu.edu', type='student')
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
 
@@ -80,17 +68,36 @@ class AuthTestCase(TestCase):
         self.assertIn('jwt', data)
         identity = jwt.get_unverified_claims(data['jwt'])
         self.assertEqual([Permission.Incomplete], identity['sub']['permissions'])
+        self.assertEqual('s', identity['sub']['type'])
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value=id_token_data)
-    @vcr.use_cassette
-    def test_non_student(self, data, decode_func):
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
+    @vcr.use_cassette('test_auth')
+    def test_new_faculty(self, data, decode_func):
+        OfficialUserTypeFactory(email='jdoe@scu.edu', type='faculty')
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
 
         data = json.loads(rv.data)
         self.assertIn('status', data)
-        self.assertEqual('non-student', data['status'])
+        self.assertEqual('new', data['status'])
+
+        self.assertIn('jwt', data)
+        identity = jwt.get_unverified_claims(data['jwt'])
+        self.assertEqual([Permission.ReadEvaluations], identity['sub']['permissions'])
+        self.assertEqual('u', identity['sub']['type'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
+    @vcr.use_cassette('test_auth')
+    def test_non_supported(self, data, decode_func):
+        OfficialUserTypeFactory(email='jdoe@scu.edu', type='foo')
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+
+        data = json.loads(rv.data)
+        self.assertIn('status', data)
+        self.assertEqual('invalid user type', data['status'])
 
     @use_data('auth.yaml')
     @vcr.use_cassette('test_auth')
@@ -134,16 +141,17 @@ class AuthTestCase(TestCase):
         self.assertIn('invalid id_token', data['message'])
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
-    @vcr.use_cassette('test_auth')
-    def test_existing_user(self, data, decode_func):
-        StudentFactory(email='jdoe@scu.edu')
+    @vcr.use_cassette('test_id_token_invalid_key')
+    def test_id_token_invalid_key(self, data):
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token']}))
-        self.assertEqual(200, rv.status_code)
+
+        self.assertEqual(422, rv.status_code)
+        resp = json.loads(rv.data)
+        self.assertEqual('invalid id_token: unable to get matching key from Google', resp['message'])
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
     @vcr.use_cassette('test_auth')
     def test_existing_user_incomplete(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu')
@@ -154,7 +162,7 @@ class AuthTestCase(TestCase):
         self.assertEqual(200, rv.status_code)
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
     @vcr.use_cassette('test_auth')
     def test_existing_user_suspended(self, data, decode_func):
         StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() + timedelta(days=1)))
@@ -167,7 +175,7 @@ class AuthTestCase(TestCase):
         self.assertEqual('suspended', data['status'])
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
     @vcr.use_cassette('test_auth')
     def test_existing_user_suspension_expired(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu', suspended_until=(datetime.now() - timedelta(days=1)))
@@ -181,7 +189,7 @@ class AuthTestCase(TestCase):
         self.assertEqual(None, student.suspended_until)
 
     @use_data('auth.yaml')
-    @mock.patch('jose.jwt.decode', return_value={'hd': 'scu.edu', 'email': 'jdoe@scu.edu', 'picture': 'foo.jpg'})
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
     @vcr.use_cassette('test_auth')
     def test_existing_user_read_access_expired(self, data, decode_func):
         student = StudentFactory(email='jdoe@scu.edu', read_access_until=(datetime.now() - timedelta(days=1)))

@@ -1,0 +1,71 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.18.4]
+    method: GET
+    uri: https://accounts.google.com/.well-known/openid-configuration
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAJbogC/5xTyw7bIBC8+yssn6sgpY9DPqM9VhUieO1sglnEgt206r8XY5w0qaM+brNmZhh2
+        19+rukHmCL451M0pBMcHIZTWFG3gXU/UG9hpGpo3ialiOJHHbyogWQm2dYQ2/EEpSNAs3ItxL2aQ
+        rQJdYNtimqaiVg55cSj6dyLLskFk8Gg7+lePt2JVZhsPI+n/fM+svUC2OU8XltHjX4fQ4AOXBOzI
+        MshwdcCSo3PkA7TJ6nNV142mNt9RerZAbOUv1Uypn+tHSob1K9nTgSULTVV/meNxPJ5Bh1fpXDwa
+        1Ct5tZGMvUXbS2V6OSoTt6QfP+3ff7hdo2nTP3212C6xYFBoFug8dWhuIR+3Sc5dlgOkZW23GmoQ
+        EolBewjSEYfSjofvR8X3d2mjcNiwUvH3aBnKMe1Yh7Aef3UL6NSA5iqtGspMexxT8nuNqqRJf+UC
+        TNpPU07vPIc6RF+KNKNb0jRTqU/KGLA9vG6CSy8q017HUP2ofgYAAP//0uQUFg8EAAA=
+    headers:
+      Accept-Ranges: [bytes]
+      Access-Control-Allow-Origin: ['*']
+      Age: ['1060']
+      Alt-Svc: ['hq=":443"; ma=2592000; quic=51303431; quic=51303339; quic=51303335,quic=":443";
+          ma=2592000; v="41,39,35"']
+      Cache-Control: ['public, max-age=3600']
+      Content-Encoding: [gzip]
+      Content-Length: ['392']
+      Content-Type: [application/json]
+      Date: ['Fri, 09 Mar 2018 20:44:13 GMT']
+      Expires: ['Fri, 09 Mar 2018 21:44:13 GMT']
+      Last-Modified: ['Mon, 01 Feb 2016 19:53:44 GMT']
+      Server: [sffe]
+      Vary: [Accept-Encoding]
+      X-Content-Type-Options: [nosniff]
+      X-XSS-Protection: [1; mode=block]
+    status: {code: 200, message: OK}
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.18.4]
+    method: GET
+    uri: https://www.googleapis.com/oauth2/v3/certs
+  response:
+    body: {string: "{\n \"keys\": [\n  {\n   \"kty\": \"RSA\",\n   \"alg\": \"RS256\",\n
+        \  \"use\": \"sig\",\n   \"kid\": \"839b924bb659f07358fdf8288ce59f189c4028f4\",\n
+        \  \"n\": \"07uX5s5LJOqYlqGhnRhvjWzutchJ5Mqutb-YkLaLm53KWJFiE_H9VDlzNj-oF_CbMPEtsl_5fPCwv1BKSlYuS9pY-FKUZlHT3K0lRvVyEly4PCYOwy6b-Ell3Ame6_sVRedPoMwqFmCXniF8OZ_hyiQQyj0spRwZRauhpc2SJmL0xUxs6HPbdFJ0Pf1TlgrCWKIADzdAjpXy2cWUyTBoNsuFMn6tdffwT0WMV5gOIxU8Cqh-m_BJHrsVrloIrWBp6RTpnDwYf3IutyRO3pQU7LDzFxsLVFwyKLLWny8DV4MDd0H7E8dHz5FPFJURiCogaVbT8chtXWyCzhWLwQEp1w\",\n
+        \  \"e\": \"AQAB\"\n  },\n  {\n   \"kty\": \"RSA\",\n   \"alg\": \"RS256\",\n
+        \  \"use\": \"sig\",\n   \"kid\": \"ac2b63faefcf8362f4c528e7c78433879387016b\",\n
+        \  \"n\": \"tt8Nz5kr90Bkstddrb-RVtUt2E5TEsOZw4lHKwlBEd4W1Cf7cI0Qc1WZ-7wTHXWzr1J0s94pXuQamXt2NrxAFtR0lAWUFKqXqZDFTsgRKkm9gy72-jwLQH17A-xNfKW6TvcwUggv5jfnHgBIXdpdm9zTtWnVjtZaikgkBMpeSRMyKaJrELqsd93pKoHtRJXA1zRcygv20MDF-0c8UFz_ZLLmh7D006zSNd7OhOflctvCRA31dWoZmhgmoRlvqFH4jiMrZzmA5u-_aZGhIavcbwTydJd7rm_AXZmZY662sD0z67TV83g-mTR5ft9ERfEPTR5ttgunSVhXzPmkY2uU-Q\",\n
+        \  \"e\": \"AQAB\"\n  }\n ]\n}\n"}
+    headers:
+      Age: ['20493']
+      Alt-Svc: ['hq=":443"; ma=2592000; quic=51303431; quic=51303339; quic=51303335,quic=":443";
+          ma=2592000; v="41,39,35"']
+      Cache-Control: ['public, max-age=24933, must-revalidate, no-transform']
+      Content-Length: ['987']
+      Content-Type: [application/json; charset=UTF-8]
+      Date: ['Fri, 09 Mar 2018 15:20:20 GMT']
+      Expires: ['Fri, 09 Mar 2018 22:15:53 GMT']
+      Server: [GSE]
+      Vary: [Origin, X-Origin]
+      X-Content-Type-Options: [nosniff]
+      X-Frame-Options: [SAMEORIGIN]
+      X-XSS-Protection: [1; mode=block]
+    status: {code: 200, message: OK}
+version: 1

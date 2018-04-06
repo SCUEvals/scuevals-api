@@ -16,7 +16,7 @@ setup(
         'blinker==1.4',
         'coveralls==1.2.0',
         'dredd_hooks==0.1.3',
-        'factory_boy==2.9.2',
+        'factory_boy==2.10.0',
         'Flask-Caching==1.3.3',
         'Flask-Cors==3.0.3',
         'Flask-JWT-Extended==3.6.0',

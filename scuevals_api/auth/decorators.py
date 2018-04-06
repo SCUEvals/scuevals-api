@@ -2,7 +2,7 @@ from functools import wraps
 from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
 from werkzeug.exceptions import Unauthorized
 
-from scuevals_api.models import User, db
+from scuevals_api.models import User
 
 
 def optional_arg_decorator(fn):
@@ -20,10 +20,10 @@ def optional_arg_decorator(fn):
 
 
 @optional_arg_decorator
-def auth_required(fn, permission=None):
+def auth_required(fn, *permissions):
     """
     Decorating a view with this ensures that the requester provided a JWT
-    and that the requester has permission to access the view.
+    and that the requester has any of the permissions needed to access the view.
     """
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -42,7 +42,7 @@ def auth_required(fn, permission=None):
             current_user.check_read_access()
 
         # verify that the user has the correct permissions for this view
-        if permission is not None and permission not in current_user.permissions_list:
+        if permissions and len(set(permissions).intersection(current_user.permissions_list)) == 0:
             raise Unauthorized()
 
         return fn(*args, **kwargs)

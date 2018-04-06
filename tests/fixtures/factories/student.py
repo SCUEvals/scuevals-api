@@ -10,6 +10,7 @@ class StudentFactory(UserFactory):
     class Meta:
         model = models.Student
         sqlalchemy_session = models.db.session
+        sqlalchemy_session_persistence = 'flush'
 
     graduation_year = 2020
     gender = factory.Iterator(['m', 'f', 'o'])

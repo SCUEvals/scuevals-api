@@ -8,7 +8,9 @@ class CourseFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.Course
         sqlalchemy_session = models.db.session
+        sqlalchemy_session_persistence = 'flush'
 
-    number = factory.Sequence(lambda n: str(n))
+    id = factory.Sequence(lambda n: n)
+    number = factory.Sequence(lambda n: str(n + 1))
     title = 'What is Life'
     department = factory.SubFactory(DepartmentFactory)

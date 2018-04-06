@@ -78,7 +78,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 ### Get Class Details [GET]
 
 + Parameters
-    + quarter_id: 3900 (number) - The ID of the quarter that the class was taught 
+    + quarter_id: 1 (number) - The ID of the quarter that the class was taught
     + professor_id: 1 (number) - The ID of the professor that taught the class
     + course_id: 1 (number) - The ID of the course that was taught
 
@@ -114,7 +114,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes
         + courses (array, fixed-type)
             + (object, required)
-                + term: 3900 (string, required)
+                + term: 1 (string, required)
                 + subject: ANTH (string, required)
                 + catalog_nbr: 1L (string, required)
                 + class_descr: Intro to Bio Anth (string, required)
@@ -154,19 +154,19 @@ Validates the JWT and returns a new one freshly generated from the database.
         + evaluations (array, required, fixed-type)
             + (Evaluation, required)
                 + user_vote: u, d (enum[string], required)
-                + user_flagged: false (boolean, required) 
-                + quarter_id: 3900 (number, required)
+                + user_flagged: false (boolean, required)
+                + quarter_id: 1 (number, required)
                 + professor (Professor, required)
                 + author (required)
                     + self: false (boolean, required)
                     + majors: 1, 3 (array[number], required)
-                    + graduation_year: 2020 (number, required) 
+                    + graduation_year: 2020 (number, required)
         + professors (array[Professor], optional)
 
 + Response 404 (application/json)
     + Attributes
         + message: course with the specified id not found (string, required, fixed)
-            
+
 
 ## Departments [/departments]
 
@@ -197,15 +197,30 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 ## Evaluations [/evaluations]
 
-### List All Your Own Evaluations [GET]
+### List All Evaluations [GET /evaluations{?professor_id,course_id,quarter_id,embed}]
+
++ Parameters
+    + professor_id: 1 (number, optional)
+    + course_id: 1 (number, optional)
+    + quarter_id: 1 (number, optional)
+    + embed (array, optional)
+        + (enum)
+            + professor
+            + course
 
 + Response 200 (application/json)
-    
     + Attributes (array, required, fixed-type)
         + (Evaluation)
-            + quarter_id: 3900 (number, required)
-            + professor (Professor, required)
-            + course (Course, required)
+            + quarter_id: 1 (number, required)
+            + professor (Professor, optional)
+            + course (Course, optional)
+            + user_vote: u, d (enum[string], required)
+            + user_flagged: false (boolean, required)
+            + author (required)
+                + self: false (boolean, required)
+                + majors: 1, 3 (array[number], required)
+                + graduation_year: 2020 (number, required)
+
 
 ### List Recent Evaluations [GET /evaluations/recent{?count}]
 
@@ -216,9 +231,16 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 200 (application/json)
     + Attributes (array, required)
         + (Evaluation, required)
-            + quarter_id: 3900 (number, required)
+            + quarter_id: 1 (number, required)
             + professor (Professor, required)
             + course (Course, required)
+            + user_vote: u, d (enum[string], required)
+            + user_flagged: false (boolean, required)
+            + author (required)
+                + self: false (boolean, required)
+                + majors: 1, 3 (array[number], required)
+                + graduation_year: 2020 (number, required)
+
 
 ### Get Evaluation Details [GET /evaluations/{id}]
 
@@ -226,9 +248,9 @@ Validates the JWT and returns a new one freshly generated from the database.
     + id: 1 (number, required)
 
 + Response 200 (application/json)
-    
+
     + Attributes (Evaluation, required)
-    
+
 + Response 404 (application/json)
     + Attributes
         + message: `evaluation with the specified id not found` (string, required, fixed)
@@ -238,7 +260,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Request (application/json)
     + Attributes
-        + quarter_id: 3900 (number, required)
+        + quarter_id: 1 (number, required)
         + professor_id: 1 (number, required)
         + course_id: 1 (number, required)
         + display_grad_year: false (boolean, required)
@@ -249,7 +271,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes
         + result: success (string, required, fixed)
         + jwt (string, required)
-        
+
 + Response 422 (application/json)
     + Attributes
         + message: `invalid quarter/course/professor combination` (string, required, fixed)
@@ -299,7 +321,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Parameters
     + eval_id: 1 (number, required)
-    
+
 + Response 204 (application/json)
 
 + Response 404 (application/json)
@@ -308,7 +330,7 @@ Validates the JWT and returns a new one freshly generated from the database.
             + `evaluation with the specified id not found`
             + `vote not found`
 
-            
+
 ## Evaluation Flags [/evaluations/{id}/flag]
 
 + Parameters
@@ -348,8 +370,8 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Request (application/json)
     + Attributes
-        + majors (array[string], required, fixed-type)
-    
+        + majors: `Sample Major 1`, `Sample Major 2` (array[string], required, fixed-type)
+
 + Response 200 (application/json)
     + Attributes
         + result: success (string, required, fixed)
@@ -365,7 +387,7 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Parameters
     + course_id: 1 (number, optional) - Limit the list to professors that taught the specified course.
-    + quarter_id: 3900 (number, optional) - Limit the list to professors who taught during the specified quarter.
+    + quarter_id: 1 (number, optional) - Limit the list to professors who taught during the specified quarter.
 
 + Response 200 (application/json)
     + Attributes (array[Professor], required, fixed-type)
@@ -375,31 +397,31 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Parameters
     + id: 1 (number) - The professor for which to get details.
     + embed (enum[string], optional)
-        Which other data to embed. 
+        Which other data to embed.
         Specifying `courses` gives you a list of courses that this professor has taught.
-        
+
         + Members
             + `courses`
-            
+
 + Response 200 (application/json)
-    
+
     Example response with the courses embedded.
-    
+
     + Attributes (Professor, required)
         + evaluations (array, required, fixed-type)
             + (Evaluation, required)
                 + user_vote: u, d (enum[string], required)
-                + user_flagged: false (boolean, required) 
-                + quarter_id: 3900 (number, required)
+                + user_flagged: false (boolean, required)
+                + quarter_id: 1 (number, required)
                 + course (Course, required)
                 + author (required)
                     + self: false (boolean, required)
                     + majors: 1, 3 (array[number], required)
-                    + graduation_year: 2020 (number, required) 
+                    + graduation_year: 2020 (number, required)
         + courses (array[Course], optional)
 
 + Response 404 (application/json)
-            
+
     + Attributes
         + message: professor with the specified id not found (string, required, fixed)
 
@@ -431,7 +453,7 @@ Validates the JWT and returns a new one freshly generated from the database.
         + professors (array[Professor], required, fixed-type)
 
 
-## Students [/students/{id}]
+## Student [/students/{id}]
 
 + Parameters
     + id: 1 (number, required)
@@ -448,7 +470,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes
         + result: success (string, required, fixed)
         + jwt (string, required)
-        
+
 + Response 403 (application/json)
     + Attributes
         + message: `you do not have the rights to modify another student` (string, required, fixed)
@@ -456,6 +478,31 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 422 (application/json)
     + Attributes
         + message: `invalid major(s) specified` (string, required, fixed)
+
+
+### List All Evaluations [GET /students/{id}/evaluations{?professor_id,course_id,quarter_id,embed}]
+
++ Parameters
+    + professor_id: 1 (number, optional)
+    + course_id: 1 (number, optional)
+    + quarter_id: 1 (number, optional)
+    + embed (array, optional)
+        + (enum)
+            + professor
+            + course
+
++ Response 200 (application/json)
+    + Attributes (array, required, fixed-type)
+        + (Evaluation)
+            + quarter_id: 1 (number, required)
+            + professor (Professor, optional)
+            + course (Course, optional)
+            + user_vote: u, d (enum[string], required)
+            + user_flagged: false (boolean, required)
+            + author (required)
+                + self: false (boolean, required)
+                + majors: 1, 3 (array[number], required)
+                + graduation_year: 2020 (number, required)
 
 
 # Data Structures

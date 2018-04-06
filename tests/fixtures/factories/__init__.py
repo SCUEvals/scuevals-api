@@ -10,4 +10,5 @@ from .student import StudentFactory  # noqa
 from .user import UserFactory  # noqa
 from .professor import ProfessorFactory  # noqa
 from .quarter import QuarterFactory  # noqa
+from .reason import ReasonFactory  # noqa
 from .vote import VoteFactory  # noqa

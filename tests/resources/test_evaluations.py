@@ -4,7 +4,9 @@ from urllib.parse import urlencode
 
 from flask_jwt_extended import create_access_token
 
-from tests.fixtures.factories import SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory
+from tests.fixtures.factories import (
+    SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory, ReasonFactory
+)
 from scuevals_api.models import db, Evaluation, Vote, Permission
 from tests import TestCase, assert_valid_schema
 
@@ -15,16 +17,55 @@ class EvaluationsTestCase(TestCase):
 
         QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
         self.section = SectionFactory()
-        EvaluationFactory(student=self.student)
-        EvaluationFactory(student=self.student)
-        EvaluationFactory()
 
     def test_get(self):
-        rv = self.client.get('/evaluations', headers=self.head_auth)
+        EvaluationFactory()
+        EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'embed': ['professor', 'course']}, True))
+
         self.assertEqual(200, rv.status_code)
         evals = json.loads(rv.data)
-        self.assertEqual(2, len(evals))
-        assert_valid_schema(rv.data, 'evaluations.json')
+        self.assertEqual(3, len(evals))
+
+    def test_get_quarter_id(self):
+        ev = EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'quarter_id': ev.section.quarter_id}))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(1, len(evals))
+
+    def test_get_professor_id(self):
+        ev = EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'professor_id': ev.professor_id}))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(1, len(evals))
+
+    def test_get_course_id(self):
+        ev = EvaluationFactory()
+        EvaluationFactory()
+
+        rv = self.client.get('/evaluations',
+                             headers=self.head_auth,
+                             query_string=urlencode({'course_id': ev.section.course_id}))
+
+        self.assertEqual(200, rv.status_code)
+        evals = json.loads(rv.data)
+        self.assertEqual(1, len(evals))
 
     def test_post_evaluation(self):
         student = StudentFactory(permissions=[Permission.query.get(Permission.WriteEvaluations)])
@@ -163,9 +204,8 @@ class EvaluationTestCase(TestCase):
         self.section = SectionFactory()
         self.eval = EvaluationFactory(student=self.student)
         self.eval2 = EvaluationFactory(section=self.section, professor=self.section.professors[0])
-        EvaluationFactory(student=self.student, votes=[VoteFactory(student_id=0)])
-
-        db.session.flush()
+        eval3 = EvaluationFactory(student=self.student)
+        VoteFactory(student_id=0, evaluation=eval3)
 
     def test_get(self):
         rv = self.client.get('/evaluations/{}'.format(self.eval.id), headers=self.head_auth)
@@ -203,7 +243,7 @@ class EvaluationTestCase(TestCase):
         self.assertIsNone(ev)
 
 
-class TestEvaluationVoteTestCase(TestCase):
+class EvaluationVoteTestCase(TestCase):
     def setUp(self):
         super().setUp()
         self.section = SectionFactory()
@@ -218,7 +258,7 @@ class TestEvaluationVoteTestCase(TestCase):
                              headers=self.head_auth,
                              data=json.dumps({'value': 'u'}))
 
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(204, rv.status_code)
 
         self.assertEqual(1, len(self.eval2.votes))
         self.assertEqual(Vote.UPVOTE, self.eval2.votes[0].value)
@@ -228,13 +268,13 @@ class TestEvaluationVoteTestCase(TestCase):
                              headers=self.head_auth,
                              data=json.dumps({'value': 'd'}))
 
-        self.assertEqual(201, rv.status_code)
+        self.assertEqual(204, rv.status_code)
 
         self.assertEqual(1, len(self.eval2.votes))
         self.assertEqual(Vote.DOWNVOTE, self.eval2.votes[0].value)
 
     def test_put_upvote_existing_downvote(self):
-        self.eval2.votes.append(VoteFactory(value=Vote.DOWNVOTE, student_id=self.student.id))
+        VoteFactory(value=Vote.DOWNVOTE, student=self.student, evaluation=self.eval2)
 
         rv = self.client.put('/evaluations/{}/vote'.format(self.eval2.id),
                              headers=self.head_auth,
@@ -279,3 +319,91 @@ class TestEvaluationVoteTestCase(TestCase):
         self.assertEqual(404, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('vote not found', data['message'])
+
+
+class EvaluationFlagTestCase(TestCase):
+    def setUp(self):
+        self.reason1 = ReasonFactory()
+        self.reason2 = ReasonFactory()
+
+        db.session.flush()
+
+        self.post_data = {
+            'reason_ids': [self.reason1.id, self.reason2.id],
+            'comment': 'Foo'
+        }
+
+    def test_post_flag(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(201, rv.status_code)
+
+        flags = evaluation.flags
+        self.assertEqual(1, len(flags))
+
+    def test_post_flag_no_comment(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        data = self.post_data
+        del data['comment']
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(201, rv.status_code)
+
+    def test_post_flag_duplicate(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(201, rv.status_code)
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(409, rv.status_code)
+
+    def test_post_flag_non_existing_eval(self):
+        rv = self.client.post('/evaluations/0/flag', headers=self.head_auth, data=json.dumps(self.post_data))
+        self.assertEqual(404, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('evaluation with the specified id not found', data['message'])
+
+    def test_post_flag_own_evaluation(self):
+        evaluation = EvaluationFactory(student=self.student)
+        db.session.flush()
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(self.post_data))
+
+        self.assertEqual(403, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('not allowed to flag your own evaluations', data['message'])
+
+    def test_post_flag_invalid_reason(self):
+        evaluation = EvaluationFactory()
+        db.session.flush()
+
+        data = {
+            'reason_ids': [-1],
+            'comment': 'Foo'
+        }
+
+        rv = self.client.post('/evaluations/{}/flag'.format(evaluation.id),
+                              headers=self.head_auth_json,
+                              data=json.dumps(data))
+
+        self.assertEqual(422, rv.status_code)

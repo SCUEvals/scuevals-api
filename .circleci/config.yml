@@ -32,6 +32,7 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
+            python setup.py install_egg_info
             pip install -e .
 
       - save_cache:
@@ -44,7 +45,7 @@ jobs:
           command: |
             . venv/bin/activate
             python setup.py test
-            (coverage run --source=scuevals_api setup.py test && coveralls)
+            (coverage run --source=scuevals_api setup.py test && coverage report --fail-under=100 && coveralls)
 
       - store_artifacts:
           path: test-reports

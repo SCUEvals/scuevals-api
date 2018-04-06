@@ -10,9 +10,9 @@ from flask_jwt_extended import create_access_token
 from jsonschema import validate, RefResolver
 from vcr import VCR
 
-from tests.fixtures.factories import StudentFactory, MajorFactory, APIKeyFactory
+from tests.fixtures.factories import StudentFactory, MajorFactory, APIKeyFactory, ReasonFactory
 from scuevals_api.cmd import init_db
-from scuevals_api.models import db, Permission, University, School
+from scuevals_api.models import db, Permission, University, School, Reason
 from scuevals_api import create_app
 
 fixtures_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
@@ -35,6 +35,8 @@ class TestCase(unittest.TestCase):
         db.drop_all()
         init_db(cls.app, db)
         seed_db(db)
+
+        ReasonFactory.reset_sequence(4)
 
         cls.session = db.session
 
@@ -85,6 +87,13 @@ def seed_db(target):
         Permission(id=101, name='UpdateDepartments'),
         Permission(id=102, name='UpdateMajors'),
         Permission(id=1000, name='Administrator'),
+    ])
+
+    db.session.add_all([
+        Reason(id=0, name='Other'),
+        Reason(id=1, name='Spam'),
+        Reason(id=2, name='Offensive'),
+        Reason(id=3, name='SensitiveInfo')
     ])
 
     db.session.commit()

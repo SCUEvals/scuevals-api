@@ -12,7 +12,7 @@ from scuevals_api.utils import use_args
 
 class ProfessorsResource(Resource):
 
-    @auth_required(Permission.WriteEvaluations)
+    @auth_required(Permission.ReadEvaluations, Permission.WriteEvaluations)
     @use_args({'course_id': fields.Int(), 'quarter_id': fields.Int()})
     def get(self, args):
         ident = get_jwt_identity()
@@ -60,6 +60,7 @@ class ProfessorResource(Resource):
             {
                 **ev.to_dict(),
                 'user_vote': ev.user_vote(current_user),
+                'user_flagged': ev.user_flag(current_user),
                 'quarter_id': ev.section.quarter_id,
                 'course': ev.section.course.to_dict(),
                 'author': {

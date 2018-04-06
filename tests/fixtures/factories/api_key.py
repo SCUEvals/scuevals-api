@@ -7,6 +7,7 @@ class APIKeyFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.APIKey
         sqlalchemy_session = models.db.session
+        sqlalchemy_session_persistence = 'flush'
 
     key = factory.Sequence(lambda n: 'KEY_' + str(n))
     university_id = 1

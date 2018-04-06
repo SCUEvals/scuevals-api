@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask_jwt_extended import get_jwt_identity, create_access_token
+from flask_jwt_extended import get_jwt_identity, create_access_token, current_user
 from flask_restful import Resource
 from marshmallow import fields, validate
 from werkzeug.exceptions import UnprocessableEntity, Forbidden
@@ -7,6 +7,7 @@ from werkzeug.exceptions import UnprocessableEntity, Forbidden
 from scuevals_api.auth import auth_required
 from scuevals_api.models import Permission, Student, db
 from scuevals_api.utils import use_args
+from .evaluations import get_evals_json
 
 
 def year_in_range(year):
@@ -59,3 +60,20 @@ class StudentsResource(Resource):
             'result': 'success',
             'jwt': create_access_token(identity=ident)
         }
+
+
+class StudentEvaluationsResource(Resource):
+    get_args = {
+        'professor_id': fields.Int(),
+        'course_id': fields.Int(),
+        'quarter_id': fields.Int(),
+        'embed': fields.List(fields.Str(validate=validate.OneOf(['professor', 'course'])), missing=[])
+    }
+
+    @auth_required(Permission.WriteEvaluations)
+    @use_args(get_args)
+    def get(self, args, s_id):
+        if current_user.id != s_id:
+            raise Forbidden("you do not have the rights to access this student's evaluations")
+
+        return get_evals_json(args, current_user.id)
