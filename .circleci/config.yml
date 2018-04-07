@@ -49,7 +49,9 @@ jobs:
 
       - run:
           name: Run documentation tests
-          command: dredd
+          command: |
+            . venv/bin/activate
+            dredd
 
       - store_artifacts:
           path: test-reports
