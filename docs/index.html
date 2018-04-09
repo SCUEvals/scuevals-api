@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SCU Evals API Apiary Documentation</title>
+</head>
+<body>
+<script src="https://api.apiary.io/seeds/embed.js"></script>
+<script>
+
+    var url = new URL(window.location.href);
+    var branch = url.searchParams.get("branch");
+
+    if (branch == null)
+        branch = 'master';
+
+    function makeHttpObject() {
+        try {
+            return new XMLHttpRequest();
+        }
+        catch (error) {
+        }
+        try {
+            return new ActiveXObject("Msxml2.XMLHTTP");
+        }
+        catch (error) {
+        }
+        try {
+            return new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        catch (error) {
+        }
+
+        throw new Error("Could not create HTTP request object.");
+    }
+
+    var request = makeHttpObject();
+    request.open("GET", "https://raw.githubusercontent.com/SCUEvals/scuevals-api/" + branch + "/apiary.apib", true);
+    request.send(null);
+    request.onreadystatechange = function () {
+        if (request.readyState === 4) {
+            var embed = new Apiary.Embed({
+                apiBlueprint: request.responseText
+            });
+        }
+    };
+</script>
+</body>
+</html>
