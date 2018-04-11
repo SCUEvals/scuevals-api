@@ -102,11 +102,30 @@ Validates the JWT and returns a new one freshly generated from the database.
 ### List All Courses [GET /courses{?quarter_id,professor_id}]
 
 + Parameters
-    + quarter_id (optional, number) - Limit the list to courses that were taught during the specified quarter
-    + professor_id (optional, number) - Limit the list to courses that were taught by the specified professor
+    + quarter_id (number, optional) - Limit the list to courses that were taught during the specified quarter
+    + professor_id (number, optional) - Limit the list to courses that were taught by the specified professor
 
 + Response 200 (application/json)
     + Attributes (array[Course], fixed-type)
+
+
+### List Top Courses [GET /courses/top{?count,department_id}]
+
++ Parameters
+    + count (number, optional)
+        + Default: 5
+    + department_id (array[number], optional)
+
++ Response 200 (application/json)
+    + Attributes (array, required, fixed-type)
+        + (object, required)
+            + course (Course, required)
+            + avg_score: 3.0 (number, required)
+            
++ Response 404 (application/json)
+    + Attributes
+        + message: `department with id <id> not found` (string, required)
+
 
 ### Post Courses [POST]
 
@@ -203,10 +222,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + professor_id: 1 (number, optional)
     + course_id: 1 (number, optional)
     + quarter_id: 1 (number, optional)
-    + embed (array, optional)
-        + (enum)
-            + professor
-            + course
+    + embed (array[string], optional) - Specify one or more of the following: professor, course.
 
 + Response 200 (application/json)
     + Attributes (array, required, fixed-type)
@@ -391,6 +407,25 @@ Validates the JWT and returns a new one freshly generated from the database.
 
 + Response 200 (application/json)
     + Attributes (array[Professor], required, fixed-type)
+    
+
+### List Top Professors [GET /professors/top{?count,department_id}]
+
++ Parameters
+    + count (number, optional)
+        + Default: 5
+    + department_id (array[number], optional)
+
++ Response 200 (application/json)
+    + Attributes (array, required, fixed-type)
+        + (object, required)
+            + professor (Professor, required)
+            + avg_score: 3.0 (number, required)
+            
++ Response 404 (application/json)
+    + Attributes
+        + message: `department with id <id> not found` (string, required)
+
 
 ### Get Professor Details [GET /professors/{id}{?embed}]
 
@@ -487,7 +522,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + course_id: 1 (number, optional)
     + quarter_id: 1 (number, optional)
     + embed (array, optional)
-        + (enum)
+        + (enum[string])
             + professor
             + course
 
