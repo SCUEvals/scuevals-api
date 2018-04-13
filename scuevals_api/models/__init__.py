@@ -1,6 +1,8 @@
 from flask import Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
 
 models_bp = Blueprint('models', __name__)
 
@@ -19,6 +21,12 @@ db = SQLAlchemy(metadata=metadata)
 @models_bp.record_once
 def on_load(state):
     db.init_app(state.app)
+
+
+# cascade all table drops to prevent views from breaking the drop_all command
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + ' CASCADE'
 
 
 from .api_key import APIKey  # noqa
