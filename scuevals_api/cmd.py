@@ -12,7 +12,7 @@ def init_db(app, db):
     db.create_all()
     db.session.commit()
 
-    sql_files = ['functions/update_courses.sql', 'functions/update_departments.sql']
+    sql_files = ['functions/update_courses.sql', 'functions/update_departments.sql', 'views/evaluation_scores.sql']
     db_dir = os.path.join(os.path.dirname(app.root_path), 'db')
 
     for sfile in sql_files:
