@@ -1,8 +1,6 @@
 from flask import Blueprint
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
-from sqlalchemy.schema import DropTable
-from sqlalchemy.ext.compiler import compiles
+from sqlalchemy import MetaData, orm
 
 models_bp = Blueprint('models', __name__)
 
@@ -22,17 +20,16 @@ db = SQLAlchemy(metadata=metadata)
 def on_load(state):
     db.init_app(state.app)
 
-
-# cascade all table drops to prevent views from breaking the drop_all command
-@compiles(DropTable, "postgresql")
-def _compile_drop_table(element, compiler, **kwargs):
-    return compiler.visit_drop_table(element) + ' CASCADE'
+    for view in views:
+        if not hasattr(view, '_sa_class_manager'):
+            orm.mapper(view, view.__view__)
 
 
 from .api_key import APIKey  # noqa
 from .assoc import user_permission, student_major, section_professor, api_key_permission  # noqa
 from .course import Course  # noqa
 from .department import Department  # noqa
+from .evaluation_scores import EvaluationScores  # noqa
 from .evaluation import Evaluation  # noqa
 from .flag import Flag  # noqa
 from .major import Major  # noqa
@@ -47,3 +44,5 @@ from .university import University  # noqa
 from .official_user_type import OfficialUserType  # noqa
 from .user import User  # noqa
 from .vote import Vote  # noqa
+
+views = [EvaluationScores]
