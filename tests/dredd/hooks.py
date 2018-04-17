@@ -95,6 +95,17 @@ def courses(trans):
     db.session.commit()
 
 
+@hooks.before('Courses > List Top Courses')
+def courses_top(trans):
+    s1 = factories.SectionFactory()
+    s2 = factories.SectionFactory()
+
+    factories.EvaluationFactory(section=s1)
+    factories.EvaluationFactory(section=s1)
+    factories.EvaluationFactory(section=s2)
+    db.session.commit()
+
+
 @hooks.before('Courses > Post Courses')
 def post_course(trans):
     factories.QuarterFactory(id=1)

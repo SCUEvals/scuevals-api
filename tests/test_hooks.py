@@ -34,6 +34,9 @@ class HooksTestCase(unittest.TestCase):
     def test_courses(self):
         hooks.courses(transaction)
 
+    def test_courses_top(self):
+        hooks.courses_top(transaction)
+
     def test_post_course(self):
         hooks.post_course(transaction)
 
