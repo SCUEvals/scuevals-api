@@ -34,6 +34,7 @@ setup(
         'PyYAML==3.12',
         'requests==2.18.4',
         'rollbar==0.13.17',
+        'sqlalchemy-views==0.2.1',
         'vcrpy==1.11.1',
         'webargs==1.8.1',
     ],
