@@ -41,12 +41,6 @@ jobs:
           key: v1-dependencies-{{ checksum "setup.py" }}
 
       - run:
-          name: Run tests
-          command: |
-            . venv/bin/activate
-            python setup.py test
-
-      - run:
           name: Run test coverage verification
           command: |
             . venv/bin/activate
