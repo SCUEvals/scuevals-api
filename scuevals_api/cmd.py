@@ -2,9 +2,11 @@ import os
 
 import click
 from flask.cli import FlaskGroup
-from sqlalchemy import text
+from sqlalchemy import text, orm
+from sqlalchemy_views import CreateView
 
 from scuevals_api import create_app
+from scuevals_api.models import views
 
 
 def init_db(app, db):
@@ -19,6 +21,16 @@ def init_db(app, db):
         with open(os.path.join(db_dir, sfile), 'r') as f:
             sql = f.read()
             db.engine.execute(text(sql))
+
+    init_views(db)
+
+
+def init_views(db):
+    for view in views:
+        db.engine.execute(CreateView(view.__view__, view.__definition__))
+
+        if not hasattr(view, '_sa_class_manager'):
+            orm.mapper(view, view.__view__)
 
 
 def create_cli_app(pointless_arg):

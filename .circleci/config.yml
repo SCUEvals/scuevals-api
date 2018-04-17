@@ -45,6 +45,11 @@ jobs:
           command: |
             . venv/bin/activate
             python setup.py test
+
+      - run:
+          name: Run test coverage verification
+          command: |
+            . venv/bin/activate
             (coverage run --source=scuevals_api setup.py test && coverage report --fail-under=100 && coveralls)
 
       - run:

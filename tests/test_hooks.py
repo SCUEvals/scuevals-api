@@ -34,6 +34,9 @@ class HooksTestCase(unittest.TestCase):
     def test_courses(self):
         hooks.courses(transaction)
 
+    def test_courses_top(self):
+        hooks.courses_top(transaction)
+
     def test_post_course(self):
         hooks.post_course(transaction)
 
@@ -66,6 +69,9 @@ class HooksTestCase(unittest.TestCase):
 
     def test_professors(self):
         hooks.professors(transaction)
+
+    def test_professors_top(self):
+        hooks.professors_top(transaction)
 
     def test_professor_details(self):
         hooks.professor_details(transaction)
