@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import Api
 
 from .api import APIStatusResource
-from .professors import ProfessorsResource, ProfessorResource
+from .professors import ProfessorsResource, ProfessorsTopResource, ProfessorResource
 from .classes import ClassResource
 from .courses import CoursesResource, CoursesTopResource, CourseResource
 from .departments import DepartmentsResource
@@ -36,6 +36,7 @@ api.add_resource(EvaluationFlagResource, '/evaluations/<int:e_id>/flag')
 api.add_resource(MajorsResource, '/majors')
 
 api.add_resource(ProfessorsResource, '/professors')
+api.add_resource(ProfessorsTopResource, '/professors/top')
 api.add_resource(ProfessorResource, '/professors/<int:p_id>')
 
 api.add_resource(SearchResource, '/search')

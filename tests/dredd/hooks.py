@@ -207,6 +207,19 @@ def professors(trans):
     db.session.commit()
 
 
+@hooks.before('Professors > List Top Professors')
+def professors_top(trans):
+    p1 = factories.ProfessorFactory()
+    p2 = factories.ProfessorFactory()
+
+    s1 = factories.SectionFactory(professors=[p1])
+    s2 = factories.SectionFactory(professors=[p2])
+
+    factories.EvaluationFactory(section=s1, professor=p1)
+    factories.EvaluationFactory(section=s2, professor=p2)
+    db.session.commit()
+
+
 @hooks.before('Professors > Get Professor Details')
 def professor_details(trans):
     prof = factories.ProfessorFactory(id=1)

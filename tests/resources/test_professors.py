@@ -40,6 +40,40 @@ class ProfessorsTestCase(TestCase):
         self.assertEqual(1, len(data))
 
 
+class ProfessorsTopTestCase(TestCase):
+    def setUp(self):
+        p1 = ProfessorFactory()
+        p2 = ProfessorFactory()
+        p3 = ProfessorFactory()
+        p4 = ProfessorFactory()
+
+        self.s1 = SectionFactory(professors=[p1])
+        self.s2 = SectionFactory(professors=[p2])
+        s3 = SectionFactory(professors=[p3])
+        SectionFactory(professors=[p4])
+
+        EvaluationFactory(section=self.s1, professor=p1)
+        EvaluationFactory(section=self.s2, professor=p2)
+        EvaluationFactory(section=s3, professor=p3)
+
+    def test_get(self):
+        rv = self.client.get('/professors/top', headers=self.head_auth, query_string=urlencode({'count': 2}))
+
+        self.assertEqual(200, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data))
+
+    def test_get_department_ids(self):
+        rv = self.client.get('/professors/top', headers=self.head_auth,
+                             query_string=urlencode({
+                                 'department_id': [self.s1.course.department_id, self.s2.course.department_id]
+                             }, True))
+
+        self.assertEqual(200, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data))
+
+
 class ProfessorTestCase(TestCase):
     def setUp(self):
         super().setUp()

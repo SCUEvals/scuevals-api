@@ -70,6 +70,9 @@ class HooksTestCase(unittest.TestCase):
     def test_professors(self):
         hooks.professors(transaction)
 
+    def test_professors_top(self):
+        hooks.professors_top(transaction)
+
     def test_professor_details(self):
         hooks.professor_details(transaction)
 

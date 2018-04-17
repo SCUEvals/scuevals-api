@@ -1,6 +1,6 @@
 from sqlalchemy import Table
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.ddl import DropTable, CreateTable
+from sqlalchemy.sql.ddl import DropTable
 
 
 class View(Table):
