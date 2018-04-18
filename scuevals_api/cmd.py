@@ -2,15 +2,15 @@ import os
 
 import click
 from flask.cli import FlaskGroup
-from sqlalchemy import text, orm
-from sqlalchemy_views import CreateView
+from sqlalchemy import text
 
 from scuevals_api import create_app
 from scuevals_api.models import views
+from scuevals_api.db_views import CreateView
 
 
 def init_db(app, db):
-    import scuevals_api.models # noqa
+    import scuevals_api.models  # noqa
     db.create_all()
     db.session.commit()
 
@@ -22,15 +22,8 @@ def init_db(app, db):
             sql = f.read()
             db.engine.execute(text(sql))
 
-    init_views(db)
-
-
-def init_views(db):
     for view in views:
-        db.engine.execute(CreateView(view.__view__, view.__definition__))
-
-        if not hasattr(view, '_sa_class_manager'):
-            orm.mapper(view, view.__view__)
+        db.engine.execute(CreateView(view))
 
 
 def create_cli_app(pointless_arg):
