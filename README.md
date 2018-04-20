@@ -16,3 +16,5 @@ Run `python setup.py test`.
 
 ## Documentation
 The API documentation is available [on Apiary](https://scuevals.docs.apiary.io/).
+Documentation for branches other than master can be 
+found at [scuevals.github.io/scuevals-api/?branch=nameofbranch](https://scuevals.github.io/scuevals-api/?branch=develop).
