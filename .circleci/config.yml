@@ -67,7 +67,7 @@ jobs:
           command: |
             if [ "$DEPLOY_STAGING_RESTORE_DB" == "1" ]; then
               ssh root@$DOKKU_SERVER "dokku postgres:connect staging-db" < .circleci/reset_db.sql
-              ssh root@$DOKKU_SERVER "dokku postgres:export db | dokku postgres:import staging-db || true
+              ssh root@$DOKKU_SERVER "dokku postgres:export db | dokku postgres:import staging-db" || true
               ssh root@$DOKKU_SERVER "dokku run staging-api 'alembic upgrade head'"
             else
               echo Skipping DB restore according to env var...
