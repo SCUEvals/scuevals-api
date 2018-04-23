@@ -47,7 +47,7 @@ class ProfessorsTopResource(Resource):
     def get(self, args):
         professors = db.session.query(
             Professor,
-            func.avg(EvaluationScores.avg_course).label('avg_professor')
+            func.avg(EvaluationScores.avg_professor).label('avg_professor')
         ).join(Professor.evaluations).join(
             EvaluationScores,
             Evaluation.id == EvaluationScores.evaluation_id
