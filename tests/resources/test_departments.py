@@ -22,7 +22,9 @@ class DepartmentsTestCase(TestCase):
         self.assertEqual(rv.status_code, 200)
 
         data = json.loads(rv.data)
-        self.assertEqual(len(data), 2)
+
+        # the two departments above + the one in the original setup
+        self.assertEqual(len(data), 3)
 
     @use_data('departments.yaml')
     def test_post(self, data):

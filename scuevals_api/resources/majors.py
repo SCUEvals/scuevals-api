@@ -1,12 +1,12 @@
 import logging
 
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import current_user
 from flask_restful import Resource
 from marshmallow import fields
 from sqlalchemy.exc import DatabaseError
 from werkzeug.exceptions import UnprocessableEntity
 
-from scuevals_api.models import Permission, Major, db
+from scuevals_api.models import Permission, Major, db, Department, School
 from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
@@ -15,17 +15,17 @@ class MajorsResource(Resource):
 
     @auth_required
     def get(self):
-        majors = Major.query.all()
+        majors = Major.query.filter(
+            Major.department.has(Department.school.has(School.university_id == current_user.university_id))
+        ).all()
 
         return [major.to_dict() for major in majors]
 
     @auth_required(Permission.UpdateMajors)
     @use_args({'majors': fields.List(fields.Str(), required=True)}, locations=('json',))
     def post(self, args):
-        jwt_data = get_jwt_identity()
-
         for major_name in args['majors']:
-            major = Major(university_id=jwt_data['university_id'], name=major_name)
+            major = Major(name=major_name)
             db.session.add(major)
 
         try:

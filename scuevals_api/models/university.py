@@ -12,6 +12,5 @@ class University(db.Model):
     professors = db.relationship('Professor', back_populates='university')
     schools = db.relationship('School', back_populates='university')
     quarters = db.relationship('Quarter', back_populates='university')
-    majors = db.relationship('Major', back_populates='university')
     api_keys = db.relationship('APIKey', back_populates='university')
     official_user_types = db.relationship('OfficialUserType', back_populates='university')

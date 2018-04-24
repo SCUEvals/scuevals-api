@@ -11,6 +11,7 @@ class Department(db.Model):
 
     courses = db.relationship('Course', back_populates='department')
     school = db.relationship('School', back_populates='departments')
+    majors = db.relationship('Major', back_populates='department')
 
     __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id'),)
 
