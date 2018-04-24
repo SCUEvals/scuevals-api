@@ -4,26 +4,27 @@ export MAIN_DB=scuevals
 export TMP_DB=scuevals_new
 
 function delete_db () {
-    psql -d ${1} -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
+    psql -p ${2} -c "SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
 WHERE pg_stat_activity.datname = '$1'
   AND pid <> pg_backend_pid();" || true
 
-    dropdb ${1} || true
+    dropdb -p ${2} ${1} || true
 }
 
-delete_db ${TMP_DB} &>/dev/null
+delete_db ${TMP_DB} ${PG_PORT} &>/dev/null
+createdb -p ${PG_PORT} ${TMP_DB}
 
-echo Fetching $MAIN_DB from Heroku...
+printf "Fetching $MAIN_DB from Dokku...\n"
 
-heroku pg:pull DATABASE_URL ${TMP_DB} -r production
+ssh root@$DOKKU_SERVER dokku postgres:export db | pg_restore -d ${TMP_DB} -p ${PG_PORT}
 
 read -p "Please confirm the replacement of the existing $MAIN_DB db? (y/n) " -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-    echo Replacing $MAIN_DB with $TMP_DB...
+    printf "\nReplacing $MAIN_DB with $TMP_DB...\n"
 
-    delete_db ${MAIN_DB}
+    delete_db ${MAIN_DB} ${PG_PORT}
 
-    psql -c "ALTER DATABASE $TMP_DB RENAME TO $MAIN_DB;"
+    psql -p ${PG_PORT} -c "ALTER DATABASE $TMP_DB RENAME TO $MAIN_DB;"
 fi
