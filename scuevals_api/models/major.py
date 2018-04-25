@@ -1,4 +1,5 @@
-from . import db, student_major
+from . import db
+from .assoc import department_major, student_major
 
 
 class Major(db.Model):
@@ -6,14 +7,13 @@ class Major(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
-    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
 
-    department = db.relationship('Department', back_populates='majors')
+    departments = db.relationship('Department', secondary=department_major, back_populates='majors')
     students = db.relationship('Student', secondary=student_major, back_populates='majors')
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
-            'department_id': self.department_id
+            'departments': [dep.id for dep in self.departments]
         }

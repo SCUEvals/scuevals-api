@@ -15,15 +15,16 @@ class MajorsResource(Resource):
 
     @auth_required
     def get(self):
-        majors = Major.query.filter(
-            Major.department.has(Department.school.has(School.university_id == current_user.university_id))
-        ).all()
+        majors = Major.query.join(Major.departments).filter(
+            Department.school.has(School.university_id == current_user.university_id)
+        )
 
-        return [major.to_dict() for major in majors]
+        return [major.to_dict() for major in majors.all()]
 
     @auth_required(Permission.UpdateMajors)
     @use_args({'majors': fields.List(fields.Str(), required=True)}, locations=('json',))
     def post(self, args):
+
         for major_name in args['majors']:
             major = Major(name=major_name)
             db.session.add(major)

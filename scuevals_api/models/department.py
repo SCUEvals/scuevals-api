@@ -1,4 +1,5 @@
 from . import db
+from .assoc import department_major
 
 
 class Department(db.Model):
@@ -11,7 +12,7 @@ class Department(db.Model):
 
     courses = db.relationship('Course', back_populates='department')
     school = db.relationship('School', back_populates='departments')
-    majors = db.relationship('Major', back_populates='department')
+    majors = db.relationship('Major', secondary=department_major, back_populates='departments')
 
     __table_args__ = (db.UniqueConstraint('abbreviation', 'school_id'),)
 

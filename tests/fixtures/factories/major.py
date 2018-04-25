@@ -11,4 +11,4 @@ class MajorFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = 'flush'
 
     name = factory.Sequence(lambda n: "Sample Major " + str(n))
-    department = factory.SubFactory(DepartmentFactory)
+    departments = factory.List([factory.SubFactory(DepartmentFactory)])
