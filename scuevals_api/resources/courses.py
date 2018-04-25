@@ -4,12 +4,14 @@ import logging
 from flask_jwt_extended import get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema, validate
-from sqlalchemy import text, and_
+from sqlalchemy import text, and_, func, desc
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound
 
-from scuevals_api.models import Permission, Course, Section, db, Department, School, Professor
+from scuevals_api.models import (
+    Permission, Course, Section, db, Department, School, Professor, Evaluation, EvaluationScores
+)
 from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args, get_pg_error_msg
 
@@ -76,6 +78,35 @@ class CoursesResource(Resource):
             raise UnprocessableEntity()
 
         return {'result': 'success', 'updated_count': int(result.first()[0])}
+
+
+class CoursesTopResource(Resource):
+    @auth_required(Permission.ReadEvaluations, Permission.WriteEvaluations)
+    @use_args({'count': fields.Int(validate=validate.Range(1, 50)), 'department_id': fields.List(fields.Int())})
+    def get(self, args):
+        courses = db.session.query(
+            Course,
+            func.avg(EvaluationScores.avg_course).label('avg_course')
+        ).filter(
+            Course.department.has(Department.school.has(School.university_id == current_user.university_id))
+        ).join(Course.sections, Section.evaluations).join(
+            EvaluationScores,
+            Evaluation.id == EvaluationScores.evaluation_id
+        ).group_by(Course).order_by(desc('avg_course'))
+
+        if 'department_id' in args:
+            courses = courses.filter(Course.department_id.in_(args['department_id']))
+
+        if 'count' in args:
+            courses = courses.limit(args['count'])
+
+        return [
+            {
+                'course': result.Course.to_dict(),
+                'avg_score': float(result.avg_course),
+            }
+            for result in courses.all()
+        ]
 
 
 class CourseResource(Resource):

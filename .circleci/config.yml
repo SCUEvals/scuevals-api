@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
 
-      - image: circleci/python:3.6.4
+      - image: scuevals/circleci
         environment:
           FLASK_ENV: test
           JWT_SECRET_KEY: lHmxPAbKYd4wCQctLEuJK7K5CTlQb8sP
@@ -28,7 +28,7 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: install dependencies
+          name: Install dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
@@ -41,11 +41,16 @@ jobs:
           key: v1-dependencies-{{ checksum "setup.py" }}
 
       - run:
-          name: run tests
+          name: Run test coverage verification
           command: |
             . venv/bin/activate
-            python setup.py test
             (coverage run --source=scuevals_api setup.py test && coverage report --fail-under=100 && coveralls)
+
+      - run:
+          name: Run documentation tests
+          command: |
+            . venv/bin/activate
+            dredd
 
       - store_artifacts:
           path: test-reports
@@ -55,46 +60,37 @@ jobs:
     machine:
         enabled: true
     working_directory: ~/repo
-    environment:
-      HEROKU_APP: "$HEROKU_APP_STAGING"
     steps:
       - checkout
-      - run:
-          name: Setup Heroku
-          command: bash .circleci/setup-heroku.sh
       - run:
           name: Restore Database From Production
           command: |
             if [ "$DEPLOY_STAGING_RESTORE_DB" == "1" ]; then
-              heroku pg:reset DATABASE --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
-              heroku pg:backups:restore `heroku pg:backups:public-url --app $HEROKU_APP_PRODUCTION` DATABASE_URL --app $HEROKU_APP_STAGING --confirm $HEROKU_APP_STAGING
+              ssh root@$DOKKU_SERVER "dokku postgres:connect staging-db" < .circleci/reset_db.sql
+              ssh root@$DOKKU_SERVER "dokku postgres:export db | dokku postgres:import staging-db" || true
+              ssh root@$DOKKU_SERVER "dokku run staging-api 'alembic upgrade head'"
             else
               echo Skipping DB restore according to env var...
             fi
       - run:
-          name: Deploy to Heroku
+          name: Deploy to Dokku
           command: |
-            heroku git:remote -a $HEROKU_APP_STAGING
-            echo Pushing to Heroku...
-            git push heroku develop:master &>/dev/null
+            git remote add dokku $DOKKU_STAGING
+            echo Pushing to Dokku...
+            git push dokku develop:master &>/dev/null
 
   deploy-production:
     machine:
         enabled: true
     working_directory: ~/repo
-    environment:
-      HEROKU_APP: "$HEROKU_APP_PRODUCTION"
     steps:
       - checkout
       - run:
-          name: Setup Heroku
-          command: bash .circleci/setup-heroku.sh
-      - run:
-          name: Deploy to Heroku
+          name: Deploy to Dokku
           command: |
-            heroku git:remote -a $HEROKU_APP_PRODUCTION
-            echo Pushing to Heroku...
-            git push heroku master:master &>/dev/null
+            git remote add dokku $DOKKU_PRODUCTION
+            echo Pushing to Dokku...
+            git push dokku master:master &>/dev/null
 
 workflows:
   version: 2

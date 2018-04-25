@@ -64,6 +64,10 @@ class TestCase(unittest.TestCase):
         db.session.rollback()
         db.session.remove()
 
+    @classmethod
+    def tearDownClass(cls):
+        db.drop_all()
+
 
 def seed_db(target):
     scu = University(id=1, abbreviation='SCU', name='Santa Clara University')

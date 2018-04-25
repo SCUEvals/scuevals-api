@@ -1,3 +1,5 @@
+import json
+
 import dredd_hooks as hooks
 
 from flask_jwt_extended import create_access_token
@@ -55,6 +57,14 @@ def after_each(trans):
     db.session.close_all()
     db.drop_all()
 
+    if 'real' not in trans or 'body' not in trans['real']:
+        return
+
+    data = json.loads(trans['real']['body'])
+    if isinstance(data, (list,)):
+        if len(data) == 0:
+            trans['fail'] = "Empty array returned, nothing was verified"
+
 
 @hooks.before('Authentication > Authenticate New/Old User')
 def skip_test(trans):
@@ -82,6 +92,17 @@ def class_details(trans):
 @hooks.before('Courses > List All Courses')
 def courses(trans):
     factories.CourseFactory()
+    db.session.commit()
+
+
+@hooks.before('Courses > List Top Courses')
+def courses_top(trans):
+    s1 = factories.SectionFactory()
+    s2 = factories.SectionFactory()
+
+    factories.EvaluationFactory(section=s1)
+    factories.EvaluationFactory(section=s1)
+    factories.EvaluationFactory(section=s2)
     db.session.commit()
 
 
@@ -183,6 +204,19 @@ def professors(trans):
     section = factories.SectionFactory(course=course, quarter=quarter)
     ev = factories.EvaluationFactory(section=section, professor=prof)
     factories.VoteFactory(value=Vote.UPVOTE, student=stash['student'], evaluation=ev)
+    db.session.commit()
+
+
+@hooks.before('Professors > List Top Professors')
+def professors_top(trans):
+    p1 = factories.ProfessorFactory()
+    p2 = factories.ProfessorFactory()
+
+    s1 = factories.SectionFactory(professors=[p1])
+    s2 = factories.SectionFactory(professors=[p2])
+
+    factories.EvaluationFactory(section=s1, professor=p1)
+    factories.EvaluationFactory(section=s2, professor=p2)
     db.session.commit()
 
 

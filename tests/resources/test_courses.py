@@ -122,6 +122,36 @@ class CoursesTestCase(TestCase):
         self.assertIn('semantic errors', data['message'])
 
 
+class CoursesTopTestCase(TestCase):
+    def setUp(self):
+        self.s1 = SectionFactory()
+        self.s2 = SectionFactory()
+        s3 = SectionFactory()
+        SectionFactory()
+
+        EvaluationFactory(section=self.s1)
+        EvaluationFactory(section=self.s1)
+        EvaluationFactory(section=self.s2)
+        EvaluationFactory(section=s3)
+
+    def test_get(self):
+        rv = self.client.get('/courses/top', headers=self.head_auth, query_string=urlencode({'count': 2}))
+
+        self.assertEqual(200, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data))
+
+    def test_get_department_ids(self):
+        rv = self.client.get('/courses/top', headers=self.head_auth,
+                             query_string=urlencode({
+                                 'department_id': [self.s1.course.department_id, self.s2.course.department_id]
+                             }, True))
+
+        self.assertEqual(200, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertEqual(2, len(data))
+
+
 class CourseTestCase(TestCase):
     def setUp(self):
         super().setUp()

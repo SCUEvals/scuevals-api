@@ -5,10 +5,12 @@ from flask.cli import FlaskGroup
 from sqlalchemy import text
 
 from scuevals_api import create_app
+from scuevals_api.models import views
+from scuevals_api.db_views import CreateView
 
 
 def init_db(app, db):
-    import scuevals_api.models # noqa
+    import scuevals_api.models  # noqa
     db.create_all()
     db.session.commit()
 
@@ -19,6 +21,9 @@ def init_db(app, db):
         with open(os.path.join(db_dir, sfile), 'r') as f:
             sql = f.read()
             db.engine.execute(text(sql))
+
+    for view in views:
+        db.engine.execute(CreateView(view))
 
 
 def create_cli_app(pointless_arg):

@@ -1,11 +1,13 @@
 from flask_jwt_extended import get_jwt_identity, current_user
 from flask_restful import Resource
 from marshmallow import fields, validate
-from sqlalchemy import and_
+from sqlalchemy import and_, func, desc
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import NotFound
 
-from scuevals_api.models import Permission, Professor, Section, Evaluation, Course
+from scuevals_api.models import (
+    Permission, Professor, Section, Evaluation, Course, EvaluationScores, db
+)
 from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args
 
@@ -36,6 +38,38 @@ class ProfessorsResource(Resource):
             professors = professors.filter(Professor.sections.any(expr))
 
         return [professor.to_dict() for professor in professors.all()]
+
+
+class ProfessorsTopResource(Resource):
+
+    @auth_required(Permission.ReadEvaluations, Permission.WriteEvaluations)
+    @use_args({'count': fields.Int(validate=validate.Range(1, 50)), 'department_id': fields.List(fields.Int())})
+    def get(self, args):
+        professors = db.session.query(
+            Professor,
+            func.avg(EvaluationScores.avg_professor).label('avg_professor')
+        ).join(Professor.evaluations).join(
+            EvaluationScores,
+            Evaluation.id == EvaluationScores.evaluation_id
+        ).filter(
+            Professor.university_id == current_user.university_id,
+        ).group_by(Professor).order_by(desc('avg_professor'))
+
+        if 'department_id' in args:
+            professors = professors.filter(
+                Evaluation.section.has(Section.course.has(Course.department_id.in_(args['department_id'])))
+            )
+
+        if 'count' in args:
+            professors = professors.limit(args['count'])
+
+        return [
+            {
+                'professor': result.Professor.to_dict(),
+                'avg_score': float(result.avg_professor),
+            }
+            for result in professors.all()
+        ]
 
 
 class ProfessorResource(Resource):
