@@ -3,7 +3,9 @@ import logging
 from flask_jwt_extended import current_user
 from flask_restful import Resource
 from marshmallow import fields
+from sqlalchemy import or_
 from sqlalchemy.exc import DatabaseError
+from sqlalchemy.orm import joinedload
 from werkzeug.exceptions import UnprocessableEntity
 
 from scuevals_api.models import Permission, Major, db, Department, School
@@ -15,8 +17,10 @@ class MajorsResource(Resource):
 
     @auth_required
     def get(self):
-        majors = Major.query.join(Major.departments).filter(
-            Department.school.has(School.university_id == current_user.university_id)
+        majors = db.session.query(Major).options(
+            joinedload(Major.departments)
+        ).outerjoin(Major.departments).filter(
+            or_(Department.id == None, Department.school.has(School.university_id == current_user.university_id))  # noqa
         )
 
         return [major.to_dict() for major in majors.all()]

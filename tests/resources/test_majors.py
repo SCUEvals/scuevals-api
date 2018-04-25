@@ -3,18 +3,21 @@ import json
 from flask_jwt_extended import create_access_token
 
 from scuevals_api.models import db, Permission
-from tests.fixtures.factories import StudentFactory
+from tests.fixtures.factories import StudentFactory, MajorFactory, DepartmentFactory
 from tests import TestCase, no_logging
 
 
 class MajorsTestCase(TestCase):
     def test_get_as_student(self):
+        MajorFactory(departments=[])
+        MajorFactory(departments=[DepartmentFactory(), DepartmentFactory()])
+
         rv = self.client.get('/majors', headers=self.head_auth)
 
         self.assertEqual(200, rv.status_code)
 
         data = json.loads(rv.data)
-        self.assertEqual(1, len(data))
+        self.assertEqual(3, len(data))
 
     def test_majors_as_incomplete(self):
         incomplete = StudentFactory(permissions=[Permission.query.get(Permission.Incomplete)])
