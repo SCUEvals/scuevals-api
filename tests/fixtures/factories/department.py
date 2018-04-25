@@ -13,6 +13,6 @@ class DepartmentFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = models.db.session
         sqlalchemy_session_persistence = 'flush'
 
-    abbreviation = factory.Iterator(['COEN', 'MATH', 'POLI', 'MECH', 'ELEN'])
+    abbreviation = factory.Sequence(lambda n: 'SMPL' + str(n))
     name = 'Sample Department'
     school = factory.iterator(schools)
