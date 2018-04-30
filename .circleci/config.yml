@@ -92,12 +92,6 @@ jobs:
               echo Skipping DB restore according to env var...
             fi
 
-      - run:
-          name: Run DB migrations
-          command: |
-            . venv/bin/activate
-            alembic upgrade head
-
   deploy-production:
     machine:
         enabled: true
