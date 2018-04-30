@@ -13,7 +13,7 @@ class Major(db.Model):
 
     departments = db.relationship('Department', secondary=department_major, back_populates='majors')
     _students = db.relationship('StudentMajor',  order_by='StudentMajor.index', collection_class=ordering_list('index'),
-                                back_populates='major', passive_deletes=True)
+                                back_populates='major', passive_deletes=True, cascade="all, delete-orphan")
     students = association_proxy('_students', 'student', creator=lambda student: StudentMajor(student=student))
 
     def to_dict(self):
