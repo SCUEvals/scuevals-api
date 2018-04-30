@@ -26,7 +26,7 @@ def on_load(state):
 
 
 from .api_key import APIKey  # noqa
-from .assoc import user_permission, student_major, section_professor, api_key_permission  # noqa
+from .assoc import user_permission, section_professor, api_key_permission, StudentMajor  # noqa
 from .course import Course  # noqa
 from .department import Department  # noqa
 from .evaluation_scores import EvaluationScores  # noqa

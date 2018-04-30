@@ -1,7 +1,10 @@
 from datetime import datetime
 
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.orderinglist import ordering_list
+
 from . import db
-from .assoc import student_major
+from .assoc import StudentMajor
 from .major import Major
 from .user import User
 from .permission import Permission
@@ -17,7 +20,10 @@ class Student(User):
 
     evaluations = db.relationship('Evaluation', back_populates='student', passive_deletes=True)
 
-    majors = db.relationship('Major', secondary=student_major, back_populates='students', passive_deletes=True)
+    _majors = db.relationship('StudentMajor', order_by='StudentMajor.index', collection_class=ordering_list('index'),
+                              back_populates='student', passive_deletes=True)
+    majors = association_proxy('_majors', 'major', creator=lambda major: StudentMajor(major=major))
+
     votes = db.relationship('Vote', back_populates='student', passive_deletes=True)
     accused_flags = db.relationship('Flag', back_populates='accused_student', passive_deletes=True)
 
