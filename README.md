@@ -1,5 +1,6 @@
 [![CircleCI Status for SCUEvals/scuevals-api](https://img.shields.io/circleci/project/github/SCUEvals/scuevals-api/master.svg)](https://app.codeship.com/projects/251868)
 [![Coverage Status](https://img.shields.io/coveralls/github/SCUEvals/scuevals-api/master.svg)](https://coveralls.io/github/SCUEvals/scuevals-api?branch=master)
+![Code Climate](https://img.shields.io/codeclimate/maintainability/SCUEvals/scuevals-api.svg)
 [![License](https://img.shields.io/badge/license-AGPL%20v3-blue.svg)](https://github.com/SCUEvals/scuevals-api/blob/master/LICENSE)
 
 ## Running the API
