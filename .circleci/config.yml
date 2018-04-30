@@ -54,6 +54,7 @@ jobs:
             coverage run --source=scuevals_api setup.py test
             ex_code=$?
             coveralls
+            coverage xml
             ./cc-test-reporter after-build --coverage-input-type coverage.py --exit-code $ex_code
             coverage report --fail-under=100
 
