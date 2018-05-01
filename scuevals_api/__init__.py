@@ -1,12 +1,11 @@
 import os
 
-import click
 from flask import Flask
 
 from scuevals_api.models import models_bp, db
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
-from scuevals_api.errors import get_http_exception_handler
+from scuevals_api.errors import get_http_exception_handler, rollbar
 
 
 def create_app(config='development'):
@@ -35,7 +34,6 @@ def register_extensions(app):
     cache.init_app(app)
 
     if 'ENV' in app.config and app.config['ENV'] in ('production', 'staging'):
-        from scuevals_api.errors import rollbar
         rollbar.init_app(app)
 
 
@@ -47,12 +45,6 @@ def register_blueprints(app):
 
 def register_cli(app):
     from scuevals_api.models import db
-
-    @app.cli.command('start')
-    @click.option('--env', default='development', type=click.Choice(['development', 'test']))
-    def start(env):
-        new_app = create_app(env)
-        new_app.run(host='0.0.0.0')
 
     @app.cli.command(short_help='Initializes the DB.')
     def initdb():

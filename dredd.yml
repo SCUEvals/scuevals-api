@@ -5,7 +5,7 @@ dry-run: null
 hookfiles: tests/dredd/**/*.py
 language: python
 sandbox: false
-server: app start --env test
+server: app run
 server-wait: 3
 init: false
 names: false
