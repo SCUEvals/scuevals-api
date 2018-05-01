@@ -75,6 +75,13 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Deploy to Dokku
+          command: |
+            git remote add dokku $DOKKU_STAGING
+            echo Pushing to Dokku...
+            git push dokku develop:master &>/dev/null
+
+      - run:
           name: Restore Database From Production
           command: |
             if [ "$DEPLOY_STAGING_RESTORE_DB" == "1" ]; then
@@ -84,12 +91,6 @@ jobs:
             else
               echo Skipping DB restore according to env var...
             fi
-      - run:
-          name: Deploy to Dokku
-          command: |
-            git remote add dokku $DOKKU_STAGING
-            echo Pushing to Dokku...
-            git push dokku develop:master &>/dev/null
 
   deploy-production:
     machine:

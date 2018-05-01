@@ -21,7 +21,7 @@ class Student(User):
     evaluations = db.relationship('Evaluation', back_populates='student', passive_deletes=True)
 
     _majors = db.relationship('StudentMajor', order_by='StudentMajor.index', collection_class=ordering_list('index'),
-                              back_populates='student', passive_deletes=True)
+                              back_populates='student', passive_deletes=True, cascade="all, delete-orphan")
     majors = association_proxy('_majors', 'major', creator=lambda major: StudentMajor(major=major))
 
     votes = db.relationship('Vote', back_populates='student', passive_deletes=True)

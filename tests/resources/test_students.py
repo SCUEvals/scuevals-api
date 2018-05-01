@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 from flask_jwt_extended import create_access_token
 # from datetime import datetime, timezone
 from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory, EvaluationFactory
-from scuevals_api.models import db, Permission
+from scuevals_api.models import Permission
 from tests import TestCase
 
 
@@ -21,8 +21,10 @@ class StudentsTestCase(TestCase):
         MajorFactory()
         MajorFactory()
 
-        self.student = StudentFactory(permissions=[Permission.query.get(Permission.Incomplete)])
-        db.session.flush()
+        self.student = StudentFactory(
+            majors=[MajorFactory()],
+            permissions=[Permission.query.get(Permission.Incomplete)]
+        )
 
         ident = self.student.to_dict()
         self.jwt = create_access_token(identity=ident)
