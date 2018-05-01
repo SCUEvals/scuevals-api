@@ -5,7 +5,7 @@ from flask import Flask
 from scuevals_api.models import models_bp, db
 from scuevals_api.auth import auth_bp
 from scuevals_api.resources import resources_bp
-from scuevals_api.errors import get_http_exception_handler, rollbar
+from scuevals_api.errors import get_http_exception_handler
 
 
 def create_app(config='development'):
@@ -34,6 +34,7 @@ def register_extensions(app):
     cache.init_app(app)
 
     if 'ENV' in app.config and app.config['ENV'] in ('production', 'staging'):
+        from scuevals_api.errors import rollbar
         rollbar.init_app(app)
 
 

@@ -9,6 +9,7 @@ from scuevals_api import create_app
 class AppTestCase(unittest.TestCase):
     def test_create_app(self):
         os.environ['DATABASE_URL'] = os.environ['TEST_DATABASE_URL']
+        os.environ['ROLLBAR_API_KEY'] = ''
         app = create_app()
         self.assertIsNotNone(app)
 
