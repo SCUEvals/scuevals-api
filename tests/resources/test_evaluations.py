@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 from flask_jwt_extended import create_access_token
+from freezegun import freeze_time
 
 from tests.fixtures.factories import (
     SectionFactory, EvaluationFactory, VoteFactory, QuarterFactory, StudentFactory, ReasonFactory
@@ -15,7 +16,7 @@ class EvaluationsTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
+        QuarterFactory(period='[2018-01-01, 2018-02-01)')
         self.section = SectionFactory()
 
     def test_get(self):
@@ -67,6 +68,7 @@ class EvaluationsTestCase(TestCase):
         evals = json.loads(rv.data)
         self.assertEqual(1, len(evals))
 
+    @freeze_time('2018-01-05')
     def test_post_evaluation(self):
         student = StudentFactory(permissions=[Permission.query.get(Permission.WriteEvaluations)])
         db.session.flush()

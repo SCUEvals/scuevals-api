@@ -48,7 +48,7 @@ class StudentsResource(Resource):
             student.permissions.append(Permission.query.get(Permission.WriteEvaluations))
 
             # set the reading permission to expire when the current quarter expires
-            # cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+            # cur_quarter_period = Quarter.current.one()
             # student.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
             #                                                tzinfo=timezone.utc)
 

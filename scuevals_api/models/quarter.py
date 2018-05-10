@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import pytz
+from sqlalchemy import func, asc
 from sqlalchemy.dialects.postgresql import ranges, ExcludeConstraint
 
 from . import db
@@ -9,7 +13,6 @@ class Quarter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     year = db.Column(db.Integer, nullable=False)
     name = db.Column(db.Text, nullable=False)
-    current = db.Column(db.Boolean, default=False)
     period = db.Column(ranges.DATERANGE, nullable=False)
 
     university_id = db.Column(db.Integer, db.ForeignKey('universities.id'), nullable=False)
@@ -21,7 +24,6 @@ class Quarter(db.Model):
         ExcludeConstraint(('period', '&&')),
         db.UniqueConstraint('year', 'name', 'university_id'),
         db.CheckConstraint(name.in_(['Fall', 'Winter', 'Spring', 'Summer']), name='valid_quarter'),
-        db.Index('uq_quarters_current', current, unique=True, postgresql_where=current),
     )
 
     def to_dict(self):
@@ -29,5 +31,11 @@ class Quarter(db.Model):
             'id': self.id,
             'year': self.year,
             'name': self.name,
-            'current': self.current
+            'period': str(self.period),
         }
+
+    @classmethod
+    def current(cls):
+        return Quarter.query.filter(
+            func.upper(Quarter.period) > datetime.now(pytz.timezone('America/Los_Angeles'))
+        ).order_by(asc(Quarter.period)).limit(1)
