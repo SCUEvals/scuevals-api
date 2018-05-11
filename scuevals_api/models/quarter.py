@@ -31,7 +31,10 @@ class Quarter(db.Model):
             'id': self.id,
             'year': self.year,
             'name': self.name,
-            'period': str(self.period),
+            'period': {
+                'start': self.period.lower.strftime("%Y-%m-%d"),
+                'end': self.period.upper.strftime("%Y-%m-%d"),
+            },
         }
 
     @classmethod

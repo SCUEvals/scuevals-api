@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta
 
 import dredd_hooks as hooks
 
@@ -229,7 +230,14 @@ def professor_details(trans):
 
 @hooks.before('Quarters > List All Quarters')
 def quarters(trans):
-    quarter = factories.QuarterFactory()
+    now = datetime.now()
+    start_prev = (now + timedelta(days=-10)).strftime("%Y-%m-%d")
+    end_prev = (now + timedelta(days=-9)).strftime("%Y-%m-%d")
+    start_cur = (now + timedelta(days=-1)).strftime("%Y-%m-%d")
+    end_cur = (now + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    quarter = factories.QuarterFactory(period='[{},{})'.format(start_prev, end_prev))
+    factories.QuarterFactory(period='[{},{})'.format(start_cur, end_cur))
     course = factories.CourseFactory(id=1)
     prof = factories.ProfessorFactory(id=1)
     factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
