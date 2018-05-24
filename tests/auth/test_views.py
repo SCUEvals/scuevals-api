@@ -100,6 +100,17 @@ class AuthTestCase(TestCase):
         self.assertEqual('invalid user type', data['status'])
 
     @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token)
+    @vcr.use_cassette('test_auth')
+    def test_no_info(self, data, decode_func):
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token']}))
+
+        data = json.loads(rv.data)
+        self.assertIn('status', data)
+        self.assertEqual('invalid user type', data['status'])
+
+    @use_data('auth.yaml')
     @vcr.use_cassette('test_auth')
     def test_id_token_expired(self, data):
         self.app.debug = False
