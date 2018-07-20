@@ -39,7 +39,8 @@ def before_each(trans):
             Permission.query.get(Permission.VoteOnEvaluations),
             Permission.query.get(Permission.UpdateMajors),
             Permission.query.get(Permission.UpdateDepartments),
-            Permission.query.get(Permission.UpdateCourses)
+            Permission.query.get(Permission.UpdateCourses),
+            Permission.query.get(Permission.UpdateOfficialUserTypes)
         ]
     )
 
