@@ -29,4 +29,4 @@ class OfficialUserTypeResource(Resource):
             ))
 
         db.session.commit()
-        return {'updated_count': len(args['official_user_types'])}, 200
+        return {'result': 'success', 'updated_count': len(args['official_user_types'])}, 200
