@@ -1,6 +1,6 @@
 from functools import wraps
 from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
-from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_jwt_extended.exceptions import JWTExtendedException
 from werkzeug.exceptions import Unauthorized
 
 from scuevals_api.models import User
@@ -31,8 +31,8 @@ def auth_required(fn, *permissions):
 
         try:
             jwt_required(lambda: None)()
-        except NoAuthorizationError:
-            raise Unauthorized('missing authorization header')
+        except JWTExtendedException as ex:
+            raise Unauthorized('authorization error: ' + str(ex))
 
         identity = get_jwt_identity()
 

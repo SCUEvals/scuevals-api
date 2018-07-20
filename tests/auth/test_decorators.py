@@ -25,4 +25,4 @@ class AuthRequiredTestCase(TestCase):
 
         self.assertEqual(401, rv.status_code)
         data = json.loads(rv.data)
-        self.assertIn('missing authorization header', data['message'])
+        self.assertIn('authorization error', data['message'])
