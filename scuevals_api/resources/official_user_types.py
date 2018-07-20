@@ -23,7 +23,7 @@ class OfficialUserTypeResource(Resource):
 
         for out in args['official_user_types']:
             db.session.merge(OfficialUserType(
-                email=out['email'],
+                email=out['email'].lower(),
                 type=out['type'],
                 university_id=current_user.university_id
             ))
