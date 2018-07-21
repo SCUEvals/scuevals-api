@@ -21,4 +21,6 @@ class OfficialUserTypesCase(TestCase):
         self.assertEqual(200, rv.status_code)
         resp = json.loads(rv.data)
         self.assertEqual(2, resp['updated_count'])
+
+        self.session.refresh(out)
         self.assertEqual('professor', out.type)
