@@ -1,6 +1,6 @@
 from functools import wraps
 from flask_jwt_extended import get_jwt_identity, jwt_required, current_user
-from flask_jwt_extended.exceptions import JWTExtendedException, UserLoadError
+from flask_jwt_extended.exceptions import JWTExtendedException, UserLoadError, UserClaimsVerificationError
 from werkzeug.exceptions import Unauthorized, InternalServerError
 
 from scuevals_api.models import User
@@ -33,6 +33,8 @@ def auth_required(fn, *permissions):
             jwt_required(lambda: None)()
         except UserLoadError:
             raise InternalServerError('unable to load user')
+        except UserClaimsVerificationError:
+            raise Unauthorized('invalid or expired user info')
         except JWTExtendedException as ex:
             raise Unauthorized('authorization error: ' + str(ex))
 
