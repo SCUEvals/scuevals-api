@@ -33,7 +33,7 @@ class OfficialUserTypeResource(Resource):
         sql = text(r"""
         with upsert as (
             insert into official_user_type (email, type, university_id)
-            select distinct on (u->>'email')
+            select distinct on (lower(u->>'email'))
               lower(u->>'email') as new_email,
               lower(u->>'type') as new_type,
               :u_id
