@@ -34,8 +34,8 @@ class OfficialUserTypeResource(Resource):
         with upsert as (
             insert into official_user_type (email, type, university_id)
             select distinct on (u->>'email')
-              u->>'email' as new_email,
-              u->>'type' as new_type,
+              lower(u->>'email') as new_email,
+              lower(u->>'type') as new_type,
               :u_id
             from jsonb_array_elements((:json_data)::jsonb) u
             on conflict (email)
