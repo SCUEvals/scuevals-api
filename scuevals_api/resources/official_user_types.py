@@ -28,10 +28,12 @@ class OfficialUserTypeResource(Resource):
         params = {'u_id': current_user.university_id, 'json_data': json.dumps(args['official_user_types'])}
 
         # afaik this should not fail due to input data validation and no table constraints
+        # the only emails that have been seen listed with multiple types
+        # are official school emails, not person emails
         sql = text(r"""
         with upsert as (
             insert into official_user_type (email, type, university_id)
-            select
+            select distinct on (u->>'email')
               u->>'email' as new_email,
               u->>'type' as new_type,
               :u_id
