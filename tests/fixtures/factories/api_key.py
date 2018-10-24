@@ -17,5 +17,6 @@ class APIKeyFactory(factory.alchemy.SQLAlchemyModelFactory):
         return [
             models.Permission.query.get(models.Permission.UpdateCourses),
             models.Permission.query.get(models.Permission.UpdateDepartments),
-            models.Permission.query.get(models.Permission.UpdateMajors)
+            models.Permission.query.get(models.Permission.UpdateMajors),
+            models.Permission.query.get(models.Permission.UpdateOfficialUserTypes)
         ]

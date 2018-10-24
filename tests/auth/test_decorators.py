@@ -19,3 +19,10 @@ class AuthRequiredTestCase(TestCase):
         self.assertEqual(401, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('could not verify that you are authorized to access the URL requested', data['message'])
+
+    def test_missing_authorization_header(self):
+        rv = self.client.get('/quarters', headers={})
+
+        self.assertEqual(401, rv.status_code)
+        data = json.loads(rv.data)
+        self.assertIn('authorization error', data['message'])

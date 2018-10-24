@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask_jwt_extended import get_jwt_identity, create_access_token, current_user
 from flask_restful import Resource
 from marshmallow import fields, validate
 from werkzeug.exceptions import UnprocessableEntity, Forbidden
 
 from scuevals_api.auth import auth_required
-from scuevals_api.models import Permission, Student, db
-from scuevals_api.utils import use_args
+from scuevals_api.models import Permission, Student, Quarter, db
+from scuevals_api.utils import use_args, datetime_from_date
 from .evaluations import get_evals_json
 
 
@@ -43,14 +43,15 @@ class StudentsResource(Resource):
             student.permissions.remove(inc)
 
             # grant them both reading and writing permissions
-            # TEMP: only grant them writing permission
-            # student.permissions.append(Permission.query.get(Permission.Read))
+            student.permissions.append(Permission.query.get(Permission.ReadEvaluations))
             student.permissions.append(Permission.query.get(Permission.WriteEvaluations))
 
             # set the reading permission to expire when the current quarter expires
-            # cur_quarter_period = Quarter.current.one()
-            # student.read_access_until = datetime_from_date(cur_quarter_period.upper + timedelta(days=1),
-            #                                                tzinfo=timezone.utc)
+            # essentially they get their first quarter free,
+            # which makes sense for new students and transfer students
+            cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+            student.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1, hours=11),
+                                                     tzinfo=timezone.utc)
 
         db.session.commit()
 

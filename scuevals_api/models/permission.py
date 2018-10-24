@@ -11,6 +11,7 @@ class Permission(db.Model):
     UpdateCourses = 100
     UpdateDepartments = 101
     UpdateMajors = 102
+    UpdateOfficialUserTypes = 103
 
     Administrator = 1000
 

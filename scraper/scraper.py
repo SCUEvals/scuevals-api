@@ -34,9 +34,15 @@ def scrape_departments(args):
     if not resp.status_code == 200:
         raise Exception('Non-OK status code: ' + str(resp.status_code))
 
-    deps = {'departments': resp.json()['results']}
+    scu_deps = resp.json()['results']
 
-    post(args.api, '/departments', deps)
+    deps = []
+
+    for dep in scu_deps:
+        if dep['school'] not in ('JST',):
+            deps.append(dep)
+
+    post(args.api, '/departments', {'departments': deps})
 
 
 def scrape_courses(args):

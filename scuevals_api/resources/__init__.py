@@ -10,6 +10,7 @@ from .evaluations import (
     EvaluationsResource, EvaluationsRecentResource, EvaluationResource, EvaluationVoteResource, EvaluationFlagResource
 )
 from .majors import MajorsResource
+from .official_user_types import OfficialUserTypeResource
 from .quarters import QuartersResource
 from .search import SearchResource
 from .students import StudentsResource, StudentEvaluationsResource
@@ -34,6 +35,8 @@ api.add_resource(EvaluationVoteResource, '/evaluations/<int:e_id>/vote')
 api.add_resource(EvaluationFlagResource, '/evaluations/<int:e_id>/flag')
 
 api.add_resource(MajorsResource, '/majors')
+
+api.add_resource(OfficialUserTypeResource, '/official_user_types')
 
 api.add_resource(ProfessorsResource, '/professors')
 api.add_resource(ProfessorsTopResource, '/professors/top')

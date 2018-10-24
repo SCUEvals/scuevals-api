@@ -73,6 +73,7 @@ Validates the JWT and returns a new one freshly generated from the database.
     + Attributes
         + jwt (string, required)
 
+
 ## Classes [/classes/{quarter_id}/{professor_id}/{course_id}]
 
 ### Get Class Details [GET]
@@ -395,6 +396,27 @@ Validates the JWT and returns a new one freshly generated from the database.
 + Response 422 (application/json)
     + Attributes
         + message: `failed to insert majors: <db error>` (string, required)
+
+
+## Official User Types [/official_user_types]
+
+### Post Official User Types [POST]
+
++ Request (application/json)
+    + Attributes
+        + official_user_types (array, required, fixed-type)
+            + (object)
+                + email: jdoe@scu.edu (string, required)
+                + type: `student` (string, required)
+
++ Response 200 (application/json)
+    + Attributes
+        + result: success (string, required, fixed)
+        + updated_count: 1 (number, required)
+
++ Response 422 (application/json)
+    + Attributes
+        + message: `The request was well-formed but was unable to be followed due to semantic errors.` (string, required, fixed)
 
 
 ## Professors [/professors]

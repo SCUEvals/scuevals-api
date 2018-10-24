@@ -68,7 +68,11 @@ def auth(args):
         # check the official type of the user
         official = OfficialUserType.query.get(data['email'])
 
-        if official.type == 'student':
+        if not official or official.type not in ('student', 'faculty'):
+            # we do not support other kinds of users
+            return jsonify({'status': 'invalid user type'}), 403
+
+        elif official.type == 'student':
             user = Student(
                 email=data['email'],
                 first_name=data['given_name'],
@@ -88,10 +92,6 @@ def auth(args):
                 permissions=[Permission.query.get(Permission.ReadEvaluations)],
                 university_id=1
             )
-
-        else:
-            # we do not support other kinds of users
-            return jsonify({'status': 'invalid user type'}), 403
 
         db.session.add(user)
         db.session.flush()

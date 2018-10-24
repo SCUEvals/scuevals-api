@@ -1,8 +1,8 @@
 import json
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 from flask_jwt_extended import create_access_token
-# from datetime import datetime, timezone
 from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory, EvaluationFactory
 from scuevals_api.models import Permission
 from tests import TestCase
@@ -10,26 +10,36 @@ from tests import TestCase
 
 class StudentsTestCase(TestCase):
     def setUp(self):
-        super(StudentsTestCase, self).setUp()
+        super().setUp()
+
+        m1 = MajorFactory()
+        m2 = MajorFactory()
 
         self.patch_data = {
             'graduation_year': 2018,
             'gender': 'm',
-            'majors': [1, 2]
+            'majors': [m1.id, m2.id]
         }
 
-        MajorFactory()
-        MajorFactory()
+    def test_patch(self):
+        rv = self.client.patch('/students/{}'.format(self.student.id),
+                               headers=self.head_auth,
+                               data=json.dumps(self.patch_data))
 
-        self.student = StudentFactory(
+        self.assertEqual(rv.status_code, 200)
+
+        self.assertEqual(self.patch_data['graduation_year'], self.student.graduation_year)
+        self.assertEqual(self.patch_data['gender'], self.student.gender)
+        self.assertEqual(self.patch_data['majors'], self.student.majors_list)
+
+    def test_patch_incomplete(self):
+        student = StudentFactory(
             majors=[MajorFactory()],
             permissions=[Permission.query.get(Permission.Incomplete)]
         )
 
-        ident = self.student.to_dict()
-        self.jwt = create_access_token(identity=ident)
+        self.jwt = create_access_token(identity=student.to_dict())
 
-    def test_patch(self):
         headers = {
             'Authorization': 'Bearer ' + self.jwt,
             'Content-Type': 'application/json'
@@ -37,39 +47,29 @@ class StudentsTestCase(TestCase):
 
         QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
 
-        rv = self.client.patch('/students/{}'.format(self.student.id),
+        rv = self.client.patch('/students/{}'.format(student.id),
                                headers=headers,
                                data=json.dumps(self.patch_data))
 
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(200, rv.status_code)
 
-        self.assertEqual(self.student.graduation_year, self.patch_data['graduation_year'])
-        self.assertEqual(self.student.gender, self.patch_data['gender'])
-        self.assertEqual(self.student.majors_list, self.patch_data['majors'])
+        self.assertEqual(self.patch_data['graduation_year'], student.graduation_year)
+        self.assertEqual(self.patch_data['gender'], student.gender)
+        self.assertEqual(self.patch_data['majors'], student.majors_list)
 
-        self.assertIn(Permission.WriteEvaluations, self.student.permissions_list)
-        # self.assertIn(Permission.Read, self.student.permissions_list)
-        # self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), self.student.read_access_until)
+        self.assertIn(Permission.WriteEvaluations, student.permissions_list)
+        self.assertIn(Permission.ReadEvaluations, student.permissions_list)
+        self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), student.read_access_until)
 
     def test_patch_wrong_user(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
-        }
-
-        rv = self.client.patch('/students/2', headers=headers, data=json.dumps(self.patch_data))
+        rv = self.client.patch('/students/2', headers=self.head_auth, data=json.dumps(self.patch_data))
         self.assertEqual(rv.status_code, 403)
 
     def test_patch_invalid_majors(self):
-        headers = {
-            'Authorization': 'Bearer ' + self.jwt,
-            'Content-Type': 'application/json'
-        }
-
         self.patch_data['majors'] = [-1]
 
         rv = self.client.patch(
-            '/students/{}'.format(self.student.id), headers=headers, data=json.dumps(self.patch_data)
+            '/students/{}'.format(0), headers=self.head_auth, data=json.dumps(self.patch_data)
         )
         self.assertEqual(rv.status_code, 422)
         resp = json.loads(rv.data)

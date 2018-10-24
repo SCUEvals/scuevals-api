@@ -90,6 +90,7 @@ def seed_db(target):
         Permission(id=100, name='UpdateCourses'),
         Permission(id=101, name='UpdateDepartments'),
         Permission(id=102, name='UpdateMajors'),
+        Permission(id=103, name='UpdateOfficialUserTypes'),
         Permission(id=1000, name='Administrator'),
     ])
 
