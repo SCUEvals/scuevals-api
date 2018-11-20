@@ -9,6 +9,6 @@ from .section import SectionFactory  # noqa
 from .student import StudentFactory  # noqa
 from .user import UserFactory  # noqa
 from .professor import ProfessorFactory  # noqa
-from .quarter import QuarterFactory  # noqa
+from .quarter import QuarterFactory, QuarterCurrentFactory  # noqa
 from .reason import ReasonFactory  # noqa
 from .vote import VoteFactory  # noqa

@@ -1,10 +1,12 @@
 import json
-from datetime import datetime, timezone
+from datetime import timezone, timedelta
 from urllib.parse import urlencode
 
 from flask_jwt_extended import create_access_token
-from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterFactory, EvaluationFactory
+
+from tests.fixtures.factories import MajorFactory, StudentFactory, QuarterCurrentFactory, EvaluationFactory
 from scuevals_api.models import Permission
+from scuevals_api.utils import datetime_from_date
 from tests import TestCase
 
 
@@ -45,7 +47,7 @@ class StudentsTestCase(TestCase):
             'Content-Type': 'application/json'
         }
 
-        QuarterFactory(current=True, period='[2018-01-01, 2018-02-01)')
+        quarter = QuarterCurrentFactory()
 
         rv = self.client.patch('/students/{}'.format(student.id),
                                headers=headers,
@@ -59,7 +61,10 @@ class StudentsTestCase(TestCase):
 
         self.assertIn(Permission.WriteEvaluations, student.permissions_list)
         self.assertIn(Permission.ReadEvaluations, student.permissions_list)
-        self.assertEqual(datetime(2018, 2, 2, tzinfo=timezone.utc), student.read_access_until)
+        self.assertEqual(
+            datetime_from_date(quarter.period.upper + timedelta(days=1, hours=11), tzinfo=timezone.utc),
+            student.read_access_until
+        )
 
     def test_patch_wrong_user(self):
         rv = self.client.patch('/students/2', headers=self.head_auth, data=json.dumps(self.patch_data))

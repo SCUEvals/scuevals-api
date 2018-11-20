@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import dredd_hooks as hooks
 
 from flask_jwt_extended import create_access_token
+from psycopg2.extras import DateRange
 
 from scuevals_api import create_app, db
 from scuevals_api.cmd import init_db
@@ -161,7 +162,7 @@ def evaluations_submit(trans):
     prof = factories.ProfessorFactory(id=1)
     course = factories.CourseFactory(id=1)
     quarter = factories.QuarterFactory(id=1)
-    factories.QuarterFactory(current=True)
+    factories.QuarterFactory()
 
     factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
     db.session.commit()
@@ -232,17 +233,15 @@ def professor_details(trans):
 @hooks.before('Quarters > List All Quarters')
 def quarters(trans):
     now = datetime.now()
-    start_prev = (now + timedelta(days=-10)).strftime("%Y-%m-%d")
-    end_prev = (now + timedelta(days=-9)).strftime("%Y-%m-%d")
-    start_cur = (now + timedelta(days=-1)).strftime("%Y-%m-%d")
-    end_cur = (now + timedelta(days=1)).strftime("%Y-%m-%d")
+    start_prev = (now + timedelta(days=-10)).date()
+    end_prev = (now + timedelta(days=-9)).date()
 
-    quarter = factories.QuarterFactory(period='[{},{})'.format(start_prev, end_prev))
-    factories.QuarterFactory(period='[{},{})'.format(start_cur, end_cur))
+    quarter = factories.QuarterFactory(period=DateRange(start_prev, end_prev))
+    factories.QuarterCurrentFactory()
     course = factories.CourseFactory(id=1)
     prof = factories.ProfessorFactory(id=1)
     factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
-    factories.QuarterFactory(current=True)
+    factories.QuarterFactory()
     db.session.commit()
 
 

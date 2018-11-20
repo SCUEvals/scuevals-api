@@ -1,7 +1,9 @@
 import json
 from urllib.parse import urlencode
+from datetime import date
 
 from freezegun import freeze_time
+from psycopg2.extras import DateRange
 
 from tests import TestCase
 from tests.fixtures.factories import CourseFactory
@@ -21,9 +23,9 @@ class QuartersTestCase(TestCase):
     def setUp(self):
         super().setUp()
 
-        q1 = QuarterFactory(period='[2018-01-01,2018-02-01)')
-        q2 = QuarterFactory(period='[2018-02-01,2018-03-01)')
-        QuarterFactory(period='[2018-03-01,2018-04-01)')
+        q1 = QuarterFactory(period=DateRange(date(2018, 1, 1), date(2018, 2, 1)))
+        q2 = QuarterFactory(period=DateRange(date(2018, 2, 1), date(2018, 3, 1)))
+        QuarterFactory(period=DateRange(date(2018, 3, 1), date(2018, 4, 1)))
 
         c1 = CourseFactory(id=1000)
         CourseFactory()

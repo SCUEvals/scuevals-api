@@ -29,7 +29,7 @@ setup(
         'gunicorn==19.8.1',
         'jsonschema==2.6.0',
         'newrelic==3.2.0.91',
-        'psycopg2==2.7.4',
+        'psycopg2==2.7.6.1',
         'pycryptodome>=3.4.7',
         'python-jose==2.0.2',
         'pytz==2018.4',
