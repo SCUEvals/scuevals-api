@@ -54,7 +54,10 @@ def auth(args):
     except JWTError as e:
         raise UnprocessableEntity('invalid id_token: {}'.format(e))
 
-    if data['hd'] != 'scu.edu':
+    # while we could just use an endswith here, it feels like a better
+    # idea to be explicit since as far as we know,
+    # there are no other domains that would/should need access
+    if data['hd'] not in ('scu.edu', 'alumni.scu.edu'):
         raise UnprocessableEntity('invalid id_token: incorrect hd')
 
     user = User.query.options(
