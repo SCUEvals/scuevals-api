@@ -1,14 +1,12 @@
 import json
-import logging
 
 from flask_jwt_extended import current_user
 from flask_restful import Resource
 from marshmallow import fields, Schema
 from sqlalchemy import text
-from sqlalchemy.exc import DatabaseError
 
 from scuevals_api.auth import auth_required
-from scuevals_api.models import Permission, OfficialUserType, db
+from scuevals_api.models import Permission, db
 from scuevals_api.utils import use_args
 
 
