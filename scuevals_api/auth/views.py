@@ -54,14 +54,57 @@ def auth(args):
     except JWTError as e:
         raise UnprocessableEntity('invalid id_token: {}'.format(e))
 
-    if data['hd'] != 'scu.edu':
+    # while we could just use an endswith here, it feels like a better
+    # idea to be explicit since as far as we know,
+    # there are no other domains that would/should need access
+    if data['hd'] not in ('scu.edu', 'alumni.scu.edu'):
         raise UnprocessableEntity('invalid id_token: incorrect hd')
 
     user = User.query.options(
         subqueryload(User.permissions)
     ).with_polymorphic(Student).filter_by(email=data['email']).one_or_none()
 
-    if user is None:
+    if user is None and data['hd'] == 'alumni.scu.edu':
+        # not-before-seen alumni, check if they already have a student account
+        student_email = data['email'].split('@')[0] + '@scu.edu'
+
+        user = User.query.options(
+            subqueryload(User.permissions)
+        ).with_polymorphic(Student).filter_by(email=student_email).one_or_none()
+
+        if user is None:
+            # new alumni
+            status = 'new'
+
+            # create a new student account with only reading permission
+            user = Student(
+                email=data['email'],
+                first_name=data['given_name'],
+                last_name=data['family_name'],
+                picture=data['picture'] if 'picture' in data else None,
+                permissions=[Permission.query.get(Permission.ReadEvaluations)],
+                university_id=1,
+                alumni=True
+            )
+
+            db.session.add(user)
+            db.session.flush()
+
+        else:
+            # existing student that turned into an alumni
+            status = 'converted'
+
+            # update their email to their new one and mark them as alumni explicitly
+            user.email = data['email']
+            user.alumni = True
+
+            # revoke all permissions except for reading evaluations
+            user.permissions_list = [Permission.ReadEvaluations]
+
+            # we do no longer care about read access expiration
+            user.read_access_until = None
+
+    elif user is None:
         # new user
         status = 'new'
 
@@ -104,7 +147,7 @@ def auth(args):
             return jsonify({'status': 'suspended', 'until': user.suspended_until.isoformat()}), 401
 
         # make sure the permissions are correct in case the student lost reading access
-        if user.type == User.Student:
+        if user.type == User.Student and not user.alumni:
             user.check_read_access()
 
         # update the image of the existing user

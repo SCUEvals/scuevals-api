@@ -17,6 +17,7 @@ class Student(User):
     graduation_year = db.Column(db.Integer)
     gender = db.Column(db.String(1))
     read_access_until = db.Column(db.DateTime(timezone=True), nullable=True)
+    alumni = db.Column(db.Boolean, nullable=False, server_default='false')
 
     evaluations = db.relationship('Evaluation', back_populates='student', passive_deletes=True)
 
@@ -94,6 +95,7 @@ class Student(User):
     def to_dict(self):
         student = {
             **super().to_dict(),
+            'alumni': self.alumni,
             'gender': self.gender,
             'graduation_year': self.graduation_year,
             'majors': self.majors_list
