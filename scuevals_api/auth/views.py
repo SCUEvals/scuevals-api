@@ -7,7 +7,7 @@ from flask_jwt_extended import create_access_token, jwt_required, current_user
 from jose import jwt, JWTError, ExpiredSignatureError
 from marshmallow import fields
 from sqlalchemy.orm import subqueryload
-from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError
+from werkzeug.exceptions import UnprocessableEntity, Unauthorized, HTTPException, InternalServerError, Forbidden
 
 from . import auth_bp, cache
 from .decorators import auth_required
@@ -57,8 +57,8 @@ def auth(args):
     # while we could just use an endswith here, it feels like a better
     # idea to be explicit since as far as we know,
     # there are no other domains that would/should need access
-    if data['hd'] not in ('scu.edu', 'alumni.scu.edu'):
-        raise UnprocessableEntity('invalid id_token: incorrect hd')
+    if 'hd' not in data or data['hd'] not in ('scu.edu', 'alumni.scu.edu'):
+        raise Forbidden('invalid id_token: incorrect or missing hd')
 
     user = User.query.options(
         subqueryload(User.permissions)
