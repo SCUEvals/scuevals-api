@@ -40,4 +40,9 @@ setup(
         'vcrpy==2.0.1',
         'webargs==4.1.3',
     ],
+    extras_require={
+        'dev': [
+            'flake8'
+        ]
+    }
 )

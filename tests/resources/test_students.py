@@ -1,5 +1,5 @@
 import json
-from datetime import timezone, timedelta
+from datetime import timezone, timedelta, datetime
 from urllib.parse import urlencode
 
 from flask_jwt_extended import create_access_token
@@ -18,7 +18,7 @@ class StudentsTestCase(TestCase):
         m2 = MajorFactory()
 
         self.patch_data = {
-            'graduation_year': 2018,
+            'graduation_year': datetime.now().year,
             'gender': 'm',
             'majors': [m1.id, m2.id]
         }
@@ -28,7 +28,7 @@ class StudentsTestCase(TestCase):
                                headers=self.head_auth,
                                data=json.dumps(self.patch_data))
 
-        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(200, rv.status_code)
 
         self.assertEqual(self.patch_data['graduation_year'], self.student.graduation_year)
         self.assertEqual(self.patch_data['gender'], self.student.gender)
