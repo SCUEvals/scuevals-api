@@ -33,7 +33,7 @@ setup(
         'psycopg2==2.7.6.1',
         'python-jose==3.0.1',
         'pytz==2018.7',
-        'PyYAML==3.13',
+        'PyYAML==4.2b1',
         'requests==2.21.0',
         'rollbar==0.14.5',
         'sqlalchemy-views==0.2.2',
