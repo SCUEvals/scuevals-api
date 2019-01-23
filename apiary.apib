@@ -42,7 +42,7 @@ The SCU Evals API powers the SCU Evals front-end by managing all the data and ac
 
 + Response 403 (application/json)
     + Attributes
-        + status: non-student (string, required, fixed)
+        + status: `non-student` (string, required, fixed)
         
 
 ### Validate User Token [GET /auth/validate]
@@ -607,7 +607,9 @@ Validates the JWT and returns a new one freshly generated from the database.
 + id: 1 (number, required)
 + year: 2018 (number, required)
 + name: Spring (string, required)
-+ current: true (boolean, required)
++ period (required)
+    + start: 2018-01-01 (string, required)
+    + end: 2018-03-01 (string, required)
 
 ## Student (User)
 + gender: m, f, o (enum[string], required)

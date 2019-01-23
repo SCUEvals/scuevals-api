@@ -49,7 +49,7 @@ class StudentsResource(Resource):
             # set the reading permission to expire when the current quarter expires
             # essentially they get their first quarter free,
             # which makes sense for new students and transfer students
-            cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+            cur_quarter_period = Quarter.current().with_entities(Quarter.period).one()[0]
             student.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1, hours=11),
                                                      tzinfo=timezone.utc)
 

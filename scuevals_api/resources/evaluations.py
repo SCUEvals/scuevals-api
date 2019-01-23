@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
 
-from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote, Flag, Reason, Course
+from scuevals_api.models import Permission, Section, Evaluation, db, Professor, Quarter, Vote, Flag, Reason
 from scuevals_api.auth import auth_required
 from scuevals_api.utils import use_args, datetime_from_date
 
@@ -86,7 +86,7 @@ class EvaluationsResource(Resource):
         db.session.add(evaluation)
 
         # extend their read access until the end of the current quarter
-        cur_quarter_period = db.session.query(Quarter.period).filter_by(current=True).one()[0]
+        cur_quarter_period = Quarter.current().with_entities(Quarter.period).one()[0]
         current_user.read_access = datetime_from_date(cur_quarter_period.upper + timedelta(days=1, hours=11),
                                                       tzinfo=timezone.utc)
 

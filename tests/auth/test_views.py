@@ -21,6 +21,14 @@ sample_id_token = {
     'family_name': 'Doe',
 }
 
+sample_id_token_alumni = {
+    'hd': 'alumni.scu.edu',
+    'email': 'jdoe@alumni.scu.edu',
+    'picture': 'foo.jpg',
+    'given_name': 'John',
+    'family_name': 'Doe',
+}
+
 
 class AuthTestCase(TestCase):
     def setUp(self):
@@ -69,6 +77,7 @@ class AuthTestCase(TestCase):
         identity = jwt.get_unverified_claims(data['jwt'])
         self.assertEqual([Permission.Incomplete], identity['sub']['permissions'])
         self.assertEqual('s', identity['sub']['type'])
+        self.assertFalse(identity['sub']['alumni'])
 
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value=sample_id_token)
@@ -86,6 +95,23 @@ class AuthTestCase(TestCase):
         identity = jwt.get_unverified_claims(data['jwt'])
         self.assertEqual([Permission.ReadEvaluations], identity['sub']['permissions'])
         self.assertEqual('u', identity['sub']['type'])
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token_alumni)
+    @vcr.use_cassette('test_auth_alumni')
+    def test_new_alumni(self, data, decode_func):
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token_alumni']}))
+
+        data = json.loads(rv.data)
+        self.assertIn('status', data)
+        self.assertEqual('new', data['status'])
+
+        self.assertIn('jwt', data)
+        identity = jwt.get_unverified_claims(data['jwt'])
+        self.assertEqual([Permission.ReadEvaluations], identity['sub']['permissions'])
+        self.assertEqual('s', identity['sub']['type'])
+        self.assertEqual(True, identity['sub']['alumni'])
 
     @use_data('auth.yaml')
     @mock.patch('jose.jwt.decode', return_value=sample_id_token)
@@ -147,7 +173,7 @@ class AuthTestCase(TestCase):
     def test_id_token_invalid_hd(self, data, decode_func):
         rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
                               data=json.dumps({'id_token': data['id_token_invalid']}))
-        self.assertEqual(422, rv.status_code)
+        self.assertEqual(403, rv.status_code)
         data = json.loads(rv.data)
         self.assertIn('invalid id_token', data['message'])
 
@@ -218,6 +244,23 @@ class AuthTestCase(TestCase):
         self.assertEqual(None, student.read_access_until)
         self.assertNotIn(Permission.ReadEvaluations, student.permissions_list)
         self.assertNotIn(Permission.VoteOnEvaluations, student.permissions_list)
+
+    @use_data('auth.yaml')
+    @mock.patch('jose.jwt.decode', return_value=sample_id_token_alumni)
+    @vcr.use_cassette('test_auth_alumni')
+    def test_existing_user_turned_alumni(self, data, decode_func):
+        student = StudentFactory(email='jdoe@scu.edu')
+
+        rv = self.client.post('/auth', headers={'Content-Type': 'application/json'},
+                              data=json.dumps({'id_token': data['id_token_alumni']}))
+        self.assertEqual(rv.status_code, 200)
+
+        data = json.loads(rv.data)
+        self.assertIn('status', data)
+        self.assertEqual('converted', data['status'])
+
+        self.assertEqual('jdoe@alumni.scu.edu', student.email)
+        self.assertTrue(student.alumni)
 
     @use_data('auth.yaml')
     @vcr.use_cassette
