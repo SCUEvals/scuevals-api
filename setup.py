@@ -41,6 +41,7 @@ setup(
         'sqlalchemy-views==0.2.2',
         'vcrpy==2.0.1',
         'webargs==5.5.1',
+        'Werkzeug==0.15.6'
     ],
     extras_require={
         'dev': [
