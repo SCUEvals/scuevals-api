@@ -109,7 +109,7 @@ def use_data(file):
         @wraps(f)
         def wrapper(*args):
             with open(os.path.join(fixtures_path, 'data', file), 'r') as stream:
-                data = yaml.load(stream)
+                data = yaml.load(stream, Loader=yaml.FullLoader)
             args = args + (data, )
 
             return f(*args)

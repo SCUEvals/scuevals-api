@@ -2,7 +2,7 @@ import json
 
 from flask_jwt_extended import current_user
 from flask_restful import Resource
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, EXCLUDE
 from sqlalchemy import text
 
 from scuevals_api.auth import auth_required
@@ -15,7 +15,7 @@ class OfficialUserTypeSchema(Schema):
     type = fields.Str(required=True)
 
     class Meta:
-        strict = True
+        unknown = EXCLUDE
 
 
 class OfficialUserTypeResource(Resource):

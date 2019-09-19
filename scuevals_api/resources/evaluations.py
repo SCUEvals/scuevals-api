@@ -2,7 +2,7 @@ from datetime import timedelta, timezone
 
 from flask_jwt_extended import get_jwt_identity, current_user, create_access_token
 from flask_restful import Resource
-from marshmallow import fields, Schema, validate
+from marshmallow import fields, Schema, validate, EXCLUDE
 from sqlalchemy import func
 from sqlalchemy.orm import subqueryload
 from werkzeug.exceptions import UnprocessableEntity, NotFound, Forbidden, Conflict
@@ -26,7 +26,7 @@ class EvaluationSchemaV1(Schema):
     comment = fields.Str(required=True, validate=validate.Length(min=1, max=1000))
 
     class Meta:
-        strict = True
+        unknown = EXCLUDE
 
 
 class EvaluationsResource(Resource):
