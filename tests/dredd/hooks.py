@@ -162,7 +162,12 @@ def evaluation(trans):
 def evaluations_submit(trans):
     prof = factories.ProfessorFactory(id=1)
     course = factories.CourseFactory(id=1)
-    quarter = factories.QuarterFactory(id=1)
+
+    now = datetime.now()
+    start_prev = (now - timedelta(days=10)).date()
+    end_prev = (now + timedelta(days=10)).date()
+    quarter = factories.QuarterFactory(id=1, period=DateRange(start_prev, end_prev))
+
     factories.QuarterFactory()
 
     factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
