@@ -64,7 +64,7 @@ def scrape_majors(args):
         raise Exception('Non-OK status code: ' + str(resp.status_code))
 
     soup = BeautifulSoup(resp.text, 'html.parser')
-    elements = soup.select_one('.intro').parent.select('li a')
+    elements = soup.select_one('main#content').select('li a')
 
     exclusions = ['Modern Languages and Literatures']
     all_majors = []

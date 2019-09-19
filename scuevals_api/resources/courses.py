@@ -3,7 +3,7 @@ import logging
 
 from flask_jwt_extended import get_jwt_identity, current_user
 from flask_restful import Resource
-from marshmallow import fields, Schema, validate
+from marshmallow import fields, Schema, validate, EXCLUDE
 from sqlalchemy import text, and_, func, desc
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import subqueryload
@@ -26,7 +26,7 @@ class CourseSchema(Schema):
     instr_3 = fields.Str(required=True)
 
     class Meta:
-        strict = True
+        unknown = EXCLUDE
 
 
 class CoursesResource(Resource):

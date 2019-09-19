@@ -3,7 +3,7 @@ import logging
 
 from flask_jwt_extended import get_jwt_identity
 from flask_restful import Resource
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, EXCLUDE
 from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError
 from werkzeug.exceptions import UnprocessableEntity
@@ -19,7 +19,7 @@ class DepartmentSchema(Schema):
     school = fields.Str(required=True)
 
     class Meta:
-        strict = True
+        unknown = EXCLUDE
 
 
 class DepartmentsResource(Resource):

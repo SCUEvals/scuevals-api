@@ -5,6 +5,7 @@ import dredd_hooks as hooks
 
 from flask_jwt_extended import create_access_token
 from psycopg2.extras import DateRange
+from sqlalchemy.orm import close_all_sessions
 
 from scuevals_api import create_app, db
 from scuevals_api.cmd import init_db
@@ -24,7 +25,7 @@ def before_all(trans):
 
     stash['app'] = app
 
-    db.session.close_all()
+    close_all_sessions()
     db.drop_all()
 
 
@@ -57,7 +58,7 @@ def before_each(trans):
 
 @hooks.after_each
 def after_each(trans):
-    db.session.close_all()
+    close_all_sessions()
     db.drop_all()
 
     if 'real' not in trans or 'body' not in trans['real']:
@@ -161,7 +162,12 @@ def evaluation(trans):
 def evaluations_submit(trans):
     prof = factories.ProfessorFactory(id=1)
     course = factories.CourseFactory(id=1)
-    quarter = factories.QuarterFactory(id=1)
+
+    now = datetime.now()
+    start_prev = (now - timedelta(days=10)).date()
+    end_prev = (now + timedelta(days=10)).date()
+    quarter = factories.QuarterFactory(id=1, period=DateRange(start_prev, end_prev))
+
     factories.QuarterFactory()
 
     factories.SectionFactory(quarter=quarter, course=course, professors=[prof])
