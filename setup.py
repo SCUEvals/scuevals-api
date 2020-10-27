@@ -15,7 +15,7 @@ setup(
         'beautifulsoup4==4.6.3',
         'blinker==1.4',
         'coveralls==1.5.1',
-        'cryptography==2.4.2',
+        'cryptography==3.2',
         'dredd_hooks==0.2.0',
         'factory_boy==2.11.1',
         'Flask-Caching==1.7.2',
