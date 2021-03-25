@@ -34,7 +34,7 @@ setup(
         'psycopg2==2.8.3',
         'python-jose==3.0.1',
         'pytz==2018.7',
-        'PyYAML==5.1.2',
+        'PyYAML==5.4',
         'requests==2.22.0',
         'rollbar==0.14.5',
         'SQLAlchemy==1.3.8',
