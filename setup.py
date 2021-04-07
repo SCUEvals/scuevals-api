@@ -40,7 +40,7 @@ setup(
         'SQLAlchemy==1.3.8',
         'sqlalchemy-views==0.2.2',
         'vcrpy==2.0.1',
-        'webargs==5.5.1',
+        'webargs==5.5.3',
         'Werkzeug==0.15.6'
     ],
     extras_require={
