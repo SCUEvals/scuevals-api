@@ -19,7 +19,7 @@ setup(
         'dredd_hooks==0.2.0',
         'factory_boy==2.11.1',
         'Flask-Caching==1.7.2',
-        'Flask-Cors==3.0.7',
+        'Flask-Cors==3.0.9',
         'Flask-JWT-Extended==3.14.0',
         'Flask-Migrate==2.3.1',
         'Flask-RESTful==0.3.7',
